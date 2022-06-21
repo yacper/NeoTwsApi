@@ -8,6 +8,7 @@
 *********************************************************************/
 
 using System.ComponentModel;
+using IBApi;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using NLog;
 
@@ -34,7 +35,7 @@ public interface IIbClient : INotifyPropertyChanged
     /// <summary>
     /// default timeout duration
     /// </summary>
-    int TimeoutMillseconds { get; }
+    int TimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets a value indicating whether is the client connected to tws
@@ -59,4 +60,17 @@ public interface IIbClient : INotifyPropertyChanged
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task DisconnectAsync();
+
+    #region Contract
+
+    
+
+    /// <summary>
+    /// Gets a contract by request.
+    /// </summary>
+    /// <param name="contract">The requested contract.</param>
+    /// <returns>The details of the contract</returns>
+    Task<List<ContractDetails>> GetContractAsync(Contract contract);
+
+	    #endregion
 }
