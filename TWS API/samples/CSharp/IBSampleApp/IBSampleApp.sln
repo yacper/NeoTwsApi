@@ -1,8 +1,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2012 for Windows Desktop
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IBSampleApp", "IBSampleApp.csproj", "{CB7BDB4D-923F-4C4E-BB20-68DBDC33C10A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpAPI", "..\..\..\source\csharpclient\client\CSharpAPI.csproj", "{8EDE0744-96C2-40B0-A8DC-37DF79370203}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpAPI", "..\..\..\source\csharpclient\client\CSharpAPI.csproj", "{8EDE0744-96C2-40B0-A8DC-37DF79370203}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testbed", "..\Testbed\Testbed.csproj", "{F54B4AD1-305E-4089-A1A0-FB9EE5A84040}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,8 +28,19 @@ Global
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Release|x64.ActiveCfg = Release|Any CPU
+		{F54B4AD1-305E-4089-A1A0-FB9EE5A84040}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F54B4AD1-305E-4089-A1A0-FB9EE5A84040}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F54B4AD1-305E-4089-A1A0-FB9EE5A84040}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F54B4AD1-305E-4089-A1A0-FB9EE5A84040}.Debug|x64.Build.0 = Debug|Any CPU
+		{F54B4AD1-305E-4089-A1A0-FB9EE5A84040}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F54B4AD1-305E-4089-A1A0-FB9EE5A84040}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F54B4AD1-305E-4089-A1A0-FB9EE5A84040}.Release|x64.ActiveCfg = Release|Any CPU
+		{F54B4AD1-305E-4089-A1A0-FB9EE5A84040}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {04312ACF-5472-409D-9CA1-F6E5DBD57B1F}
 	EndGlobalSection
 EndGlobal

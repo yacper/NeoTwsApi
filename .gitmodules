@@ -1,0 +1,3 @@
+[submodule "AutoFinance.Broker"]
+	path = AutoFinance.Broker
+	url = https://github.com/yacper/AutoFinance.Broker.git

@@ -33,8 +33,8 @@ namespace Samples
             /*************************************************************************************************************************************************/
             /* One (although primitive) way of knowing if we can proceed is by monitoring the order's nextValidId reception which comes down automatically after connecting. */
             /*************************************************************************************************************************************************/
-            while (testImpl.NextOrderId <= 0) { }            
-            testIBMethods(clientSocket, testImpl.NextOrderId);            
+            while (testImpl.NextOrderId <= 0) { }
+            testIBMethods(clientSocket, testImpl.NextOrderId);
             Console.WriteLine("Disconnecting...");
             clientSocket.eDisconnect();
             return 0;
