@@ -15,9 +15,12 @@ using Microsoft.Toolkit.Mvvm.ComponentModel;
 using NLog;
 using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using AutoFinance.Broker.InteractiveBrokers.Exceptions;
+using Microsoft.VisualBasic.CompilerServices;
 using ErrorEventArgs = AutoFinance.Broker.InteractiveBrokers.EventArgs.ErrorEventArgs;
 using MoreLinq;
+using NeoTwsApi.Enums;
 using NeoTwsApi.EventArgs;
+using NeoTwsApi.Helpers;
 
 namespace NeoTwsApi;
 
@@ -66,8 +69,6 @@ public class IbClient : ObservableObject, IIbClient
             // And the socket will get really fucked up any commands come in during that time
             // Just wait 5 seconds for it to finish
             await Task.Delay(5000);
-
-
         }
 
         return Connected;
@@ -92,15 +93,15 @@ public class IbClient : ObservableObject, IIbClient
             reader.Start();
 
             this.readerThread = new Thread(
-                    () =>
-                    {
-                        while (true)
-                        {
-                            this.signal.waitForSignal();
-                            reader.processMsgs();
-                        }
-                    })
-                { IsBackground = true };
+                                           () =>
+                                           {
+                                               while (true)
+                                               {
+                                                   this.signal.waitForSignal();
+                                                   reader.processMsgs();
+                                               }
+                                           })
+                                { IsBackground = true };
             this.readerThread.Start();
 
             //todo: need a better way
@@ -149,8 +150,7 @@ public class IbClient : ObservableObject, IIbClient
         ServerVersion = clientSocket.EClientSocket.ServerVersion;
         ServerTime    = clientSocket.EClientSocket.ServerTime;
 
-        twsCallbackHandler.Accounts.ForEach(p=>_Accounts.Add(p));
-
+        twsCallbackHandler.Accounts.ForEach(p => _Accounts.Add(p));
     }
 
     protected void OnDisconnected()
@@ -160,7 +160,7 @@ public class IbClient : ObservableObject, IIbClient
         _Accounts.Clear();
     }
 
-    #region contract
+#region contract
 
     /// <summary>
     /// Gets a contract by request.
@@ -192,9 +192,11 @@ public class IbClient : ObservableObject, IIbClient
             if (args.RequestId == requestId)
             {
                 /// clean handler
-                this.twsCallbackHandler.ContractDetailsEvent    -= contractDetailsEventHandler;
-                this.twsCallbackHandler.ContractDetailsEndEvent -= contractDetailsEndEventHandler;
-                this.twsCallbackHandler.ErrorEvent              -= errorEventHandler;
+                this.twsCallbackHandler.ContractDetailsEvent -=
+                    contractDetailsEventHandler;
+                this.twsCallbackHandler.ContractDetailsEndEvent -=
+                    contractDetailsEndEventHandler;
+                this.twsCallbackHandler.ErrorEvent -= errorEventHandler;
 
                 taskSource.TrySetResult(contractDetailsList);
             }
@@ -228,13 +230,13 @@ public class IbClient : ObservableObject, IIbClient
 
     public Task<List<ContractDescription>> ReqMatchingSymbolsAsync(string pattern)
     {
-        int requestId = this.twsRequestIdGenerator.GetNextRequestId();
+        int                       requestId           = this.twsRequestIdGenerator.GetNextRequestId();
         List<ContractDescription> contractDetailsList = new List<ContractDescription>();
 
         var taskSource = new TaskCompletionSource<List<ContractDescription>>();
 
         EventHandler<TwsEventArs<ContractDescription[]>> symbolSamplesHandler = null;
-        
+
         symbolSamplesHandler = (sender, args) =>
         {
             if (args.RequestId == requestId)
@@ -267,19 +269,102 @@ public class IbClient : ObservableObject, IIbClient
 
         _EClientSocket.reqMatchingSymbols(requestId, pattern);
         return taskSource.Task;
-
     }
 
-    #endregion
+#endregion
+
+#region HistoricalData
+
+    public Task<List<Bar>> ReqHistoricalDataAsync(Contract      contract, DateTime  begin,    DateTime end,
+                                                  ETimeFrameTws tf,       EDataType dataType, bool     useRth = true)
+    {
+        int            requestId    = this.twsRequestIdGenerator.GetNextRequestId();
+        List<TagValue> chartOptions = null;
+
+        string value = string.Empty;
+
+        var taskSource = new TaskCompletionSource<List<Bar>>();
+
+        EventHandler<TwsEventArs<Bar>>                historicalDataEventHandler    = null;
+        EventHandler<TwsEventArs<DateTime, DateTime>> historicalDataEndEventHandler = null;
+        EventHandler<ErrorEventArgs>                  errorEventHandler             = null;
+
+        List<Bar> historicalDataList = new List<Bar>();
+
+        historicalDataEventHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId) { historicalDataList.Add(args.Arg); }
+        };
+
+        historicalDataEndEventHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId)
+            {
+                this.twsCallbackHandler.HistoricalDataEvent    -= historicalDataEventHandler;
+                this.twsCallbackHandler.HistoricalDataEndEvent -= historicalDataEndEventHandler;
+                this.twsCallbackHandler.ErrorEvent             -= errorEventHandler;
+                taskSource.TrySetResult(historicalDataList);
+            }
+        };
+
+        errorEventHandler = (sender, args) =>
+        {
+            if (args.Id == requestId)
+            {
+                //todo:warn
+                //this.CancelHistoricalData(requestId);
+
+                // The error is associated with this request
+                this.twsCallbackHandler.HistoricalDataEvent    -= historicalDataEventHandler;
+                this.twsCallbackHandler.HistoricalDataEndEvent -= historicalDataEndEventHandler;
+                this.twsCallbackHandler.ErrorEvent             -= errorEventHandler;
+                taskSource.TrySetException(new TwsException(args));
+            }
+        };
+
+        // Set the operation to cancel after 1 minute
+        CancellationTokenSource tokenSource = new CancellationTokenSource(60 * 1000);
+        tokenSource.Token.Register(() =>
+        {
+            //todo:warn
+            //this.CancelHistoricalData(requestId);
+
+            this.twsCallbackHandler.HistoricalDataEvent    -= historicalDataEventHandler;
+            this.twsCallbackHandler.HistoricalDataEndEvent -= historicalDataEndEventHandler;
+            this.twsCallbackHandler.ErrorEvent             -= errorEventHandler;
+
+            taskSource.TrySetCanceled();
+        });
+
+        this.twsCallbackHandler.HistoricalDataEvent    += historicalDataEventHandler;
+        this.twsCallbackHandler.HistoricalDataEndEvent += historicalDataEndEventHandler;
+        this.twsCallbackHandler.ErrorEvent             += errorEventHandler;
 
 
-    #region Fields
+        this.clientSocket.ReqHistoricalData(
+                                            requestId,
+                                            contract,
+                                            end.ToString("yyyyMMdd HH:mm:ss"),
+                                            TwsDuration.ToTwsDuration(begin, end, tf),
+                                            tf.ToTwsString(),
+                                            dataType.ToString(),
+                                            useRth ? 1 : 0,
+                                            1, // default format date
+                                            chartOptions);
+
+        return taskSource.Task;
+    }
+
+#endregion
+
+
+#region Fields
 
     private bool _Connected;
 
     private TwsCallbackHandler twsCallbackHandler = new TwsCallbackHandler();
 
-    private TwsClientSocket clientSocket  = null;
+    private TwsClientSocket clientSocket   = null;
     private EClientSocket   _EClientSocket = null;
 
     private EReaderSignal signal = new EReaderMonitorSignal();
@@ -293,5 +378,5 @@ public class IbClient : ObservableObject, IIbClient
 
     protected ObservableCollection<string> _Accounts = new ObservableCollection<string>();
 
-    #endregion
+#endregion
 }

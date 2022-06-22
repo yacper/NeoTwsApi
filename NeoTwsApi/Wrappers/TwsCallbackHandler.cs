@@ -79,10 +79,12 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
         /// </summary>
         public event EventHandler<OrderStatusEventArgs> OrderStatusEvent;
 
+
         /// <summary>
         /// The event that is fired when HistoricalData is called by TWS
         /// </summary>
-        public event EventHandler<HistoricalDataEventArgs> HistoricalDataEvent;
+//        public event EventHandler<HistoricalDataEventArgs> HistoricalDataEvent;
+        public event EventHandler<TwsEventArs<Bar>> HistoricalDataEvent;
 
         /// <summary>
         /// The event that is fired when continuous HistoricalDataUpdateEvent is called by TWS
@@ -92,7 +94,9 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
         /// <summary>
         /// The event that is fired when HistoricalDataEnd is called by TWS
         /// </summary>
-        public event EventHandler<HistoricalDataEndEventArgs> HistoricalDataEndEvent;
+//        public event EventHandler<HistoricalDataEndEventArgs> HistoricalDataEndEvent;
+        public event EventHandler<TwsEventArs<DateTime, DateTime>> HistoricalDataEndEvent;
+
 
         /// <summary>
         /// The event that is fired when RealtimeBar is called by TWS
@@ -459,38 +463,17 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
             this.HistogramDataEvent?.Invoke(this, eventArgs);
         }
 
-        /// <summary>
-        /// A callback for historical data, fixing a breaking change by the IB API to keep this signature
-        /// </summary>
-        /// <param name="reqId">The req id.</param>
-        /// <param name="date">The date.</param>
-        /// <param name="open">The open.</param>
-        /// <param name="high">The high.</param>
-        /// <param name="low">The low.</param>
-        /// <param name="close">The close.</param>
-        /// <param name="volume">The volume.</param>
-        /// <param name="count">The count.</param>
-        /// <param name="WAP">The WAP.</param>
-        /// <param name="hasGaps">Whether the data has gaps.</param>
-        public void historicalData(int reqId, string date, double open, double high, double low, double close, int volume, int count, decimal WAP, bool hasGaps)
-        {
-            // Raise an event which can be listened throughout the application
-            var eventArgs = new HistoricalDataEventArgs(reqId, date, open, high, low, close, volume, count, WAP, hasGaps);
-            this.HistoricalDataEvent?.Invoke(this, eventArgs);
-        }
 
-        /// <inheritdoc/>
         public void historicalData(int reqId, Bar bar)
         {
-            this.historicalData(reqId, bar.Time, bar.Open, bar.High, bar.Low, bar.Close, (int)bar.Volume, bar.Count, bar.WAP, false);
+            this.HistoricalDataEvent?.Invoke(this, new TwsEventArs<Bar>(reqId, bar));
         }
 
-        /// <inheritdoc/>
         public void historicalDataEnd(int reqId, string start, string end)
         {
-            // Raise an event which can be listened throughout the application
-            var eventArgs = new HistoricalDataEndEventArgs(reqId, start, end);
-            this.HistoricalDataEndEvent?.Invoke(this, eventArgs);
+            DateTime s = DateTime.Parse(start);
+            DateTime e = DateTime.Parse(end);
+            this.HistoricalDataEndEvent?.Invoke(this, new TwsEventArs<DateTime, DateTime>(reqId, s, e));
         }
 
         /// <inheritdoc/>
