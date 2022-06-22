@@ -107,7 +107,7 @@ public class Sample
         /****************************/
         /*** Contract information ***/
         /****************************/
-        //contractOperations(client);
+        contractOperations(client);
 
         /***********************/
         /*** Market Scanners ***/
@@ -563,16 +563,16 @@ public class Sample
     private static void contractOperations(EClientSocket client)
     {
         //! [reqcontractdetails]
-        client.reqContractDetails(209, ContractSamples.OptionForQuery());
-        client.reqContractDetails(210, ContractSamples.EurGbpFx());
-        client.reqContractDetails(211, ContractSamples.Bond());
-        client.reqContractDetails(212, ContractSamples.FuturesOnOptions());
-        client.reqContractDetails(213, ContractSamples.SimpleFuture());
-        client.reqContractDetails(214, ContractSamples.USStockAtSmart());
-        client.reqContractDetails(215, ContractSamples.CryptoContract());
-        //! [reqcontractdetails]
+        //client.reqContractDetails(209, ContractSamples.OptionForQuery());
+        //client.reqContractDetails(210, ContractSamples.EurGbpFx());
+        //client.reqContractDetails(211, ContractSamples.Bond());
+        //client.reqContractDetails(212, ContractSamples.FuturesOnOptions());
+        //client.reqContractDetails(213, ContractSamples.SimpleFuture());
+        //client.reqContractDetails(214, ContractSamples.USStockAtSmart());
+        //client.reqContractDetails(215, ContractSamples.CryptoContract());
+        ////! [reqcontractdetails]
 
-        Thread.Sleep(2000);
+        //Thread.Sleep(2000);
         //! [reqmatchingsymbols]
         client.reqMatchingSymbols(211, "IB");
         //! [reqmatchingsymbols]

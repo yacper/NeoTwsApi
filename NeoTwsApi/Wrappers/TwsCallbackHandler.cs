@@ -1,6 +1,8 @@
 ﻿// Licensed under the Apache License, Version 2.0.
 
+using System.Diagnostics;
 using MoreLinq;
+using NeoTwsApi.EventArgs;
 
 namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
 {
@@ -28,6 +30,7 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
         /// </summary>
         public event EventHandler<AccountDownloadEndEventArgs> AccountDownloadEndEvent;
 
+
         /// <summary>
         /// The event that is fired when the ContractDetailsEnd is called by TWS
         /// </summary>
@@ -37,6 +40,9 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
         /// The event that is fired when ContractDetails is called by TWS
         /// </summary>
         public event EventHandler<ContractDetailsEventArgs> ContractDetailsEvent;
+
+        public event EventHandler<TwsEventArs<ContractDescription[]>> SymbolSamplesEvent;
+
 
         /// <summary>
         /// The event that is fired when the connection is acknowledged by TWS
@@ -398,6 +404,8 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
         /// <inheritdoc/>
         public void error(string str)
         {
+            Debug.WriteLine($"Error:{str}");
+
             var eventArgs = new ErrorEventArgs(-1, -1, str);
             this.ErrorEvent?.Invoke(this, eventArgs);
         }
@@ -405,6 +413,8 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
         /// <inheritdoc/>
         public void error(int id, int errorCode, string errorMsg, string advancedOrderRejectJson)
         {
+            Debug.WriteLine($"Error: [id]:{id} [errorCode]:{errorCode} [errorMsg]:{errorMsg} [advancedOrderRejectJson]:{advancedOrderRejectJson}");
+
             var eventArgs = new ErrorEventArgs(id, errorCode, errorMsg);
             this.ErrorEvent?.Invoke(this, eventArgs);
         }
@@ -713,7 +723,7 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
         /// <inheritdoc/>
         public void symbolSamples(int reqId, ContractDescription[] contractDescriptions)
         {
-            throw new NotImplementedException();
+            SymbolSamplesEvent?.Invoke(this, new TwsEventArs<ContractDescription[]>(reqId, contractDescriptions));
         }
 
         /// <inheritdoc/>

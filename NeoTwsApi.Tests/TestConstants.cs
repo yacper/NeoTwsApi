@@ -5,6 +5,6 @@
         public const string Host = "localhost";
         //public const int Port = 7497;
         public const int Port = 4002;
-        public const int ClientId = 1;
+        public const int ClientId = 0;
     }
 }

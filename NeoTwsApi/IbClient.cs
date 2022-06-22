@@ -17,6 +17,7 @@ using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using AutoFinance.Broker.InteractiveBrokers.Exceptions;
 using ErrorEventArgs = AutoFinance.Broker.InteractiveBrokers.EventArgs.ErrorEventArgs;
 using MoreLinq;
+using NeoTwsApi.EventArgs;
 
 namespace NeoTwsApi;
 
@@ -50,7 +51,8 @@ public class IbClient : ObservableObject, IIbClient
         ClientId = clientId;
         Logger   = logger;
 
-        clientSocket = new TwsClientSocket(new EClientSocket(twsCallbackHandler, signal));
+        _EClientSocket = new EClientSocket(twsCallbackHandler, signal);
+        clientSocket   = new TwsClientSocket(_EClientSocket);
     }
 
 
@@ -64,6 +66,8 @@ public class IbClient : ObservableObject, IIbClient
             // And the socket will get really fucked up any commands come in during that time
             // Just wait 5 seconds for it to finish
             await Task.Delay(5000);
+
+
         }
 
         return Connected;
@@ -79,7 +83,7 @@ public class IbClient : ObservableObject, IIbClient
 
         var taskSource = new TaskCompletionSource<bool>();
 
-        void ConnectionAcknowledgementCallback(object? sender, EventArgs eventArgs)
+        void ConnectionAcknowledgementCallback(object? sender, System.EventArgs eventArgs)
         {
             // When the connection is acknowledged, create a reader to consume messages from the TWS.
             // The EReader will consume the incoming messages and the callback handler will begin to fire events.
@@ -99,8 +103,9 @@ public class IbClient : ObservableObject, IIbClient
                 { IsBackground = true };
             this.readerThread.Start();
 
-
+            //todo: need a better way
             OnConnected();
+
             taskSource.TrySetResult(true);
         }
 
@@ -162,7 +167,7 @@ public class IbClient : ObservableObject, IIbClient
     /// </summary>
     /// <param name="contract">The requested contract.</param>
     /// <returns>The details of the contract</returns>
-    public Task<List<ContractDetails>> GetContractAsync(Contract contract)
+    public Task<List<ContractDetails>> ReqContractAsync(Contract contract)
     {
         int                   requestId           = this.twsRequestIdGenerator.GetNextRequestId();
         List<ContractDetails> contractDetailsList = new List<ContractDetails>();
@@ -220,6 +225,51 @@ public class IbClient : ObservableObject, IIbClient
         return taskSource.Task;
     }
 
+
+    public Task<List<ContractDescription>> ReqMatchingSymbolsAsync(string pattern)
+    {
+        int requestId = this.twsRequestIdGenerator.GetNextRequestId();
+        List<ContractDescription> contractDetailsList = new List<ContractDescription>();
+
+        var taskSource = new TaskCompletionSource<List<ContractDescription>>();
+
+        EventHandler<TwsEventArs<ContractDescription[]>> symbolSamplesHandler = null;
+        
+        symbolSamplesHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId)
+            {
+                contractDetailsList.AddRange(args.Arg);
+
+                twsCallbackHandler.SymbolSamplesEvent -= symbolSamplesHandler;
+                taskSource.TrySetResult(contractDetailsList);
+            }
+        };
+        //EventHandler<ErrorEventArgs> errorEventHandler = (sender, args) =>
+        //{
+        //    if (args.Id == requestId)
+        //    {
+        //        // The error is associated with this request
+        //        this.twsCallbackHandler.ContractDetailsEvent -= contractDetailsEventHandler;
+        //        this.twsCallbackHandler.ContractDetailsEndEvent -= contractDetailsEndEventHandler;
+        //        this.twsCallbackHandler.ErrorEvent -= errorEventHandler;
+
+        //        taskSource.TrySetException(new TwsException(args));
+        //    }
+        //};
+
+        // Set the operation to cancel after 5 seconds
+        CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
+        tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
+
+        this.twsCallbackHandler.SymbolSamplesEvent += symbolSamplesHandler;
+        //this.twsCallbackHandler.ErrorEvent += errorEventHandler;
+
+        _EClientSocket.reqMatchingSymbols(requestId, pattern);
+        return taskSource.Task;
+
+    }
+
     #endregion
 
 
@@ -229,7 +279,8 @@ public class IbClient : ObservableObject, IIbClient
 
     private TwsCallbackHandler twsCallbackHandler = new TwsCallbackHandler();
 
-    private TwsClientSocket clientSocket = null;
+    private TwsClientSocket clientSocket  = null;
+    private EClientSocket   _EClientSocket = null;
 
     private EReaderSignal signal = new EReaderMonitorSignal();
 

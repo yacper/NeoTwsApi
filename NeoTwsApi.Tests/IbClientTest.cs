@@ -19,7 +19,7 @@ public class Tests
         bool connected = await client.ConnectedAsync();
         connected.Should().BeTrue();
 
-        client.Accounts.Should().NotBeEmpty();
+        //client.Accounts.Should().NotBeEmpty();
 
         Debug.WriteLine(client.Dump());
     }
@@ -49,12 +49,23 @@ public class Tests
             contract.Exchange = "IDEALPRO";
 
 
-            var ret = await client.GetContractAsync(contract);
+            var ret = await client.ReqContractAsync(contract);
             Debug.WriteLine(ret.Dump());
 
             // Assert
             ret.First().Should().NotBeNull();
         }
+        [Test]
+        public async Task ReqMatchingSymbols_Test()
+        {
+            var ret = await client.ReqMatchingSymbolsAsync("Ib");
+            Debug.WriteLine(ret.Dump());
+
+            // Assert
+            ret.First().Should().NotBeNull();
+        }
+
+
 
     }
 }

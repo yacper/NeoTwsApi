@@ -84,7 +84,13 @@ public interface IIbClient : INotifyPropertyChanged
     /// </summary>
     /// <param name="contract">The requested contract.</param>
     /// <returns>The details of the contract</returns>
-    Task<List<ContractDetails>> GetContractAsync(Contract contract);
+    Task<List<ContractDetails>> ReqContractAsync(Contract contract);
+
+   /**
+        * @brief Requests matching stock symbols
+        * @param pattern - either start of ticker symbol or (for larger strings) company name
+        */
+    Task<List<ContractDescription>> ReqMatchingSymbolsAsync(string pattern);
 
     #endregion
 }
