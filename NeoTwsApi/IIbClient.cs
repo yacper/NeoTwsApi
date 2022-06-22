@@ -7,6 +7,7 @@
     modifiers:	用户服务
 *********************************************************************/
 
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using IBApi;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
@@ -37,17 +38,30 @@ public interface IIbClient : INotifyPropertyChanged
     /// </summary>
     int TimeoutMilliseconds { get; }
 
-    /// <summary>
-    /// Gets a value indicating whether is the client connected to tws
-    /// </summary>
-    bool Connected { get; }
-
+   
     /**
          * @brief returns the Host's version. Some of the API functionality might not be available in older Hosts and therefore it is essential to keep the TWS/Gateway as up to date as possible.
          */
     public int ServerVersion { get; }
 
     public string ServerTime { get; }
+
+    #region Account
+    IReadOnlyList<string> Accounts { get; }
+
+    
+
+    #endregion
+
+    #region Login
+
+    
+
+    /// <summary>
+    /// Gets a value indicating whether is the client connected to tws
+    /// </summary>
+    bool Connected { get; }
+
 
     /// <summary>
     /// connect to tws
@@ -61,9 +75,9 @@ public interface IIbClient : INotifyPropertyChanged
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task DisconnectAsync();
 
-    #region Contract
+    #endregion
 
-    
+    #region Contract
 
     /// <summary>
     /// Gets a contract by request.
@@ -72,5 +86,5 @@ public interface IIbClient : INotifyPropertyChanged
     /// <returns>The details of the contract</returns>
     Task<List<ContractDetails>> GetContractAsync(Contract contract);
 
-	    #endregion
+    #endregion
 }

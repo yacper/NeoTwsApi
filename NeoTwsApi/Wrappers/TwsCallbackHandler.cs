@@ -1,5 +1,7 @@
 ﻿// Licensed under the Apache License, Version 2.0.
 
+using MoreLinq;
+
 namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
 {
     using System;
@@ -12,6 +14,8 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
     /// </summary>
     public class TwsCallbackHandler : EWrapper 
     {
+        public IList<string> Accounts { get; }  = new List<string>();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="TwsCallbackHandler"/> class.
         /// </summary>
@@ -521,8 +525,11 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
         }
 
         /// <inheritdoc/>
+        // 登录的时候会被自动调用，列出连接所有的Account
         public void managedAccounts(string accountsList)
         {
+            accountsList.Split(',').ForEach(p=>Accounts.Add(p));
+
         }
 
         /// <inheritdoc/>

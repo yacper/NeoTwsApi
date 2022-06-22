@@ -57,7 +57,7 @@ public class Sample
     /*****************************************************************/
     private static void testIBMethods(EClientSocket client, int nextValidId)
     {
-        reqContractDetails(client, nextValidId);
+       // reqContractDetails(client, nextValidId);
 
         /**************************************************************/
         /*** Options operations                                     ***/
@@ -208,7 +208,7 @@ public class Sample
         /***********************/
         /*** WSHE Calendar API samples ***/
         /***********************/
-        wshCalendarOperations(client);
+        //wshCalendarOperations(client);
 
         Thread.Sleep(3000);
         Console.WriteLine("Done");
