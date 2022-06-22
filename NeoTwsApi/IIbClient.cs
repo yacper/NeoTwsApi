@@ -9,6 +9,7 @@
 
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using AutoFinance.Broker.InteractiveBrokers.Constants;
 using IBApi;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using NLog;
@@ -93,4 +94,17 @@ public interface IIbClient : INotifyPropertyChanged
     Task<List<ContractDescription>> ReqMatchingSymbolsAsync(string pattern);
 
     #endregion
+
+
+    #region HistoricalData
+
+    //Task<List<Bar>> ReqHistoricalDataAsync(Contract contract,
+    //    DateTime beginDateTime,
+    //    DateTime endDateTime,
+    //    TwsBarSizeSetting barSizeSetting,
+    //    TwsHistoricalDataRequestType whatToShow,
+    //    bool useRth = true);
+
+    #endregion
+
 }

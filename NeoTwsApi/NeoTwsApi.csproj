@@ -19,4 +19,8 @@
     <ProjectReference Include="..\TWS API\source\CSharpClient\client\CSharpAPI.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Enums\" />
+  </ItemGroup>
+
 </Project>
