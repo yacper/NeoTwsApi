@@ -123,6 +123,13 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
             this.EClientSocket.cancelHistoricalData(requestId);
         }
 
+
+
+        public void ReqTickByTickData(int requestId, Contract contract, string tickType, int numberOfTicks, bool ignoreSize)
+        {
+            this.EClientSocket.reqTickByTickData(requestId, contract, tickType, numberOfTicks, ignoreSize);
+        }
+
         /// <summary>
         /// Request realtime data from TWS
         /// </summary>

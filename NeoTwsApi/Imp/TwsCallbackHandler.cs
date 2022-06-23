@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using MoreLinq;
+using NeoTwsApi;
 using NeoTwsApi.EventArgs;
 using NeoTwsApi.Helpers;
 
@@ -19,11 +20,13 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
     {
         public IList<string> Accounts { get; }  = new List<string>();
 
+        protected IbClient _IbClient;
         /// <summary>
         /// Initializes a new instance of the <see cref="TwsCallbackHandler"/> class.
         /// </summary>
-        public TwsCallbackHandler()
+        public TwsCallbackHandler(IbClient client)
         {
+            _IbClient = client;
         }
 
         /// <summary>
@@ -712,16 +715,41 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
             SymbolSamplesEvent?.Invoke(this, new TwsEventArs<ContractDescription[]>(reqId, contractDescriptions));
         }
 
+
+        public event EventHandler<TwsEventArs<Contract, HistoricalTick>> TickByTickMidPointEvent;
+        public event EventHandler<TwsEventArs<Contract, HistoricalTickLast>> TickByTickLastEvent;
+        public event EventHandler<TwsEventArs<Contract, HistoricalTickLast>> TickByTickAllLastEvent;
+        public event EventHandler<TwsEventArs<Contract, HistoricalTickBidAsk>> TickByTickBidAskEvent;
+
+
         /// <inheritdoc/>
         public void tickByTickAllLast(int reqId, int tickType, long time, double price, decimal size, TickAttribLast tickAttriblast, string exchange, string specialConditions)
         {
             throw new NotImplementedException();
+
+
         }
+
 
         /// <inheritdoc/>
         public void tickByTickBidAsk(int reqId, long time, double bidPrice, double askPrice, decimal bidSize, decimal askSize, TickAttribBidAsk tickAttribBidAsk)
         {
-            throw new NotImplementedException();
+            TickByTickBidAskEvent?.Invoke(this,
+                                          new(reqId,
+                                              _IbClient.ReqContracts[reqId],
+                                              new HistoricalTickBidAsk(
+                                                                       time, tickAttribBidAsk,
+                                                                       bidPrice,
+                                                                       askPrice, bidSize,
+                                                                       askSize
+                                                                      )));
+
+            //Console.WriteLine(
+            //                  "Tick-By-Tick. Request Id: {0}, TickType: BidAsk, Time: {1}, BidPrice: {2}, AskPrice: {3}, BidSize: {4}, AskSize: {5}, BidPastLow: {6}, AskPastHigh: {7}",
+            //                  reqId, Util.UnixSecondsToString(time, "yyyyMMdd-HH:mm:ss zzz"), Util.DoubleMaxString(bidPrice),
+            //                  Util.DoubleMaxString(askPrice), Util.DecimalMaxString(bidSize), Util.DecimalMaxString(askSize),
+            //                  tickAttribBidAsk.BidPastLow, tickAttribBidAsk.AskPastHigh);
+
         }
 
         /// <inheritdoc/>

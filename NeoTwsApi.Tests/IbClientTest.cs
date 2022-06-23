@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoFinance.Broker.InteractiveBrokers.Exceptions;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using IBApi;
@@ -98,5 +99,52 @@ public class Tests
     }
 
 #endregion
+
+
+#region Streaming Data
+    [Test]
+    public async Task SubTickByTickData_Test0()
+    {
+        Contract contract = new Contract();
+        contract.Symbol   = "EUR2";         // bad contract
+        contract.SecType  = "CASH";
+        contract.Currency = "USD";
+        contract.Exchange = "IDEALPRO";
+
+        client.TickByTickBidAskEvent += (s, e) =>
+        {
+            Debug.WriteLine(e.Arg2.Dump());
+        };
+
+
+        var ret = () => client.SubTickByTickData(contract, ETickByTickDataType.BidAsk).ConfigureAwait(false).GetAwaiter().GetResult();
+        ret.Should().Throw<TwsException>();
+    }
+
+
+    [Test]
+    public async Task SubTickByTickData_Test1()
+    {
+        Contract contract = new Contract();
+        contract.Symbol   = "EUR";
+        contract.SecType  = "CASH";
+        contract.Currency = "USD";
+        contract.Exchange = "IDEALPRO";
+
+        client.TickByTickBidAskEvent += (s, e) =>
+        {
+
+            Debug.WriteLine(e.Arg2.Dump());
+
+        };
+
+        await client.SubTickByTickData(contract,  ETickByTickDataType.BidAsk);
+
+
+        await Task.Delay(5000);
+    }
+
+#endregion
+
 }
 }

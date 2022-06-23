@@ -8,6 +8,7 @@
 *********************************************************************/
 
 using System.Collections.ObjectModel;
+using AutoFinance.Broker.InteractiveBrokers.Constants;
 using AutoFinance.Broker.InteractiveBrokers.Controllers;
 using AutoFinance.Broker.InteractiveBrokers.Wrappers;
 using IBApi;
@@ -54,10 +55,34 @@ public class IbClient : ObservableObject, IIbClient
         ClientId = clientId;
         Logger   = logger;
 
+        twsCallbackHandler = new TwsCallbackHandler(this);
         _EClientSocket = new EClientSocket(twsCallbackHandler, signal);
+        twsCallbackHandler.TickByTickBidAskEvent += TwsCallbackHandler_TickByTickBidAskEvent;
+        twsCallbackHandler.TickByTickMidPointEvent += TwsCallbackHandler_TickByTickMidPointEvent;
+        twsCallbackHandler.TickByTickLastEvent += TwsCallbackHandler_TickByTickLastEvent;
+        twsCallbackHandler.TickByTickAllLastEvent += TwsCallbackHandlerTickByTickAllLastEvent;
         clientSocket   = new TwsClientSocket(_EClientSocket);
     }
 
+    private void TwsCallbackHandlerTickByTickAllLastEvent(object? sender, TwsEventArs<Contract, HistoricalTickLast> e)
+    {
+        TickByTickAllLastEvent?.Invoke(this, e);
+    }
+
+    private void TwsCallbackHandler_TickByTickLastEvent(object? sender, TwsEventArs<Contract, HistoricalTickLast> e)
+    {
+        TickByTickLastEvent?.Invoke(this, e);
+    }
+
+    private void TwsCallbackHandler_TickByTickMidPointEvent(object? sender, TwsEventArs<Contract, HistoricalTick> e)
+    {
+        TickByTickMidPointEvent?.Invoke(this, e);
+    }
+
+    private void TwsCallbackHandler_TickByTickBidAskEvent(object? sender, TwsEventArs<Contract, HistoricalTickBidAsk> e)
+    {
+        TickByTickBidAskEvent?.Invoke(this, e);
+    }
 
     public async Task<bool> ConnectedAsync()
     {
@@ -364,14 +389,254 @@ public class IbClient : ObservableObject, IIbClient
 #endregion
 
 
+#region Orders
+
+    
+
+ ///// <summary>
+ //       /// Places an order and returns whether the order placement was successful or not.
+ //       /// </summary>
+ //       /// <param name="orderId">The order Id</param>
+ //       /// <param name="contract">The contract to trade</param>
+ //       /// <param name="order">The order</param>
+ //       /// <param name="cancellationToken">The cancellation token used to cancel the request</param>
+ //       /// <returns>True if the order was acknowledged, false otherwise</returns>
+ //       public Task<bool> PlaceOrderAsync(int orderId, Contract contract, Order order)
+ //       {
+ //           var taskSource = new TaskCompletionSource<bool>();
+
+ //           EventHandler<OpenOrderEventArgs> openOrderEventCallback = null;
+
+ //           openOrderEventCallback = (sender, eventArgs) =>
+ //           {
+ //               if (eventArgs.OrderId == orderId)
+ //               {
+ //                   if (eventArgs.OrderState.Status == TwsOrderStatus.Submitted ||
+ //                       eventArgs.OrderState.Status == TwsOrderStatus.Presubmitted)
+ //                   {
+ //                       // Unregister the callbacks
+ //                       this.twsCallbackHandler.OpenOrderEvent -= openOrderEventCallback;
+
+ //                       taskSource.TrySetResult(true);
+ //                   }
+ //               }
+ //           };
+
+ //           EventHandler<ErrorEventArgs> orderErrorEventCallback = null;
+ //           orderErrorEventCallback = (sender, eventArgs) =>
+ //           {
+ //               if (orderId == eventArgs.Id)
+ //               {
+ //                   if (
+ //                       eventArgs.ErrorCode == TwsErrorCodes.InvalidOrderType ||
+ //                       eventArgs.ErrorCode == TwsErrorCodes.AmbiguousContract ||
+ //                       eventArgs.ErrorCode == TwsErrorCodes.OrderRejected)
+ //                   {
+ //                       // Unregister the callbacks
+ //                       this.twsCallbackHandler.OpenOrderEvent -= openOrderEventCallback;
+ //                       this.twsCallbackHandler.ErrorEvent -= orderErrorEventCallback;
+ //                       taskSource.TrySetException(new TwsException(eventArgs));
+ //                   }
+ //               }
+ //           };
+
+ //           this.twsCallbackHandler.ErrorEvent += orderErrorEventCallback;
+ //           this.twsCallbackHandler.OpenOrderEvent += openOrderEventCallback;
+
+
+ //           CancellationTokenSource cancellationToken = new CancellationTokenSource(TimeoutMilliseconds);
+ //           cancellationToken.Token.Register(() =>
+ //           {
+ //               taskSource.TrySetCanceled();
+ //           });
+
+ //           this.clientSocket.PlaceOrder(orderId, contract, order);
+ //           return taskSource.Task;
+ //       }
+
+#endregion
+
+
+    #region LiveData ref:https: //interactivebrokers.github.io/tws-api/market_data.html 
+
+    /**
+          * @brief Requests tick-by-tick data.\n
+          * @param contract - the contract for which tick-by-tick data is requested.\n
+          * @param tickType - tick-by-tick data type: "Last", "AllLast", "BidAsk" or "MidPoint".\n
+          * @sa EWrapper::tickByTickAllLast, EWrapper::tickByTickBidAsk, EWrapper::tickByTickMidPoint, Contract
+
+            Tick-by-tick data for options is currently only available historically and not in real time.
+            Tick-by-tick data for indices is only provided for indices which are on CME.
+            Tick-by-tick data is not available for combos.
+            No more than 1 tick-by-tick request can be made for the same instrument within 15 seconds.
+          */
+    public Task SubTickByTickData(Contract contract, ETickByTickDataType tickType)
+    {
+        int            requestId    = this.twsRequestIdGenerator.GetNextRequestId();
+        ReqContracts[requestId] = contract;
+
+        var taskSource = new TaskCompletionSource();
+
+        EventHandler<TwsEventArs<Contract, HistoricalTick>> tickByTickMidPointEventHandler = null;
+        EventHandler<TwsEventArs<Contract, HistoricalTickLast>> tickByTickLastEventHandler = null;
+        EventHandler<TwsEventArs<Contract, HistoricalTickLast>> tickByTickAllLastEventHandler = null;
+        EventHandler<TwsEventArs<Contract, HistoricalTickBidAsk>> tickByTickBidAskEventHandler = null;
+
+        EventHandler<ErrorEventArgs>                  errorEventHandler             = null;
+
+        void clearHandler(ETickByTickDataType type)
+        {
+            switch (type)
+            {
+                case ETickByTickDataType.MidPoint:
+                    this.twsCallbackHandler.TickByTickMidPointEvent -= tickByTickMidPointEventHandler;
+                    break;
+                case
+                    ETickByTickDataType.Last:
+                    this.twsCallbackHandler.TickByTickLastEvent -= tickByTickLastEventHandler;
+                    break;
+                case
+                    ETickByTickDataType.AllLast:
+                    this.twsCallbackHandler.TickByTickAllLastEvent -= tickByTickAllLastEventHandler;
+                    break;
+                case
+                    ETickByTickDataType.BidAsk:
+                    this.twsCallbackHandler.TickByTickBidAskEvent -= tickByTickBidAskEventHandler;
+                    break;
+            }
+            this.twsCallbackHandler.ErrorEvent -= errorEventHandler;
+        }
+
+        tickByTickMidPointEventHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId)
+            {
+                clearHandler(ETickByTickDataType.MidPoint);
+                taskSource.TrySetResult();
+            }
+        };
+        tickByTickLastEventHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId)
+            {
+                clearHandler(ETickByTickDataType.Last);
+                taskSource.TrySetResult();
+            }
+        };
+        tickByTickAllLastEventHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId)
+            {
+                clearHandler(ETickByTickDataType.AllLast);
+                taskSource.TrySetResult();
+            }
+        };
+        tickByTickBidAskEventHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId)
+            {
+                clearHandler(ETickByTickDataType.BidAsk);
+                taskSource.TrySetResult();
+            }
+        };
+
+        errorEventHandler = (sender, args) =>
+        {
+            if (args.Id == requestId)
+            {
+                //todo:warn
+                //this.CancelHistoricalData(requestId);
+
+                clearHandler(tickType);
+                taskSource.TrySetException(new TwsException(args));
+            }
+        };
+
+      
+        switch (tickType)
+        {
+            case ETickByTickDataType.MidPoint:
+                this.twsCallbackHandler.TickByTickMidPointEvent += tickByTickMidPointEventHandler;
+                break;
+             case ETickByTickDataType.Last:
+                this.twsCallbackHandler.TickByTickLastEvent += tickByTickLastEventHandler;
+                break;
+            case ETickByTickDataType.AllLast:
+                this.twsCallbackHandler.TickByTickAllLastEvent += tickByTickAllLastEventHandler;
+                break;
+            case ETickByTickDataType.BidAsk:
+                this.twsCallbackHandler.TickByTickBidAskEvent += tickByTickBidAskEventHandler;
+                break;
+        }
+
+        this.twsCallbackHandler.ErrorEvent += errorEventHandler;
+
+
+    // Set the operation to cancel after 1 minute
+        CancellationTokenSource tokenSource = new CancellationTokenSource(60 * 1000);
+        tokenSource.Token.Register(() =>
+        {
+            //todo:warn
+            //this.CancelHistoricalData(requestId);
+
+            clearHandler(tickType);
+
+            taskSource.TrySetCanceled();
+        });
+
+        this.clientSocket.ReqTickByTickData(requestId, contract, tickType.ToString(), 0, false);
+
+        return taskSource.Task;
+
+    }
+
+    public Task CancelTickByTickData(Contract contract, ETickByTickDataType tickType)
+    {
+        throw new NotImplementedException();
+
+    }
+
+    public ReadOnlyObservableCollection<Tuple<Contract, ETickByTickDataType>> TickByTickSubscriptions { get => new ReadOnlyObservableCollection<Tuple<Contract, ETickByTickDataType>>(_TickByTickSubscriptions); } 
+
+    public event EventHandler<TwsEventArs<Contract, HistoricalTick>> TickByTickMidPointEvent;
+    public event EventHandler<TwsEventArs<Contract, HistoricalTickLast>> TickByTickLastEvent;
+    public event EventHandler<TwsEventArs<Contract, HistoricalTickLast>> TickByTickAllLastEvent;
+    public event EventHandler<TwsEventArs<Contract, HistoricalTickBidAsk>> TickByTickBidAskEvent;
+
+
+
+
+    ///// <summary>
+    ///// Request market data from TWS.
+    ///// </summary>
+    ///// <param name="contract">The contract type</param>
+    ///// <param name="genericTickList">The generic tick list</param>
+    ///// <param name="snapshot">The snapshot flag</param>
+    ///// <param name="regulatorySnapshot">The regulatory snapshot flag</param>
+    ///// <param name="mktDataOptions">The market data options</param>
+    ///// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    //public Task<TickSnapshotEndEventArgs> RequestMarketDataAsync(
+    //    Contract contract,
+    //    string genericTickList,
+    //    bool snapshot,
+    //    bool regulatorySnapshot,
+    //    List<TagValue> mktDataOptions)
+
+
+
+#endregion
+
+
+
+        public Dictionary<int, Contract> ReqContracts = new Dictionary<int, Contract>();
+
 #region Fields
 
     private bool _Connected;
 
-    private TwsCallbackHandler twsCallbackHandler = new TwsCallbackHandler();
-
-    private TwsClientSocket clientSocket   = null;
-    private EClientSocket   _EClientSocket = null;
+    private TwsCallbackHandler twsCallbackHandler = null;
+    private TwsClientSocket    clientSocket       = null;
+    private EClientSocket      _EClientSocket     = null;
 
     private EReaderSignal signal = new EReaderMonitorSignal();
 
@@ -383,6 +648,9 @@ public class IbClient : ObservableObject, IIbClient
     private Thread readerThread;
 
     protected ObservableCollection<string> _Accounts = new ObservableCollection<string>();
+
+
+    protected ObservableCollection<Tuple<Contract, ETickByTickDataType>> _TickByTickSubscriptions = new ObservableCollection<Tuple<Contract, ETickByTickDataType>>();
 
 #endregion
 }

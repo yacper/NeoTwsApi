@@ -34,10 +34,10 @@ public class TwsEventArs<T>
 
 public class TwsEventArs<T, T2>
 {
-    public TwsEventArs(int requestId, T arg, T2 arg2)
+    public TwsEventArs(int requestId, T arg1, T2 arg2)
     {
         this.RequestId = requestId;
-        Arg            = arg;
+        Arg1            = arg1;
         Arg2           = arg2;
     }
 
@@ -47,6 +47,27 @@ public class TwsEventArs<T, T2>
     public int RequestId { get; private set; }
 
 
-    public T  Arg  { get; protected set; }
+    public T  Arg1  { get; protected set; }
     public T2 Arg2 { get; protected set; }
+}
+
+public class TwsEventArs<T, T2, T3>
+{
+    public TwsEventArs(int requestId, T arg1, T2 arg2, T3 arg3)
+    {
+        this.RequestId = requestId;
+        Arg1            = arg1;
+        Arg2           = arg2;
+        Arg3           = arg3;
+    }
+
+    /// <summary>
+    /// Gets the request Id
+    /// </summary>
+    public int RequestId { get; private set; }
+
+
+    public T  Arg1  { get; protected set; }
+    public T2 Arg2 { get; protected set; }
+    public T3 Arg3 { get; protected set; }
 }
