@@ -3,6 +3,7 @@
 using System.Diagnostics;
 using MoreLinq;
 using NeoTwsApi.EventArgs;
+using NeoTwsApi.Helpers;
 
 namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
 {
@@ -471,8 +472,10 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
 
         public void historicalDataEnd(int reqId, string start, string end)
         {
-            DateTime s = DateTime.Parse(start);
-            DateTime e = DateTime.Parse(end);
+            //20220317  00:00:00
+
+            DateTime s = start.ToTwsDateTime();
+            DateTime e = end.ToTwsDateTime();
             this.HistoricalDataEndEvent?.Invoke(this, new TwsEventArs<DateTime, DateTime>(reqId, s, e));
         }
 

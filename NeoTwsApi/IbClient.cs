@@ -275,8 +275,14 @@ public class IbClient : ObservableObject, IIbClient
 
 #region HistoricalData
 
-    public Task<List<Bar>> ReqHistoricalDataAsync(Contract      contract, DateTime  begin,    DateTime end,
-                                                  ETimeFrameTws tf,       EDataType dataType, bool     useRth = true)
+    public Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime begin, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
+    {
+        // covert [begin. end] to duration
+        throw new NotImplementedException();
+
+    }
+
+    public Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
     {
         int            requestId    = this.twsRequestIdGenerator.GetNextRequestId();
         List<TagValue> chartOptions = null;
@@ -344,8 +350,8 @@ public class IbClient : ObservableObject, IIbClient
         this.clientSocket.ReqHistoricalData(
                                             requestId,
                                             contract,
-                                            end.ToString("yyyyMMdd HH:mm:ss"),
-                                            TwsDuration.ToTwsDuration(begin, end, tf),
+                                            end.ToTwsDateTimeString(),
+                                             duration.ToString(),
                                             tf.ToTwsString(),
                                             dataType.ToString(),
                                             useRth ? 1 : 0,

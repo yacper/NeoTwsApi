@@ -13,6 +13,7 @@ using AutoFinance.Broker.InteractiveBrokers.Constants;
 using IBApi;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using NeoTwsApi.Enums;
+using NeoTwsApi.Helpers;
 using NLog;
 
 namespace NeoTwsApi;
@@ -99,12 +100,8 @@ public interface IIbClient : INotifyPropertyChanged
 
     #region HistoricalData
 
-    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract,
-        DateTime begin,
-        DateTime end,
-        ETimeFrameTws tf,
-        EDataType dataType,
-        bool useRth = true);
+    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true);
+    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime begin, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true);
 
     #endregion
 

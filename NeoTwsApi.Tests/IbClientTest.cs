@@ -7,6 +7,7 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using IBApi;
 using NeoTwsApi.Enums;
+using NeoTwsApi.Helpers;
 using NUnit.Framework;
 
 namespace NeoTwsApi.Tests
@@ -76,7 +77,7 @@ public class Tests
 #region HistoricalData
 
     [Test]
-    public async Task ReqHistoricalDataAsync_Test()
+    public async Task ReqHistoricalDataAsync_Test1()
     {
         Contract contract = new Contract();
         contract.Symbol   = "EUR";
@@ -84,11 +85,11 @@ public class Tests
         contract.Currency = "USD";
         contract.Exchange = "IDEALPRO";
 
-        DateTime begin = 13.March(2022).At(00, 00);
-        DateTime end = 17.March(2022).At(23, 59);
+        DurationTws duration = new DurationTws(3, EDurationStep.D);
+        DateTime    end      = 17.March(2022).At(23, 59);
 
-        var ret = await client.ReqHistoricalDataAsync(contract, begin, end,
-                                                      ETimeFrameTws.D1, EDataType.MIDPOINT);
+        var ret = await client.ReqHistoricalDataAsync(contract,  end, duration,
+                                                      ETimeFrameTws.H1, EDataType.MIDPOINT);
         Debug.WriteLine(ret.Dump());
 
         // Assert
