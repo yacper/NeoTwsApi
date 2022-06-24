@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -117,13 +118,22 @@ public class Tests
         };
 
 
-        var ret = () => client.SubTickByTickData(contract, ETickByTickDataType.BidAsk).ConfigureAwait(false).GetAwaiter().GetResult();
-        ret.Should().Throw<TwsException>();
+        //try
+        //{
+        //    await client.SubTickByTickData(contract, ETickByTickDataType.BidAsk);
+        //}
+        //catch (Exception e)
+        //{
+        //    e.Dump();
+        //}
+
+        var a = async () => { await client.SubTickByTickData(contract, ETickByTickDataType.BidAsk); };
+        await a.Should().ThrowAsync<TwsException>();
     }
 
 
     [Test]
-    public async Task SubTickByTickData_Test1()
+    public async Task SubTickByTickData_BidAsk()
     {
         Contract contract = new Contract();
         contract.Symbol   = "EUR";
@@ -131,17 +141,46 @@ public class Tests
         contract.Currency = "USD";
         contract.Exchange = "IDEALPRO";
 
+        var historicalTickBidAsks = new List<HistoricalTickBidAsk>();
         client.TickByTickBidAskEvent += (s, e) =>
         {
-
+            historicalTickBidAsks.Add(e.Arg2);
             Debug.WriteLine(e.Arg2.Dump());
-
         };
 
         await client.SubTickByTickData(contract,  ETickByTickDataType.BidAsk);
 
+        await client.SubTickByTickData(contract,  ETickByTickDataType.BidAsk);
 
+        client.TickByTickSubscriptions.Should().NotBeEmpty();
+        historicalTickBidAsks.Should().NotBeEmpty();
+
+
+            // cancel
+        client.UnsubTickByTickData(contract, ETickByTickDataType.BidAsk);
+        client.TickByTickSubscriptions.Should().BeEmpty();
         await Task.Delay(5000);
+    }
+
+    [Test]
+    public async Task SubTickByTickData_Last()
+    {
+        Contract contract = new Contract();
+        contract.Symbol   = "EUR";
+        contract.SecType  = "CASH";
+        contract.Currency = "USD";
+        contract.Exchange = "IDEALPRO";
+
+        var historicalTickBidAsks = new List<HistoricalTickLast>();
+        client.TickByTickLastEvent += (s, e) =>
+        {
+            historicalTickBidAsks.Add(e.Arg2);
+            Debug.WriteLine(e.Arg2.Dump());
+        };
+
+        await client.SubTickByTickData(contract,  ETickByTickDataType.Last);
+
+        historicalTickBidAsks.Should().NotBeEmpty();
     }
 
 #endregion

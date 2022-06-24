@@ -119,7 +119,7 @@ public interface IIbClient : INotifyPropertyChanged
           */
     Task SubTickByTickData(Contract contract, ETickByTickDataType tickType);
 
-    Task CancelTickByTickData(Contract contract, ETickByTickDataType tickType);
+    void UnsubTickByTickData(Contract contract, ETickByTickDataType tickType);
 
     ReadOnlyObservableCollection<Tuple<Contract, ETickByTickDataType>> TickByTickSubscriptions { get; } 
 

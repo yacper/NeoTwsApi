@@ -736,7 +736,7 @@ namespace AutoFinance.Broker.InteractiveBrokers.Wrappers
         {
             TickByTickBidAskEvent?.Invoke(this,
                                           new(reqId,
-                                              _IbClient.ReqContracts[reqId],
+                                              _IbClient.ReqContracts[reqId].Item1,
                                               new HistoricalTickBidAsk(
                                                                        time, tickAttribBidAsk,
                                                                        bidPrice,
