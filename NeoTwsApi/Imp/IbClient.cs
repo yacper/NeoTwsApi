@@ -115,7 +115,7 @@ public class IbClient : ObservableObject, IIbClient
                                                    reader.processMsgs();
                                                }
                                            })
-                                { IsBackground = true };
+                { IsBackground = true };
             this.readerThread.Start();
 
             //todo: need a better way

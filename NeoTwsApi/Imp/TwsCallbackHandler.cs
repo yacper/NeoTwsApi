@@ -633,7 +633,20 @@ public class TwsCallbackHandler : EWrapper
     public void tickByTickAllLast(int    reqId, int tickType, long time, double price, decimal size, TickAttribLast tickAttriblast, string exchange,
                                   string specialConditions)
     {
-        throw new NotImplementedException();
+
+        var tick = new HistoricalTickLast(time, tickAttriblast, price, size, exchange, specialConditions);
+        if (tickType == 1)
+            TickByTickLastEvent?.Invoke(this, new(reqId, _IbClient.ReqContracts[reqId].Item1, tick));
+        else
+            TickByTickAllLastEvent?.Invoke(this, new(reqId, _IbClient.ReqContracts[reqId].Item1, tick));
+
+
+        //Console.WriteLine(
+        //    "Tick-By-Tick. Request Id: {0}, TickType: {1}, Time: {2}, Price: {3}, Size: {4}, Exchange: {5}, Special Conditions: {6}, PastLimit: {7}, Unreported: {8}",
+        //    reqId, tickType == 1 ? "Last" : "AllLast", Util.UnixSecondsToString(time, "yyyyMMdd-HH:mm:ss zzz"),
+        //    Util.DoubleMaxString(price), Util.DecimalMaxString(size), exchange, specialConditions,
+        //    tickAttriblast.PastLimit, tickAttriblast.Unreported);
+
     }
 
 
@@ -658,7 +671,20 @@ public class TwsCallbackHandler : EWrapper
     }
 
     /// <inheritdoc/>
-    public void tickByTickMidPoint(int reqId, long time, double midPoint) { throw new NotImplementedException(); }
+    public void tickByTickMidPoint(int reqId, long time, double midPoint)
+    {
+        TickByTickMidPointEvent?.Invoke(this,
+                                      new(reqId,
+                                          _IbClient.ReqContracts[reqId].Item1,
+                                          new HistoricalTick(
+                                                             time, midPoint, 
+                                                             decimal.MaxValue  // decimal.MaxValue indicate no value
+                                                            )));
+
+
+          //Console.WriteLine("Tick-By-Tick. Request Id: {0}, TickType: MidPoint, Time: {1}, MidPoint: {2}",
+          //  reqId, Util.UnixSecondsToString(time, "yyyyMMdd-HH:mm:ss zzz"), Util.DoubleMaxString(midPoint));
+    }
 
     /// <inheritdoc/>
     public void tickEFP(int    tickerId,       int    tickType, double basisPoints, string formattedBasisPoints, double impliedFuture, int holdDays, string futureLastTradeDate,
