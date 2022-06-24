@@ -9,19 +9,19 @@
 
 using System.Collections.ObjectModel;
 using AutoFinance.Broker.InteractiveBrokers.Constants;
-using AutoFinance.Broker.InteractiveBrokers.Controllers;
 using AutoFinance.Broker.InteractiveBrokers.Wrappers;
 using IBApi;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using NLog;
 using AutoFinance.Broker.InteractiveBrokers.EventArgs;
-using AutoFinance.Broker.InteractiveBrokers.Exceptions;
 using Microsoft.VisualBasic.CompilerServices;
-using ErrorEventArgs = AutoFinance.Broker.InteractiveBrokers.EventArgs.ErrorEventArgs;
 using MoreLinq;
 using NeoTwsApi.Enums;
 using NeoTwsApi.EventArgs;
+using NeoTwsApi.Exceptions;
 using NeoTwsApi.Helpers;
+using NeoTwsApi.Imp;
+using ErrorEventArgs = NeoTwsApi.EventArgs.ErrorEventArgs;
 
 namespace NeoTwsApi;
 
@@ -589,10 +589,7 @@ public class IbClient : ObservableObject, IIbClient
         _TickByTickSubscriptionReqs.Remove(pair.Key);
     }
 
-    public ReadOnlyObservableCollection<Tuple<Contract, ETickByTickDataType>> TickByTickSubscriptions
-    {
-        get => new ReadOnlyObservableCollection<Tuple<Contract, ETickByTickDataType>>(_TickByTickSubscriptions);
-    }
+    public ReadOnlyObservableCollection<Tuple<Contract, ETickByTickDataType>> TickByTickSubscriptions { get => new(_TickByTickSubscriptions); }
 
     public event EventHandler<TwsEventArs<Contract, HistoricalTick>>       TickByTickMidPointEvent;
     public event EventHandler<TwsEventArs<Contract, HistoricalTickLast>>   TickByTickLastEvent;

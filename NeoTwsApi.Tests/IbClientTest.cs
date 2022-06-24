@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoFinance.Broker.InteractiveBrokers.Exceptions;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using IBApi;
 using NeoTwsApi.Enums;
+using NeoTwsApi.Exceptions;
 using NeoTwsApi.Helpers;
 using NUnit.Framework;
 

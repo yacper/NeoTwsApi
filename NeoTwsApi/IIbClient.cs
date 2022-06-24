@@ -101,10 +101,10 @@ public interface IIbClient : INotifyPropertyChanged
     Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime begin, DateTime    end,      ETimeFrameTws tf, EDataType dataType, bool useRth = true);
     Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end,   DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true);
 
-    #endregion
+#endregion
 
 
-    #region LiveData ref:https: //interactivebrokers.github.io/tws-api/market_data.html 
+#region Stream data ref:https: //interactivebrokers.github.io/tws-api/market_data.html 
 
     /**
           * @brief Requests tick-by-tick data.\n
@@ -121,14 +121,12 @@ public interface IIbClient : INotifyPropertyChanged
 
     void UnsubTickByTickData(Contract contract, ETickByTickDataType tickType);
 
-    ReadOnlyObservableCollection<Tuple<Contract, ETickByTickDataType>> TickByTickSubscriptions { get; } 
+    ReadOnlyObservableCollection<Tuple<Contract, ETickByTickDataType>> TickByTickSubscriptions { get; }
 
-    event EventHandler<TwsEventArs<Contract, HistoricalTick>> TickByTickMidPointEvent;
-    event EventHandler<TwsEventArs<Contract, HistoricalTickLast>> TickByTickLastEvent;
-    event EventHandler<TwsEventArs<Contract, HistoricalTickLast>> TickByTickAllLastEvent;
+    event EventHandler<TwsEventArs<Contract, HistoricalTick>>       TickByTickMidPointEvent;
+    event EventHandler<TwsEventArs<Contract, HistoricalTickLast>>   TickByTickLastEvent;
+    event EventHandler<TwsEventArs<Contract, HistoricalTickLast>>   TickByTickAllLastEvent;
     event EventHandler<TwsEventArs<Contract, HistoricalTickBidAsk>> TickByTickBidAskEvent;
-
-
 
 
     ///// <summary>
@@ -147,8 +145,6 @@ public interface IIbClient : INotifyPropertyChanged
     //    bool regulatorySnapshot,
     //    List<TagValue> mktDataOptions)
 
-
-
 #endregion
 
 #region Orders
@@ -161,8 +157,6 @@ public interface IIbClient : INotifyPropertyChanged
     ///// <param name="order">The order parameters</param>
     ///// <returns>True if acknowledged</returns>
     //Task<bool> PlaceOrderAsync(int orderId, Contract contract, Order order);
-
-
 
 #endregion
 }
