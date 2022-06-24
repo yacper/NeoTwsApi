@@ -120,14 +120,14 @@ public class Tests
 
         //try
         //{
-        //    await client.SubTickByTickData(contract, ETickByTickDataType.BidAsk);
+        //    await client.SubTickByTickDataAsync(contract, ETickByTickDataType.BidAsk);
         //}
         //catch (Exception e)
         //{
         //    e.Dump();
         //}
 
-        var a = async () => { await client.SubTickByTickData(contract, ETickByTickDataType.BidAsk); };
+        var a = async () => { await client.SubTickByTickDataAsync(contract, ETickByTickDataType.BidAsk); };
         await a.Should().ThrowAsync<TwsException>();
     }
 
@@ -148,9 +148,9 @@ public class Tests
             Debug.WriteLine(e.Arg2.Dump());
         };
 
-        await client.SubTickByTickData(contract,  ETickByTickDataType.BidAsk);
+        await client.SubTickByTickDataAsync(contract,  ETickByTickDataType.BidAsk);
 
-        await client.SubTickByTickData(contract,  ETickByTickDataType.BidAsk);
+        await client.SubTickByTickDataAsync(contract,  ETickByTickDataType.BidAsk);
 
         client.TickByTickSubscriptions.Should().NotBeEmpty();
         historicalTickBidAsks.Should().NotBeEmpty();
@@ -178,10 +178,41 @@ public class Tests
             Debug.WriteLine(e.Arg2.Dump());
         };
 
-        await client.SubTickByTickData(contract,  ETickByTickDataType.Last);
+        await client.SubTickByTickDataAsync(contract,  ETickByTickDataType.Last);
 
         historicalTickBidAsks.Should().NotBeEmpty();
     }
+
+
+    [Test]
+    public async Task SubRealtimeBarsAsync_Test()
+    {
+        Contract contract = new Contract();
+        contract.Symbol   = "EUR";
+        contract.SecType  = "CASH";
+        contract.Currency = "USD";
+        contract.Exchange = "IDEALPRO";
+
+        var bars = new List<Bar>();
+        client.RealtimeBarEvent += (s, e) =>
+        {
+            bars.Add(e.Arg2);
+            Debug.WriteLine(e.Arg2.Dump());
+        };
+
+        await client.SubRealtimeBarsAsync(contract, EDataType.MIDPOINT);
+        await client.SubRealtimeBarsAsync(contract, EDataType.MIDPOINT); // return immediately
+
+        client.RealtimeBarsSubscriptions.Should().NotBeEmpty();
+        bars.Should().NotBeEmpty();
+
+            // cancel
+        client.UnsubRealtimeBars(contract);
+        client.RealtimeBarsSubscriptions.Should().BeEmpty();
+        await Task.Delay(5000);
+    }
+
+
 
 #endregion
 

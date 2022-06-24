@@ -61,9 +61,12 @@ public class IbClient : ObservableObject, IIbClient
         twsCallbackHandler.TickByTickMidPointEvent += TwsCallbackHandler_TickByTickMidPointEvent;
         twsCallbackHandler.TickByTickLastEvent     += TwsCallbackHandler_TickByTickLastEvent;
         twsCallbackHandler.TickByTickAllLastEvent  += TwsCallbackHandlerTickByTickAllLastEvent;
+
+        twsCallbackHandler.RealtimeBarEvent += TwsCallbackHandler_RealtimeBarEvent;
         //clientSocket   = new TwsClientSocket(_EClientSocket);
         //clientSocket   = _EClientSocket;
     }
+
 
     private void TwsCallbackHandlerTickByTickAllLastEvent(object? sender, TwsEventArs<Contract, HistoricalTickLast> e) { TickByTickAllLastEvent?.Invoke(this, e); }
 
@@ -72,6 +75,8 @@ public class IbClient : ObservableObject, IIbClient
     private void TwsCallbackHandler_TickByTickMidPointEvent(object? sender, TwsEventArs<Contract, HistoricalTick> e) { TickByTickMidPointEvent?.Invoke(this, e); }
 
     private void TwsCallbackHandler_TickByTickBidAskEvent(object? sender, TwsEventArs<Contract, HistoricalTickBidAsk> e) { TickByTickBidAskEvent?.Invoke(this, e); }
+
+    private void TwsCallbackHandler_RealtimeBarEvent(object? sender, TwsEventArs<Contract, Bar> e) { RealtimeBarEvent?.Invoke(this, e); }
 
     public async Task<bool> ConnectedAsync()
     {
@@ -457,7 +462,7 @@ public class IbClient : ObservableObject, IIbClient
             Tick-by-tick data is not available for combos.
             No more than 1 tick-by-tick request can be made for the same instrument within 15 seconds.
           */
-    public Task SubTickByTickData(Contract contract, ETickByTickDataType tickType)
+    public Task SubTickByTickDataAsync(Contract contract, ETickByTickDataType tickType)
     {
         if (TickByTickSubscriptions.Any(p => p.Item1 == contract && p.Item2 == tickType))
             return Task.CompletedTask;
@@ -613,6 +618,83 @@ public class IbClient : ObservableObject, IIbClient
     //    bool regulatorySnapshot,
     //    List<TagValue> mktDataOptions)
 
+
+
+
+    public Task SubRealtimeBarsAsync(Contract contract, EDataType datType, bool useRTH = true)
+    {
+        if (RealtimeBarsSubscriptions.Any(p => p == contract))
+            return Task.CompletedTask;
+
+        int requestId = this.twsRequestIdGenerator.GetNextRequestId();
+        ReqContracts[requestId] = new(contract, null);
+
+        var taskSource = new TaskCompletionSource();
+
+        EventHandler<TwsEventArs<Contract, Bar>> realtimeBarEventHandler = null;
+        EventHandler<ErrorEventArgs>       errorEventHandler       = null;
+
+        realtimeBarEventHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId)
+            {
+                this.twsCallbackHandler.RealtimeBarEvent -= realtimeBarEventHandler;
+                this.twsCallbackHandler.ErrorEvent       -= errorEventHandler;
+
+                _RealtimeBarsSubscriptions.Add(contract);
+                _RealtimeBarsSubscriptionReqs[requestId] = contract;
+
+                taskSource.TrySetResult();
+            }
+        };
+
+        errorEventHandler = (sender, args) =>
+        {
+            if (args.Id == requestId)
+            {
+                //todo:?
+                //this.CancelRealtimeBars(requestId);
+
+                // The error is associated with this request
+                this.twsCallbackHandler.RealtimeBarEvent -= realtimeBarEventHandler;
+                this.twsCallbackHandler.ErrorEvent       -= errorEventHandler;
+                taskSource.TrySetException(new TwsException(args));
+            }
+        };
+
+        this.twsCallbackHandler.RealtimeBarEvent += realtimeBarEventHandler;
+        this.twsCallbackHandler.ErrorEvent       += errorEventHandler;
+
+        this.clientSocket.reqRealTimeBars(
+                                          requestId,
+                                          contract,
+                                          5,        // only function on 5
+                                          datType.ToString(),
+                                          useRTH,
+                                          null);
+
+        return taskSource.Task;
+
+    }
+
+    public void UnsubRealtimeBars(Contract contract)
+    {
+        var sub = RealtimeBarsSubscriptions.FirstOrDefault(p =>p==contract);
+        if (sub == null)
+            return;
+
+        var pair = _RealtimeBarsSubscriptionReqs.FirstOrDefault(p => p.Value == sub);
+
+        this.clientSocket.cancelRealTimeBars(pair.Key);
+
+        _RealtimeBarsSubscriptions.Remove(sub);
+        _RealtimeBarsSubscriptionReqs.Remove(pair.Key);
+    }
+
+    public ReadOnlyObservableCollection<Contract> RealtimeBarsSubscriptions { get => new(_RealtimeBarsSubscriptions); }
+
+    public event EventHandler<TwsEventArs<Contract, Bar>> RealtimeBarEvent;
+
 #endregion
 
 
@@ -642,6 +724,9 @@ public class IbClient : ObservableObject, IIbClient
 
     protected ObservableCollection<Tuple<Contract, ETickByTickDataType>> _TickByTickSubscriptions    = new ObservableCollection<Tuple<Contract, ETickByTickDataType>>();
     protected Dictionary<int, Tuple<Contract, ETickByTickDataType>>      _TickByTickSubscriptionReqs = new();
+
+    protected ObservableCollection<Contract> _RealtimeBarsSubscriptions    = new();
+    protected Dictionary<int, Contract>      _RealtimeBarsSubscriptionReqs = new();
 
 #endregion
 }

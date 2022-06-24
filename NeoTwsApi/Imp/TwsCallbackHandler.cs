@@ -101,7 +101,7 @@ public class TwsCallbackHandler : EWrapper
     /// <summary>
     /// The event that is fired when RealtimeBar is called by TWS
     /// </summary>
-    public event EventHandler<RealtimeBarEventArgs> RealtimeBarEvent;
+    public event EventHandler<TwsEventArs<Contract, Bar>> RealtimeBarEvent;
 
     /// <summary>
     /// The event that is fired when AccountUpdates is called by TWS
@@ -577,8 +577,17 @@ public class TwsCallbackHandler : EWrapper
     public void realtimeBar(int     reqId, long time, double open, double high, double low, double close, decimal volume,
                             decimal WAP,   int  count)
     {
-        var eventArgs = new RealtimeBarEventArgs(reqId, time, open, high, low, close, volume, WAP, count);
-        this.RealtimeBarEvent?.Invoke(this, eventArgs);
+        //var eventArgs = new RealtimeBarEventArgs(reqId, time, open, high, low, close, volume, WAP, count);
+        this.RealtimeBarEvent?.Invoke(this, new(reqId, _IbClient.ReqContracts[reqId].Item1,
+                                                new Bar(Util.LongMaxString(time), open, high, low, close, volume, count, WAP)
+                                               ));
+
+        Console.WriteLine("RealTimeBars. " + reqId + " - Time: " + Util.LongMaxString(time) + ", Open: " +
+                          Util.DoubleMaxString(open) + ", High: " + Util.DoubleMaxString(high) +
+                          ", Low: " + Util.DoubleMaxString(low) + ", Close: " + Util.DoubleMaxString(close) +
+                          ", Volume: " + Util.DecimalMaxString(volume) + ", Count: " + Util.IntMaxString(count) +
+                          ", WAP: " + Util.DecimalMaxString(WAP));
+ 
     }
 
     /// <inheritdoc/>

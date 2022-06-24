@@ -117,7 +117,7 @@ public interface IIbClient : INotifyPropertyChanged
             Tick-by-tick data is not available for combos.
             No more than 1 tick-by-tick request can be made for the same instrument within 15 seconds.
           */
-    Task SubTickByTickData(Contract contract, ETickByTickDataType tickType);
+    Task SubTickByTickDataAsync(Contract contract, ETickByTickDataType tickType);
 
     void UnsubTickByTickData(Contract contract, ETickByTickDataType tickType);
 
@@ -144,6 +144,22 @@ public interface IIbClient : INotifyPropertyChanged
     //    bool snapshot,
     //    bool regulatorySnapshot,
     //    List<TagValue> mktDataOptions)
+
+        /// <summary>
+        /// Request 5 Second Real Time Bars data from TWS
+        /// Caution: Not really real time!
+        /// </summary>
+        /// <param name="contract">The contract</param>
+        /// <param name="whatToShow">The things to show (?)</param>
+        /// <param name="useRTH">Whether to use regular trading hours</param>
+        /// <param name="realtimeBarOptions">The realtime bar options</param>
+        Task SubRealtimeBarsAsync(Contract contract, EDataType datType, bool useRTH = true);
+
+        void UnsubRealtimeBars(Contract contract);
+
+        ReadOnlyObservableCollection<Contract> RealtimeBarsSubscriptions { get; }
+
+        event EventHandler<TwsEventArs<Contract, Bar>> RealtimeBarEvent;        // 5 sec bar
 
 #endregion
 
