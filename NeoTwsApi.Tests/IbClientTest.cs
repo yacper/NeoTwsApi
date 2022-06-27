@@ -8,6 +8,7 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using IBApi;
 using NeoTwsApi.Enums;
+using NeoTwsApi.EventArgs;
 using NeoTwsApi.Exceptions;
 using NeoTwsApi.Helpers;
 using NUnit.Framework;
@@ -248,11 +249,41 @@ public class Tests
                           TotalQuantity = 2000
                       };
 
+        ExecutionDetailsEventArgs details = null;
+        CommissionReport          cr      = null;
+
+        EventHandler<ExecutionDetailsEventArgs> executionDetailsEventHandler = (s, e) =>
+        {
+            details = e;
+        };
+        EventHandler<CommissionReport> commissionReportHandler = (s, e) =>
+        {
+            cr      = e;
+        };
+
+
+        client.ExecutionDetailsEvent += executionDetailsEventHandler;
+        client.CommissionReportEvent += commissionReportHandler;
+
+
         // Call the API
         var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
 
         // Assert
         successfullyPlaced.Should().NotBeNull();
+        Debug.WriteLine(successfullyPlaced.Dump());
+
+        await Task.Delay(3000);
+
+        details.Should().NotBeNull();
+        Debug.WriteLine(details.Dump());
+
+        cr.Should().NotBeNull();
+        Debug.WriteLine(cr.Dump());
+
+        client.ExecutionDetailsEvent -= executionDetailsEventHandler;
+        client.CommissionReportEvent -= commissionReportHandler;
+
     }
 
     [Test]

@@ -69,24 +69,21 @@ public class IbClient : ObservableObject, IIbClient
         //clientSocket   = _EClientSocket;
 
         twsCallbackHandler.UpdateAccountValueEvent += _OnUpdateAccountValueEvent;
+
+        twsCallbackHandler.ExecutionDetailsEvent += TwsCallbackHandler_ExecutionDetailsEvent;
+        twsCallbackHandler.CommissionReportEvent += TwsCallbackHandler_CommissionReportEvent; ;
+ 
     }
 
-    /// <summary>
-    /// Gets the next request id
-    /// </summary>
-    /// <returns>The next request id</returns>
-    public int GetNextRequestId() { return this.twsRequestIdGenerator.GetNextRequestId(); }
-
-
-    public int GetNextValidOrderId()
+    private void TwsCallbackHandler_CommissionReportEvent(object? sender, CommissionReportEventArgs e)
     {
-        var nextId = Interlocked.Read(ref NextValidOrderId_);
-        var r = Interlocked.Increment(ref NextValidOrderId_);
-        return (int)nextId;
+        this.CommissionReportEvent?.Invoke(this, e.CommissionReport);
     }
 
-    protected long NextValidOrderId_;
-
+    private void TwsCallbackHandler_ExecutionDetailsEvent(object? sender, ExecutionDetailsEventArgs e)
+    {
+        this.ExecutionDetailsEvent?.Invoke(this, e);
+    }
 
 
 
@@ -115,6 +112,9 @@ public class IbClient : ObservableObject, IIbClient
 
         return Connected;
     }
+
+
+
 
     /// <summary>
     /// Connect to the TWS socket and launch a background thread to begin firing the events.
@@ -532,6 +532,13 @@ public class IbClient : ObservableObject, IIbClient
     }
 
     /// <summary>
+    /// 订单成交后，将触发ExecutionDetailsEvent&CommissionReportEvent 这2个事件
+    /// </summary>
+    public event EventHandler<ExecutionDetailsEventArgs> ExecutionDetailsEvent;
+    public event EventHandler<CommissionReport> CommissionReportEvent;
+ 
+
+    /// <summary>
     /// Get a list of all the executions from TWS
     /// </summary>
     /// <param name="cancellationToken">The cancellation token used to cancel the request</param>
@@ -876,6 +883,24 @@ public class IbClient : ObservableObject, IIbClient
 
 
     public Dictionary<int, Tuple<Contract, object?>> ReqContracts = new();
+
+
+    /// <summary>
+    /// Gets the next request id
+    /// </summary>
+    /// <returns>The next request id</returns>
+    public int GetNextRequestId() { return this.twsRequestIdGenerator.GetNextRequestId(); }
+
+
+    public int GetNextValidOrderId()
+    {
+        var nextId = Interlocked.Read(ref NextValidOrderId_);
+        var r = Interlocked.Increment(ref NextValidOrderId_);
+        return (int)nextId;
+    }
+
+    protected long NextValidOrderId_;
+
 
 #region Fields
 

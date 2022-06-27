@@ -162,11 +162,16 @@ public interface IIbClient : INotifyPropertyChanged
     /// <summary>
     /// Send an order to TWS
     /// </summary>
-    /// <param name="orderId">The order id</param>
     /// <param name="contract">The contract to trade</param>
     /// <param name="order">The order parameters</param>
     /// <returns>True if acknowledged</returns>
     Task<OpenOrderEventArgs> PlaceOrderAsync(Contract contract, Order order);
+    /// <summary>
+    /// 订单成交后，将触发ExecutionDetailsEvent&CommissionReportEvent 这2个事件
+    /// </summary>
+    event EventHandler<ExecutionDetailsEventArgs> ExecutionDetailsEvent;
+    event EventHandler<CommissionReport> CommissionReportEvent;
+ 
 
     /// <summary>
     /// Requests open orders
@@ -181,5 +186,6 @@ public interface IIbClient : INotifyPropertyChanged
     /// <returns>True if it was successfully cancelled</returns>
     Task<bool> CancelOrderAsync(int orderId);
 
-    #endregion
+
+   #endregion
 }
