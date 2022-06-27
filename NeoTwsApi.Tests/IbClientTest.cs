@@ -229,5 +229,100 @@ public class Tests
 
 #endregion
 
+    #region Orders
+    [Test]
+    public async Task PlaceOrderAsync_Test()
+    {
+        // Initialize the contract
+        Contract contract = new Contract();
+        contract.Symbol   = "EUR";
+        contract.SecType  = "CASH";
+        contract.Currency = "USD";
+        contract.Exchange = "IDEALPRO";
+
+        // Initialize the order
+        Order order = new Order
+                      {
+                          Action        = "BUY",
+                          OrderType     = "MKT",
+                          TotalQuantity = 2000
+                      };
+
+        // Call the API
+        var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
+
+        // Assert
+        successfullyPlaced.Should().NotBeNull();
+    }
+
+    [Test]
+    public async Task RequestOpenOrdersAsync_Test()
+    {
+        // Initialize the contract
+        Contract contract = new Contract();
+        contract.Symbol   = "EUR";
+        contract.SecType  = "CASH";
+        contract.Currency = "USD";
+        contract.Exchange = "IDEALPRO";
+
+        // Initialize the order
+        Order order = new Order
+                      {
+                          Action        = "BUY",
+                          OrderType     = "LMT",
+                          TotalQuantity = 5,
+                          LmtPrice =1 
+                      };
+
+        var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
+        successfullyPlaced.Should().NotBeNull();
+
+
+
+        var ret = await client.RequestOpenOrdersAsync();
+
+        // Assert
+        ret.Should().NotBeEmpty();
+
+
+            // cancel
+        var cancelRet = await client.CancelOrderAsync(successfullyPlaced.OrderId);
+        // Assert
+        cancelRet.Should().BeTrue();
+
+    }
+
+    [Test]
+    public async Task CancelOrderAsync_Test()
+    {
+        // Initialize the contract
+        Contract contract = new Contract();
+        contract.Symbol   = "EUR";
+        contract.SecType  = "CASH";
+        contract.Currency = "USD";
+        contract.Exchange = "IDEALPRO";
+
+        // Initialize the order
+        Order order = new Order
+                      {
+                          Action        = "BUY",
+                          OrderType     = "LMT",
+                          TotalQuantity = 5,
+                          LmtPrice =1 
+                      };
+
+        var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
+        successfullyPlaced.Should().NotBeNull();
+
+        var ret = await client.CancelOrderAsync(successfullyPlaced.OrderId);
+
+        // Assert
+        ret.Should().BeTrue();
+    }
+
+
+
+    #endregion
+
 }
 }

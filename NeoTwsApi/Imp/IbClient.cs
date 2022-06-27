@@ -71,6 +71,25 @@ public class IbClient : ObservableObject, IIbClient
         twsCallbackHandler.UpdateAccountValueEvent += _OnUpdateAccountValueEvent;
     }
 
+    /// <summary>
+    /// Gets the next request id
+    /// </summary>
+    /// <returns>The next request id</returns>
+    public int GetNextRequestId() { return this.twsRequestIdGenerator.GetNextRequestId(); }
+
+
+    public int GetNextValidOrderId()
+    {
+        var nextId = Interlocked.Read(ref NextValidOrderId_);
+        var r = Interlocked.Increment(ref NextValidOrderId_);
+        return (int)nextId;
+    }
+
+    protected long NextValidOrderId_;
+
+
+
+
 
     private void TwsCallbackHandlerTickByTickAllLastEvent(object? sender, TwsEventArs<Contract, HistoricalTickLast> e) { TickByTickAllLastEvent?.Invoke(this, e); }
 
@@ -175,8 +194,10 @@ public class IbClient : ObservableObject, IIbClient
     }
 
     protected void OnConnected(int nextValidId = 0)
-    {
-        twsRequestIdGenerator = new TwsRequestIdGenerator(nextValidId);
+    { 
+        Interlocked.Exchange(ref NextValidOrderId_, nextValidId);
+
+        twsRequestIdGenerator = new TwsRequestIdGenerator();
 
         Connected     = true;
         ServerVersion = clientSocket.ServerVersion;
@@ -239,6 +260,7 @@ public class IbClient : ObservableObject, IIbClient
     /// The account updates dictionary
     /// </summary>
     private ConcurrentDictionary<string, string> _AccountUpdates = new();
+
 #endregion
 
 
@@ -448,66 +470,161 @@ public class IbClient : ObservableObject, IIbClient
 
 #region Orders
 
-    ///// <summary>
-    //       /// Places an order and returns whether the order placement was successful or not.
-    //       /// </summary>
-    //       /// <param name="orderId">The order Id</param>
-    //       /// <param name="contract">The contract to trade</param>
-    //       /// <param name="order">The order</param>
-    //       /// <param name="cancellationToken">The cancellation token used to cancel the request</param>
-    //       /// <returns>True if the order was acknowledged, false otherwise</returns>
-    //       public Task<bool> PlaceOrderAsync(int orderId, Contract contract, Order order)
-    //       {
-    //           var taskSource = new TaskCompletionSource<bool>();
+    /// <summary>
+    /// Places an order and returns whether the order placement was successful or not.
+    /// </summary>
+    /// <param name="orderId">The order Id</param>
+    /// <param name="contract">The contract to trade</param>
+    /// <param name="order">The order</param>
+    /// <param name="cancellationToken">The cancellation token used to cancel the request</param>
+    /// <returns>True if the order was acknowledged, false otherwise</returns>
+    public Task<OpenOrderEventArgs> PlaceOrderAsync(Contract contract, Order order)
+    {
+        var taskSource = new TaskCompletionSource<OpenOrderEventArgs>();
 
-    //           EventHandler<OpenOrderEventArgs> openOrderEventCallback = null;
+        var orderId    = GetNextValidOrderId();
 
-    //           openOrderEventCallback = (sender, eventArgs) =>
-    //           {
-    //               if (eventArgs.OrderId == orderId)
-    //               {
-    //                   if (eventArgs.OrderState.Status == TwsOrderStatus.Submitted ||
-    //                       eventArgs.OrderState.Status == TwsOrderStatus.Presubmitted)
-    //                   {
-    //                       // Unregister the callbacks
-    //                       this.twsCallbackHandler.OpenOrderEvent -= openOrderEventCallback;
+        EventHandler<OpenOrderEventArgs> openOrderEventCallback = null;
+        EventHandler<ErrorEventArgs> orderErrorEventCallback = null;
 
-    //                       taskSource.TrySetResult(true);
-    //                   }
-    //               }
-    //           };
+        openOrderEventCallback = (sender, eventArgs) =>
+        {
+            if (eventArgs.OrderId == orderId)
+            {
+                if (eventArgs.OrderState.Status == TwsOrderStatus.Submitted ||
+                    eventArgs.OrderState.Status == TwsOrderStatus.Presubmitted)
+                {
+                    // Unregister the callbacks
+                    this.twsCallbackHandler.OpenOrderEvent -= openOrderEventCallback;
+                    this.twsCallbackHandler.ErrorEvent     -= orderErrorEventCallback;
 
-    //           EventHandler<ErrorEventArgs> orderErrorEventCallback = null;
-    //           orderErrorEventCallback = (sender, eventArgs) =>
-    //           {
-    //               if (orderId == eventArgs.Id)
-    //               {
-    //                   if (
-    //                       eventArgs.ErrorCode == TwsErrorCodes.InvalidOrderType ||
-    //                       eventArgs.ErrorCode == TwsErrorCodes.AmbiguousContract ||
-    //                       eventArgs.ErrorCode == TwsErrorCodes.OrderRejected)
-    //                   {
-    //                       // Unregister the callbacks
-    //                       this.twsCallbackHandler.OpenOrderEvent -= openOrderEventCallback;
-    //                       this.twsCallbackHandler.ErrorEvent -= orderErrorEventCallback;
-    //                       taskSource.TrySetException(new TwsException(eventArgs));
-    //                   }
-    //               }
-    //           };
+                    taskSource.TrySetResult(eventArgs);
+                }
+            }
+        };
 
-    //           this.twsCallbackHandler.ErrorEvent += orderErrorEventCallback;
-    //           this.twsCallbackHandler.OpenOrderEvent += openOrderEventCallback;
+        orderErrorEventCallback = (sender, eventArgs) =>
+        {
+            if (orderId == eventArgs.Id)
+            {
+                if (
+                    eventArgs.ErrorCode == TwsErrorCodes.InvalidOrderType ||
+                    eventArgs.ErrorCode == TwsErrorCodes.AmbiguousContract ||
+                    eventArgs.ErrorCode == TwsErrorCodes.OrderRejected)
+                {
+                    // Unregister the callbacks
+                    this.twsCallbackHandler.OpenOrderEvent -= openOrderEventCallback;
+                    this.twsCallbackHandler.ErrorEvent     -= orderErrorEventCallback;
+                    taskSource.TrySetException(new TwsException(eventArgs));
+                }
+            }
+        };
+
+        this.twsCallbackHandler.ErrorEvent     += orderErrorEventCallback;
+        this.twsCallbackHandler.OpenOrderEvent += openOrderEventCallback;
 
 
-    //           CancellationTokenSource cancellationToken = new CancellationTokenSource(TimeoutMilliseconds);
-    //           cancellationToken.Token.Register(() =>
-    //           {
-    //               taskSource.TrySetCanceled();
-    //           });
+        CancellationTokenSource cancellationToken = new CancellationTokenSource(TimeoutMilliseconds);
+        cancellationToken.Token.Register(() => { taskSource.TrySetCanceled(); });
 
-    //           this.clientSocket.PlaceOrder(orderId, contract, order);
-    //           return taskSource.Task;
-    //       }
+        this.clientSocket.placeOrder(orderId, contract, order);
+        return taskSource.Task;
+    }
+
+    /// <summary>
+    /// Get a list of all the executions from TWS
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token used to cancel the request</param>
+    /// <returns>A list of execution details events from TWS.</returns>
+    public Task<List<OpenOrderEventArgs>> RequestOpenOrdersAsync()
+    {
+        List<OpenOrderEventArgs>            openOrderEvents          = new List<OpenOrderEventArgs>();
+        var                                 taskSource               = new TaskCompletionSource<List<OpenOrderEventArgs>>();
+        EventHandler<OpenOrderEventArgs>    openOrderEventHandler    = null;
+        EventHandler<OpenOrderEndEventArgs> openOrderEndEventHandler = null;
+
+        openOrderEventHandler = (sender, args) => { openOrderEvents.Add(args); };
+
+        openOrderEndEventHandler = (sender, args) =>
+        {
+            // Cleanup the event handlers when the positions end event is called.
+            this.twsCallbackHandler.OpenOrderEvent    -= openOrderEventHandler;
+            this.twsCallbackHandler.OpenOrderEndEvent -= openOrderEndEventHandler;
+
+            taskSource.TrySetResult(openOrderEvents);
+        };
+
+        this.twsCallbackHandler.OpenOrderEvent    += openOrderEventHandler;
+        this.twsCallbackHandler.OpenOrderEndEvent += openOrderEndEventHandler;
+
+        // Set the operation to cancel after 5 seconds
+        CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
+        tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
+
+        this.clientSocket.reqAllOpenOrders();
+
+        return taskSource.Task;
+    }
+
+    /// <summary>
+    /// Cancels an order in TWS.
+    /// </summary>
+    /// <param name="orderId">The order Id to cancel</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation. True if the broker acknowledged the cancelation request, false otherwise.</returns>
+    public Task<bool> CancelOrderAsync(int orderId)
+    {
+        var taskSource = new TaskCompletionSource<bool>();
+
+        EventHandler<OrderStatusEventArgs> orderStatusEventCallback = null;
+        EventHandler<ErrorEventArgs>       errorEventCallback       = null;
+
+        orderStatusEventCallback = (sender, eventArgs) =>
+        {
+            if (eventArgs.OrderId == orderId)
+            {
+                if (eventArgs.Status == "Cancelled")
+                {
+                    // Unregister the callbacks
+                    this.twsCallbackHandler.OrderStatusEvent -= orderStatusEventCallback;
+                    this.twsCallbackHandler.ErrorEvent       -= errorEventCallback;
+
+                    // Set the result
+                    taskSource.TrySetResult(true);
+                }
+            }
+        };
+
+        errorEventCallback = (sender, eventArgs) =>
+        {
+            if (eventArgs.ErrorCode == TwsErrorCodes.OrderCancelled)
+            {
+                this.twsCallbackHandler.ErrorEvent -= errorEventCallback;
+                this.twsCallbackHandler.OrderStatusEvent -= orderStatusEventCallback;
+                taskSource.TrySetResult(true);
+            }
+
+            if (eventArgs.ErrorCode == TwsErrorCodes.OrderCannotBeCancelled ||
+                eventArgs.ErrorCode == TwsErrorCodes.OrderCannotBeCancelled2)
+            {
+                this.twsCallbackHandler.ErrorEvent -= errorEventCallback;
+                this.twsCallbackHandler.OrderStatusEvent -= orderStatusEventCallback;
+                taskSource.TrySetException(new TwsException($"Order {eventArgs.Id} cannot be canceled", eventArgs.ErrorCode, eventArgs.Id));
+            }
+        };
+
+        // Set the operation to cancel after 5 seconds
+        CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
+        tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
+
+        this.twsCallbackHandler.OrderStatusEvent += orderStatusEventCallback;
+        this.twsCallbackHandler.ErrorEvent       += errorEventCallback;
+
+        this.clientSocket.cancelOrder(orderId, null);
+        return taskSource.Task;
+    }
+
+
+
 
 #endregion
 

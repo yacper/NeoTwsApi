@@ -10,7 +10,6 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using AutoFinance.Broker.InteractiveBrokers.Constants;
 using IBApi;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using NeoTwsApi.Enums;
@@ -156,18 +155,31 @@ public interface IIbClient : INotifyPropertyChanged
 
     event EventHandler<TwsEventArs<Contract, Bar>> RealtimeBarEvent; // 5 sec bar
 
-#endregion
+    #endregion
 
-#region Orders
+    #region Orders
 
-    ///// <summary>
-    ///// Send an order to TWS
-    ///// </summary>
-    ///// <param name="orderId">The order id</param>
-    ///// <param name="contract">The contract to trade</param>
-    ///// <param name="order">The order parameters</param>
-    ///// <returns>True if acknowledged</returns>
-    //Task<bool> PlaceOrderAsync(int orderId, Contract contract, Order order);
+    /// <summary>
+    /// Send an order to TWS
+    /// </summary>
+    /// <param name="orderId">The order id</param>
+    /// <param name="contract">The contract to trade</param>
+    /// <param name="order">The order parameters</param>
+    /// <returns>True if acknowledged</returns>
+    Task<OpenOrderEventArgs> PlaceOrderAsync(Contract contract, Order order);
 
-#endregion
+    /// <summary>
+    /// Requests open orders
+    /// </summary>
+    /// <returns>Open orders</returns>
+    Task<List<OpenOrderEventArgs>> RequestOpenOrdersAsync();
+
+    /// <summary>
+    /// Cancels an order
+    /// </summary>
+    /// <param name="orderId">The order ID</param>
+    /// <returns>True if it was successfully cancelled</returns>
+    Task<bool> CancelOrderAsync(int orderId);
+
+    #endregion
 }
