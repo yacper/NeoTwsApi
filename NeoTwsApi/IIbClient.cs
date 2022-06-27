@@ -188,4 +188,23 @@ public interface IIbClient : INotifyPropertyChanged
 
 
    #endregion
+
+#region Positions
+
+    /// <summary>
+    /// Get a list of all the positions in TWS.
+    //Also, subscribe the status changes of the positions
+    /// </summary>
+    /// <returns>A list of position status events from TWS.</returns>
+    Task<List<PositionStatusEventArgs>> RequestPositions();
+
+    event EventHandler<PositionStatusEventArgs> PositionStatusEvent;
+
+    /// <summary>
+    /// Sends a message to TWS telling it to stop sending position information through the socket.
+    /// </summary>
+    void UnsubPositions();
+
+#endregion
+
 }

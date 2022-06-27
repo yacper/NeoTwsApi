@@ -47,15 +47,15 @@ public class Tests
     //}
 
 #region Account
+
     [Test]
-    public async Task  ReqAccountDetailsAsync_Test()
+    public async Task ReqAccountDetailsAsync_Test()
     {
         var ret = await client.ReqAccountDetailsAsync(client.Accounts.FirstOrDefault());
         Debug.WriteLine(ret.Dump());
 
         ret.Should().NotBeEmpty();
     }
-    
 
 #endregion
 
@@ -104,32 +104,29 @@ public class Tests
         DurationTws duration = new DurationTws(3, EDurationStep.D);
         DateTime    end      = 17.March(2022).At(23, 59);
 
-        var ret = await client.ReqHistoricalDataAsync(contract,  end, duration,
+        var ret = await client.ReqHistoricalDataAsync(contract, end, duration,
                                                       ETimeFrameTws.H1, EDataType.MIDPOINT);
         Debug.WriteLine(ret.Dump());
 
         // Assert
         ret.First().Should().NotBeNull();
-
     }
 
 #endregion
 
 
 #region Streaming Data
+
     [Test]
     public async Task SubTickByTickData_Test0()
     {
         Contract contract = new Contract();
-        contract.Symbol   = "EUR2";         // bad contract
+        contract.Symbol   = "EUR2"; // bad contract
         contract.SecType  = "CASH";
         contract.Currency = "USD";
         contract.Exchange = "IDEALPRO";
 
-        client.TickByTickBidAskEvent += (s, e) =>
-        {
-            Debug.WriteLine(e.Arg2.Dump());
-        };
+        client.TickByTickBidAskEvent += (s, e) => { Debug.WriteLine(e.Arg2.Dump()); };
 
 
         //try
@@ -162,15 +159,15 @@ public class Tests
             Debug.WriteLine(e.Arg2.Dump());
         };
 
-        await client.SubTickByTickDataAsync(contract,  ETickByTickDataType.BidAsk);
+        await client.SubTickByTickDataAsync(contract, ETickByTickDataType.BidAsk);
 
-        await client.SubTickByTickDataAsync(contract,  ETickByTickDataType.BidAsk);
+        await client.SubTickByTickDataAsync(contract, ETickByTickDataType.BidAsk);
 
         client.TickByTickSubscriptions.Should().NotBeEmpty();
         historicalTickBidAsks.Should().NotBeEmpty();
 
 
-            // cancel
+        // cancel
         client.UnsubTickByTickData(contract, ETickByTickDataType.BidAsk);
         client.TickByTickSubscriptions.Should().BeEmpty();
         await Task.Delay(5000);
@@ -192,7 +189,7 @@ public class Tests
             Debug.WriteLine(e.Arg2.Dump());
         };
 
-        await client.SubTickByTickDataAsync(contract,  ETickByTickDataType.Last);
+        await client.SubTickByTickDataAsync(contract, ETickByTickDataType.Last);
 
         historicalTickBidAsks.Should().NotBeEmpty();
     }
@@ -220,17 +217,16 @@ public class Tests
         client.RealtimeBarsSubscriptions.Should().NotBeEmpty();
         bars.Should().NotBeEmpty();
 
-            // cancel
+        // cancel
         client.UnsubRealtimeBars(contract);
         client.RealtimeBarsSubscriptions.Should().BeEmpty();
         await Task.Delay(5000);
     }
 
-
-
 #endregion
 
-    #region Orders
+#region Orders
+
     [Test]
     public async Task PlaceOrderAsync_Test()
     {
@@ -243,23 +239,17 @@ public class Tests
 
         // Initialize the order
         Order order = new Order
-                      {
-                          Action        = "BUY",
-                          OrderType     = "MKT",
-                          TotalQuantity = 2000
-                      };
+        {
+            Action        = "BUY",
+            OrderType     = "MKT",
+            TotalQuantity = 2000
+        };
 
         ExecutionDetailsEventArgs details = null;
         CommissionReport          cr      = null;
 
-        EventHandler<ExecutionDetailsEventArgs> executionDetailsEventHandler = (s, e) =>
-        {
-            details = e;
-        };
-        EventHandler<CommissionReport> commissionReportHandler = (s, e) =>
-        {
-            cr      = e;
-        };
+        EventHandler<ExecutionDetailsEventArgs> executionDetailsEventHandler = (s, e) => { details = e; };
+        EventHandler<CommissionReport>          commissionReportHandler      = (s, e) => { cr      = e; };
 
 
         client.ExecutionDetailsEvent += executionDetailsEventHandler;
@@ -283,7 +273,6 @@ public class Tests
 
         client.ExecutionDetailsEvent -= executionDetailsEventHandler;
         client.CommissionReportEvent -= commissionReportHandler;
-
     }
 
     [Test]
@@ -298,16 +287,15 @@ public class Tests
 
         // Initialize the order
         Order order = new Order
-                      {
-                          Action        = "BUY",
-                          OrderType     = "LMT",
-                          TotalQuantity = 5,
-                          LmtPrice =1 
-                      };
+        {
+            Action        = "BUY",
+            OrderType     = "LMT",
+            TotalQuantity = 5,
+            LmtPrice      = 1
+        };
 
         var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
         successfullyPlaced.Should().NotBeNull();
-
 
 
         var ret = await client.RequestOpenOrdersAsync();
@@ -316,11 +304,10 @@ public class Tests
         ret.Should().NotBeEmpty();
 
 
-            // cancel
+        // cancel
         var cancelRet = await client.CancelOrderAsync(successfullyPlaced.OrderId);
         // Assert
         cancelRet.Should().BeTrue();
-
     }
 
     [Test]
@@ -335,12 +322,12 @@ public class Tests
 
         // Initialize the order
         Order order = new Order
-                      {
-                          Action        = "BUY",
-                          OrderType     = "LMT",
-                          TotalQuantity = 5,
-                          LmtPrice =1 
-                      };
+        {
+            Action        = "BUY",
+            OrderType     = "LMT",
+            TotalQuantity = 5,
+            LmtPrice      = 1
+        };
 
         var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
         successfullyPlaced.Should().NotBeNull();
@@ -351,9 +338,104 @@ public class Tests
         ret.Should().BeTrue();
     }
 
+#endregion
 
+#region Positions
 
-    #endregion
+    [Test]
+    public async Task PositionsManage_Test()
+    {
+        // Initialize the contract
+        Contract contract = new Contract();
+        contract.Symbol   = "EUR";
+        contract.SecType  = "CASH";
+        contract.Currency = "USD";
+        contract.Exchange = "IDEALPRO";
 
+        List<PositionStatusEventArgs> status = new();
+
+        EventHandler<PositionStatusEventArgs> positionStatusHandler = (s, e) => { status.Add(e); };
+
+        client.PositionStatusEvent += positionStatusHandler;
+
+        {
+            Order order = new Order
+            {
+                Action        = "BUY",
+                OrderType     = "MKT",
+                TotalQuantity = 20000
+            };
+
+            // Call the API
+            var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
+
+            // Assert
+            successfullyPlaced.Should().NotBeNull();
+            Debug.WriteLine(successfullyPlaced.Dump());
+
+            await Task.Delay(3000);
+        }
+        var ret = await client.RequestPositions();
+        ret.Should().NotBeEmpty();
+
+        {
+            Order orderSell = new Order
+            {
+                Action        = "SELL",
+                OrderType     = "MKT",
+                TotalQuantity = 20000
+            };
+
+            var sellPlaced = await client.PlaceOrderAsync(contract, orderSell);
+            sellPlaced.Should().NotBeNull();
+
+            await Task.Delay(3000);
+        }
+ 
+        status.Should().NotBeEmpty();
+        status.ForEach(p => Debug.WriteLine(p.Dump()));
+
+        // unsub position change event
+        client.UnsubPositions();
+        status.Clear();
+
+        {
+            Order order = new Order
+            {
+                Action        = "BUY",
+                OrderType     = "MKT",
+                TotalQuantity = 20000
+            };
+
+            // Call the API
+            var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
+
+            // Assert
+            successfullyPlaced.Should().NotBeNull();
+            Debug.WriteLine(successfullyPlaced.Dump());
+
+            await Task.Delay(3000);
+
+        }
+        {
+            Order orderSell = new Order
+            {
+                Action        = "SELL",
+                OrderType     = "MKT",
+                TotalQuantity = 20000
+            };
+
+            var sellPlaced = await client.PlaceOrderAsync(contract, orderSell);
+            sellPlaced.Should().NotBeNull();
+
+            await Task.Delay(3000);
+        }
+
+        status.Should().BeEmpty();
+
+        client.PositionStatusEvent -= positionStatusHandler;
+
+    }
+#endregion
 }
 }

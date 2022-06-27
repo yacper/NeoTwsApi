@@ -72,7 +72,13 @@ public class IbClient : ObservableObject, IIbClient
 
         twsCallbackHandler.ExecutionDetailsEvent += TwsCallbackHandler_ExecutionDetailsEvent;
         twsCallbackHandler.CommissionReportEvent += TwsCallbackHandler_CommissionReportEvent; ;
+        twsCallbackHandler.PositionStatusEvent += TwsCallbackHandler_PositionStatusEvent;
  
+    }
+
+    private void TwsCallbackHandler_PositionStatusEvent(object? sender, PositionStatusEventArgs e)
+    {
+        this.PositionStatusEvent?.Invoke(this, e);
     }
 
     private void TwsCallbackHandler_CommissionReportEvent(object? sender, CommissionReportEventArgs e)
@@ -880,6 +886,72 @@ public class IbClient : ObservableObject, IIbClient
     public event EventHandler<TwsEventArs<Contract, Bar>> RealtimeBarEvent;
 
 #endregion
+
+#region Positions
+ /// <summary>
+        /// Get a list of all the positions in TWS.
+        /// </summary>
+        /// <returns>A list of position status events from TWS.</returns>
+        public Task<List<PositionStatusEventArgs>> RequestPositions()
+        {
+            List<PositionStatusEventArgs> positionStatusEvents = new List<PositionStatusEventArgs>();
+            var taskSource = new TaskCompletionSource<List<PositionStatusEventArgs>>();
+            EventHandler<PositionStatusEventArgs> positionStatusEventHandler = null;
+            EventHandler<RequestPositionsEndEventArgs> requestPositionsEndEventHandler = null;
+
+            positionStatusEventHandler = (sender, args) =>
+            {
+                positionStatusEvents.Add(args);
+            };
+
+            requestPositionsEndEventHandler = (sender, args) =>
+            {
+                clearHandler();
+
+                taskSource.TrySetResult(positionStatusEvents);
+            };
+
+            this.twsCallbackHandler.PositionStatusEvent += positionStatusEventHandler;
+            this.twsCallbackHandler.RequestPositionsEndEvent += requestPositionsEndEventHandler;
+
+            void clearHandler()
+            {
+                // Cleanup the event handlers when the positions end event is called.
+                this.twsCallbackHandler.PositionStatusEvent -= positionStatusEventHandler;
+                this.twsCallbackHandler.RequestPositionsEndEvent -= requestPositionsEndEventHandler;
+            }
+
+            // Set the operation to cancel after 1 minute
+            CancellationTokenSource tokenSource = new CancellationTokenSource(60 * 1000);
+            tokenSource.Token.Register(() =>
+            {
+                clearHandler();
+
+                taskSource.TrySetCanceled();
+            });
+
+
+            this.clientSocket.reqPositions();
+
+            return taskSource.Task;
+        }
+
+
+        public event EventHandler<PositionStatusEventArgs> PositionStatusEvent;
+
+   /// <summary>
+        /// Sends a message to TWS telling it to stop sending position information through the socket.
+        /// </summary>
+        public void UnsubPositions()
+        {
+            this.clientSocket.cancelPositions();
+        }
+
+    
+
+#endregion
+
+
 
 
     public Dictionary<int, Tuple<Contract, object?>> ReqContracts = new();
