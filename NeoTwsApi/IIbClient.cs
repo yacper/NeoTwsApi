@@ -36,12 +36,10 @@ public interface IIbClient : INotifyPropertyChanged
     /// </summary>
     int ClientId { get; }
 
-
     /// <summary>
     /// default timeout duration
     /// </summary>
-    int TimeoutMilliseconds { get; }
-
+    int TimeoutMilliseconds { get; set; } 
 
     /**
          * @brief returns the Host's version. Some of the API functionality might not be available in older Hosts and therefore it is essential to keep the TWS/Gateway as up to date as possible.
@@ -50,11 +48,6 @@ public interface IIbClient : INotifyPropertyChanged
 
     public string ServerTime { get; }
 
-#region Account
-
-    ReadOnlyObservableCollection<string> Accounts { get; }
-
-#endregion
 
 #region Login
 
@@ -68,7 +61,7 @@ public interface IIbClient : INotifyPropertyChanged
     /// connect to tws
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    Task<bool> ConnectedAsync();
+    Task<bool> ConnectAsync();
 
     /// <summary>
     /// Disconnects the session
@@ -79,11 +72,9 @@ public interface IIbClient : INotifyPropertyChanged
 #endregion
 
 #region Account
+    ReadOnlyObservableCollection<string> Accounts { get; }
 
     Task<ConcurrentDictionary<string, string>> ReqAccountDetailsAsync(string accountId);
-
-
-    
 
 #endregion
 
@@ -114,6 +105,7 @@ public interface IIbClient : INotifyPropertyChanged
 
 
 #region Stream data ref:https: //interactivebrokers.github.io/tws-api/market_data.html 
+
     // 虽然tws还提供了reqMktData用于获取contract的价格等各类信息，但都延时或不实用
     // 实际上，真正有用的stream data，只有TickByTickData
 
@@ -155,9 +147,9 @@ public interface IIbClient : INotifyPropertyChanged
 
     event EventHandler<TwsEventArs<Contract, Bar>> RealtimeBarEvent; // 5 sec bar
 
-    #endregion
+#endregion
 
-    #region Orders
+#region Orders
 
     /// <summary>
     /// Send an order to TWS
@@ -166,12 +158,14 @@ public interface IIbClient : INotifyPropertyChanged
     /// <param name="order">The order parameters</param>
     /// <returns>True if acknowledged</returns>
     Task<OpenOrderEventArgs> PlaceOrderAsync(Contract contract, Order order);
+
     /// <summary>
     /// 订单成交后，将触发ExecutionDetailsEvent&CommissionReportEvent 这2个事件
     /// </summary>
     event EventHandler<ExecutionDetailsEventArgs> ExecutionDetailsEvent;
+
     event EventHandler<CommissionReport> CommissionReportEvent;
- 
+
 
     /// <summary>
     /// Requests open orders
@@ -186,8 +180,7 @@ public interface IIbClient : INotifyPropertyChanged
     /// <returns>True if it was successfully cancelled</returns>
     Task<bool> CancelOrderAsync(int orderId);
 
-
-   #endregion
+#endregion
 
 #region Positions
 
@@ -206,5 +199,4 @@ public interface IIbClient : INotifyPropertyChanged
     void UnsubPositions();
 
 #endregion
-
 }
