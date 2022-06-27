@@ -52,7 +52,7 @@ public interface IIbClient : INotifyPropertyChanged
 
 #region Account
 
-    IReadOnlyList<string> Accounts { get; }
+    ReadOnlyObservableCollection<string> Accounts { get; }
 
 #endregion
 
@@ -105,6 +105,8 @@ public interface IIbClient : INotifyPropertyChanged
 
 
 #region Stream data ref:https: //interactivebrokers.github.io/tws-api/market_data.html 
+    // 虽然tws还提供了reqMktData用于获取contract的价格等各类信息，但都延时或不实用
+    // 实际上，真正有用的stream data，只有TickByTickData
 
     /**
           * @brief Requests tick-by-tick data.\n
@@ -128,38 +130,21 @@ public interface IIbClient : INotifyPropertyChanged
     event EventHandler<TwsEventArs<Contract, HistoricalTickLast>>   TickByTickAllLastEvent;
     event EventHandler<TwsEventArs<Contract, HistoricalTickBidAsk>> TickByTickBidAskEvent;
 
+    /// <summary>
+    /// Request 5 Second Real Time Bars data from TWS
+    /// Caution: Not really real time!
+    /// </summary>
+    /// <param name="contract">The contract</param>
+    /// <param name="whatToShow">The things to show (?)</param>
+    /// <param name="useRTH">Whether to use regular trading hours</param>
+    /// <param name="realtimeBarOptions">The realtime bar options</param>
+    Task SubRealtimeBarsAsync(Contract contract, EDataType datType, bool useRTH = true);
 
-    ///// <summary>
-    ///// Request market data from TWS.
-    ///// </summary>
-    ///// <param name="contract">The contract type</param>
-    ///// <param name="genericTickList">The generic tick list</param>
-    ///// <param name="snapshot">The snapshot flag</param>
-    ///// <param name="regulatorySnapshot">The regulatory snapshot flag</param>
-    ///// <param name="mktDataOptions">The market data options</param>
-    ///// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    //public Task<TickSnapshotEndEventArgs> RequestMarketDataAsync(
-    //    Contract contract,
-    //    string genericTickList,
-    //    bool snapshot,
-    //    bool regulatorySnapshot,
-    //    List<TagValue> mktDataOptions)
+    void UnsubRealtimeBars(Contract contract);
 
-        /// <summary>
-        /// Request 5 Second Real Time Bars data from TWS
-        /// Caution: Not really real time!
-        /// </summary>
-        /// <param name="contract">The contract</param>
-        /// <param name="whatToShow">The things to show (?)</param>
-        /// <param name="useRTH">Whether to use regular trading hours</param>
-        /// <param name="realtimeBarOptions">The realtime bar options</param>
-        Task SubRealtimeBarsAsync(Contract contract, EDataType datType, bool useRTH = true);
+    ReadOnlyObservableCollection<Contract> RealtimeBarsSubscriptions { get; }
 
-        void UnsubRealtimeBars(Contract contract);
-
-        ReadOnlyObservableCollection<Contract> RealtimeBarsSubscriptions { get; }
-
-        event EventHandler<TwsEventArs<Contract, Bar>> RealtimeBarEvent;        // 5 sec bar
+    event EventHandler<TwsEventArs<Contract, Bar>> RealtimeBarEvent; // 5 sec bar
 
 #endregion
 

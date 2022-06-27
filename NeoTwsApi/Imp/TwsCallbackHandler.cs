@@ -470,7 +470,10 @@ public class TwsCallbackHandler : EWrapper
 
     /// <inheritdoc/>
     // 登录的时候会被自动调用，列出连接所有的Account
-    public void managedAccounts(string accountsList) { accountsList.Split(',').ForEach(p => Accounts.Add(p)); }
+    public void managedAccounts(string accountsList)
+    {
+        _IbClient.OnAccountsReccieved(accountsList);
+    }
 
     /// <inheritdoc/>
     public void marketDataType(int reqId, int marketDataType)

@@ -45,7 +45,7 @@ public class IbClient : ObservableObject, IIbClient
     public string ServerTime { get; protected set; } = null;
 
 
-    public IReadOnlyList<string> Accounts { get => _Accounts; }
+    public ReadOnlyObservableCollection <string> Accounts { get => new (_Accounts); }
 
 
     public IbClient(string host, int port, int clientId, ILogger? logger = null)
@@ -101,7 +101,8 @@ public class IbClient : ObservableObject, IIbClient
     {
         Logger?.Info($"Start ConnectAsync:{this.Dump()}");
 
-        var taskSource = new TaskCompletionSource<bool>();
+        var                                taskSource              = new TaskCompletionSource<bool>();
+        EventHandler<NextValidIdEventArgs> nextValidIdEventHandler = null;
 
         void ConnectionAcknowledgementCallback(object? sender, System.EventArgs eventArgs)
         {
@@ -123,17 +124,25 @@ public class IbClient : ObservableObject, IIbClient
                 { IsBackground = true };
             this.readerThread.Start();
 
-            //todo: need a better way
-            OnConnected();
+        }
+
+        nextValidIdEventHandler = (s, e) =>
+        {
+            this.twsCallbackHandler.NextValidIdEvent -= nextValidIdEventHandler;
+
+            //nextValidId() indicate really connected
+            OnConnected(e.OrderId);
 
             taskSource.TrySetResult(true);
-        }
+        };
 
         // Set the operation to cancel after 5 seconds
         CancellationTokenSource tokenSource = new CancellationTokenSource(this.TimeoutMilliseconds);
         tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
 
         this.twsCallbackHandler.ConnectionAcknowledgementEvent += ConnectionAcknowledgementCallback;
+        this.twsCallbackHandler.NextValidIdEvent += nextValidIdEventHandler;
+
         this.clientSocket.eConnect(this.Host, this.Port, this.ClientId);
         return taskSource.Task;
     }
@@ -162,14 +171,24 @@ public class IbClient : ObservableObject, IIbClient
         return taskSource.Task;
     }
 
-    protected void OnConnected()
+    protected void OnConnected(int nextValidId = 0)
     {
-        Logger?.Info($"Connected:{this.Dump()}");
+        twsRequestIdGenerator = new TwsRequestIdGenerator(nextValidId);
+
         Connected     = true;
         ServerVersion = clientSocket.ServerVersion;
         ServerTime    = clientSocket.ServerTime;
 
-        twsCallbackHandler.Accounts.ForEach(p => _Accounts.Add(p));
+
+        //twsCallbackHandler.Accounts.ForEach(p => _Accounts.Add(p));
+
+
+        Logger?.Info($"Connected:{this.Dump()}");
+    }
+
+    public void OnAccountsReccieved(string accountsList)// 当连接建立后，tws后会主动发送managedAccounts
+    {
+        accountsList.Split(',').ForEach(p => _Accounts.Add(p));
     }
 
     protected void OnDisconnected()
@@ -712,8 +731,7 @@ public class IbClient : ObservableObject, IIbClient
 
     private EReaderSignal signal = new EReaderMonitorSignal();
 
-    private TwsRequestIdGenerator twsRequestIdGenerator = new TwsRequestIdGenerator();
-
+    private TwsRequestIdGenerator twsRequestIdGenerator = null;
     /// <summary>
     /// The background thread that will await the signal and send events to the callback handler
     /// </summary>

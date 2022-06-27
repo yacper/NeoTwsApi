@@ -19,7 +19,7 @@ public class TwsRequestIdGenerator
     /// Initializes a new instance of the <see cref="TwsRequestIdGenerator"/> class.
     /// Generates a request Id for TWS requests
     /// </summary>
-    public TwsRequestIdGenerator() { }
+    public TwsRequestIdGenerator(int start = 0) { requestId = start; }
 
     /// <summary>
     /// Get the next request ID for IB
