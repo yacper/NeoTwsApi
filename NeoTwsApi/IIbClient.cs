@@ -7,6 +7,7 @@
     modifiers:	用户服务
 *********************************************************************/
 
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using AutoFinance.Broker.InteractiveBrokers.Constants;
@@ -75,6 +76,15 @@ public interface IIbClient : INotifyPropertyChanged
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task DisconnectAsync();
+
+#endregion
+
+#region Account
+
+    Task<ConcurrentDictionary<string, string>> ReqAccountDetailsAsync(string accountId);
+
+
+    
 
 #endregion
 

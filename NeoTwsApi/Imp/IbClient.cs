@@ -7,7 +7,9 @@
     modifiers:	用户服务
 *********************************************************************/
 
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using AutoFinance.Broker.InteractiveBrokers;
 using AutoFinance.Broker.InteractiveBrokers.Constants;
 using AutoFinance.Broker.InteractiveBrokers.Wrappers;
 using IBApi;
@@ -45,7 +47,7 @@ public class IbClient : ObservableObject, IIbClient
     public string ServerTime { get; protected set; } = null;
 
 
-    public ReadOnlyObservableCollection <string> Accounts { get => new (_Accounts); }
+    public ReadOnlyObservableCollection<string> Accounts { get => new(_Accounts); }
 
 
     public IbClient(string host, int port, int clientId, ILogger? logger = null)
@@ -65,6 +67,8 @@ public class IbClient : ObservableObject, IIbClient
         twsCallbackHandler.RealtimeBarEvent += TwsCallbackHandler_RealtimeBarEvent;
         //clientSocket   = new TwsClientSocket(_EClientSocket);
         //clientSocket   = _EClientSocket;
+
+        twsCallbackHandler.UpdateAccountValueEvent += _OnUpdateAccountValueEvent;
     }
 
 
@@ -123,7 +127,6 @@ public class IbClient : ObservableObject, IIbClient
                                            })
                 { IsBackground = true };
             this.readerThread.Start();
-
         }
 
         nextValidIdEventHandler = (s, e) =>
@@ -141,7 +144,7 @@ public class IbClient : ObservableObject, IIbClient
         tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
 
         this.twsCallbackHandler.ConnectionAcknowledgementEvent += ConnectionAcknowledgementCallback;
-        this.twsCallbackHandler.NextValidIdEvent += nextValidIdEventHandler;
+        this.twsCallbackHandler.NextValidIdEvent               += nextValidIdEventHandler;
 
         this.clientSocket.eConnect(this.Host, this.Port, this.ClientId);
         return taskSource.Task;
@@ -186,7 +189,7 @@ public class IbClient : ObservableObject, IIbClient
         Logger?.Info($"Connected:{this.Dump()}");
     }
 
-    public void OnAccountsReccieved(string accountsList)// 当连接建立后，tws后会主动发送managedAccounts
+    public void OnAccountsReccieved(string accountsList) // 当连接建立后，tws后会主动发送managedAccounts
     {
         accountsList.Split(',').ForEach(p => _Accounts.Add(p));
     }
@@ -197,6 +200,47 @@ public class IbClient : ObservableObject, IIbClient
         Connected = false;
         _Accounts.Clear();
     }
+
+
+#region Account
+
+    public Task<ConcurrentDictionary<string, string>> ReqAccountDetailsAsync(string accountId)
+    {
+        var taskSource = new TaskCompletionSource<ConcurrentDictionary<string, string>>();
+
+        EventHandler<AccountDownloadEndEventArgs> accountDownloadEndHandler = (s, e) => { taskSource.TrySetResult(this._AccountUpdates); };
+
+        this.twsCallbackHandler.AccountDownloadEndEvent -= accountDownloadEndHandler; // always clear
+        this.twsCallbackHandler.AccountDownloadEndEvent += accountDownloadEndHandler;
+
+        CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
+        tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
+
+        this.clientSocket.reqAccountUpdates(true, accountId);
+
+        return taskSource.Task;
+    }
+
+
+    /// <summary>
+    /// Run when an account value is updated
+    /// </summary>
+    /// <param name="sender">The sender</param>
+    /// <param name="eventArgs">The event arguments</param>
+    private void _OnUpdateAccountValueEvent(object sender, UpdateAccountValueEventArgs eventArgs)
+    {
+        this._AccountUpdates.AddOrUpdate(eventArgs.Key, eventArgs.Value, (key, value) =>
+        {
+            return eventArgs.Value; // Always take the most recent result
+        });
+    }
+
+    /// <summary>
+    /// The account updates dictionary
+    /// </summary>
+    private ConcurrentDictionary<string, string> _AccountUpdates = new();
+#endregion
+
 
 #region contract
 
@@ -638,8 +682,6 @@ public class IbClient : ObservableObject, IIbClient
     //    List<TagValue> mktDataOptions)
 
 
-
-
     public Task SubRealtimeBarsAsync(Contract contract, EDataType datType, bool useRTH = true)
     {
         if (RealtimeBarsSubscriptions.Any(p => p == contract))
@@ -651,7 +693,7 @@ public class IbClient : ObservableObject, IIbClient
         var taskSource = new TaskCompletionSource();
 
         EventHandler<TwsEventArs<Contract, Bar>> realtimeBarEventHandler = null;
-        EventHandler<ErrorEventArgs>       errorEventHandler       = null;
+        EventHandler<ErrorEventArgs>             errorEventHandler       = null;
 
         realtimeBarEventHandler = (sender, args) =>
         {
@@ -687,18 +729,17 @@ public class IbClient : ObservableObject, IIbClient
         this.clientSocket.reqRealTimeBars(
                                           requestId,
                                           contract,
-                                          5,        // only function on 5
+                                          5, // only function on 5
                                           datType.ToString(),
                                           useRTH,
                                           null);
 
         return taskSource.Task;
-
     }
 
     public void UnsubRealtimeBars(Contract contract)
     {
-        var sub = RealtimeBarsSubscriptions.FirstOrDefault(p =>p==contract);
+        var sub = RealtimeBarsSubscriptions.FirstOrDefault(p => p == contract);
         if (sub == null)
             return;
 
@@ -732,6 +773,7 @@ public class IbClient : ObservableObject, IIbClient
     private EReaderSignal signal = new EReaderMonitorSignal();
 
     private TwsRequestIdGenerator twsRequestIdGenerator = null;
+
     /// <summary>
     /// The background thread that will await the signal and send events to the callback handler
     /// </summary>

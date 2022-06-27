@@ -45,6 +45,19 @@ public class Tests
     //    //Debug.WriteLine(client.Dump());
     //}
 
+#region Account
+    [Test]
+    public async Task  ReqAccountDetailsAsync_Test()
+    {
+        var ret = await client.ReqAccountDetailsAsync(client.Accounts.FirstOrDefault());
+        Debug.WriteLine(ret.Dump());
+
+        ret.Should().NotBeEmpty();
+    }
+    
+
+#endregion
+
 #region Contract
 
     [Test]
