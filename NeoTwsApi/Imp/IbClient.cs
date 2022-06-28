@@ -264,10 +264,6 @@ public class IbClient : ObservableObject, IIbClient
         ServerVersion  = clientSocket.ServerVersion;
         ServerTime     = clientSocket.ServerTime;
 
-
-        //twsCallbackHandler.Accounts.ForEach(p => _Accounts.Add(p));
-
-
         Logger?.Info($"Connected:{this.Dump()}");
 
         ConnectionStat = EConnectionStat.Connected;

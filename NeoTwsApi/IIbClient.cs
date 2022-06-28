@@ -4,7 +4,7 @@
     email:		yacper@gmail.com	
 	
     purpose:
-    modifiers:	用户服务
+    modifiers:	Ib Api 
 *********************************************************************/
 
 using System.Collections.Concurrent;
