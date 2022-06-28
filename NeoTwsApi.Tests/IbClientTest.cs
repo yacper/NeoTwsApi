@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoFinance.Broker.InteractiveBrokers.Constants;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using IBApi;
@@ -17,17 +18,18 @@ using NUnit.Framework;
 
 namespace NeoTwsApi.Tests
 {
-public class Tests
+public partial class Tests
 {
     private IbClient client = null;
+
 
     [OneTimeSetUp]
     public async Task Setup()
     {
         Debug.WriteLine(Environment.CurrentDirectory);
         ILogger defaultLogger = null;
-        //LogManager.Configuration = new XmlLoggingConfiguration("NLog.config");
-        //defaultLogger = LogManager.GetCurrentClassLogger();
+        LogManager.Configuration = new XmlLoggingConfiguration("NLog.config");
+        defaultLogger            = LogManager.GetCurrentClassLogger();
 
         client = new IbClient(TestConstants.Host, TestConstants.Port, TestConstants.ClientId, defaultLogger);
         // Setup
@@ -38,7 +40,7 @@ public class Tests
 
         Debug.WriteLine(client.Dump());
 
-        await Reconnect_Test();
+        //await Reconnect_Test();
     }
 
     [OneTimeTearDown]
@@ -46,30 +48,25 @@ public class Tests
     {
         await client.DisconnectAsync();
 
-        client.ConnectionStat.Should().Be(EConnectionStat.Disconnected);
+        client.ConnectionState.Should().Be(EConnectionState.Disconnected);
         Debug.WriteLine(client.Dump());
     }
 
-    //[Test]
+    [Test]
     public async Task Reconnect_Test()
     {
         await client.DisconnectAsync();
-        client.ConnectionStat.Should().Be(EConnectionStat.Disconnected);
+        client.ConnectionState.Should().Be(EConnectionState.Disconnected);
         Debug.WriteLine(client.Dump());
 
-
         /// reconnect
-        client = new IbClient(TestConstants.Host, TestConstants.Port, TestConstants.ClientId );
         bool connected = await client.ConnectAsync();
         connected.Should().BeTrue();
         Debug.WriteLine(client.Dump());
 
         // wait some time for account info
         await Task.Delay(5000);
-
     }
-
-
 
 #region Account
 
@@ -92,12 +89,7 @@ public class Tests
     [Test]
     public async Task GetContractAsync_Test()
     {
-        Contract contract = new Contract();
-        contract.Symbol   = "EUR";
-        contract.SecType  = "CASH";
-        contract.Currency = "USD";
-        contract.Exchange = "IDEALPRO";
-
+        Contract contract = QQQContract_ETF;
 
         var ret = await client.ReqContractAsync(contract);
         Debug.WriteLine(ret.Dump());
@@ -121,13 +113,9 @@ public class Tests
 #region HistoricalData
 
     [Test]
-    public async Task ReqHistoricalDataAsync_Test1()
+    public async Task ReqHistoricalDataAsync_Test()
     {
-        Contract contract = new Contract();
-        contract.Symbol   = "EUR";
-        contract.SecType  = "CASH";
-        contract.Currency = "USD";
-        contract.Exchange = "IDEALPRO";
+        Contract    contract = XauusdContract_CMDTY;
 
         DurationTws duration = new DurationTws(3, EDurationStep.D);
         DateTime    end      = 17.March(2022).At(23, 59);

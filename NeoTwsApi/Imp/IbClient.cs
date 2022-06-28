@@ -25,6 +25,7 @@ using NeoTwsApi.Exceptions;
 using NeoTwsApi.Helpers;
 using NeoTwsApi.Imp;
 using ErrorEventArgs = NeoTwsApi.EventArgs.ErrorEventArgs;
+using System.Globalization;
 
 namespace NeoTwsApi;
 
@@ -41,65 +42,65 @@ public class IbClient : ObservableObject, IIbClient
     public ILogger? Logger { get; protected set; }
 
 
-    public EConnectionStat ConnectionStat { get =>ConnectionStat_; protected set => SetProperty(ref ConnectionStat_, value); }
+    public EConnectionState ConnectionState { get => ConnectionState_; protected set => SetProperty(ref ConnectionState_, value); }
 
     public int ServerVersion { get; protected set; } = 0;
 
-    public string ServerTime { get; protected set; } = null;
+    public string ConnectedServerTime { get; protected set; } = null;
 
 
-    public ReadOnlyObservableCollection<string> Accounts { get => new(_Accounts); }
+    public ReadOnlyObservableCollection<string> Accounts { get => new(Accounts_); }
 
 
     public IbClient(string host, int port, int clientId, ILogger? logger = null)
     {
-        Host               = host;
-        Port               = port;
-        ClientId           = clientId;
-        Logger             = logger;
+        Host     = host;
+        Port     = port;
+        ClientId = clientId;
+        Logger   = logger;
 
-        signal = new EReaderMonitorSignal();
-        twsCallbackHandler = new TwsCallbackHandler(this);
-        clientSocket = new EClientSocket(twsCallbackHandler, signal);
+        Signal_             = new EReaderMonitorSignal();
+        TwsCallbackHandler_ = new TwsCallbackHandler(this);
+        ClientSocket_       = new EClientSocket(TwsCallbackHandler_, Signal_);
         AddHandler_();
     }
 
     protected void AddHandler_()
     {
-        twsCallbackHandler.TickByTickBidAskEvent   += TwsCallbackHandler_TickByTickBidAskEvent;
-        twsCallbackHandler.TickByTickMidPointEvent += TwsCallbackHandler_TickByTickMidPointEvent;
-        twsCallbackHandler.TickByTickLastEvent     += TwsCallbackHandler_TickByTickLastEvent;
-        twsCallbackHandler.TickByTickAllLastEvent  += TwsCallbackHandlerTickByTickAllLastEvent;
+        TwsCallbackHandler_.TickByTickBidAskEvent   += TwsCallbackHandler_TickByTickBidAskEvent;
+        TwsCallbackHandler_.TickByTickMidPointEvent += TwsCallbackHandler_TickByTickMidPointEvent;
+        TwsCallbackHandler_.TickByTickLastEvent     += TwsCallbackHandler_TickByTickLastEvent;
+        TwsCallbackHandler_.TickByTickAllLastEvent  += TwsCallbackHandlerTickByTickAllLastEvent;
 
-        twsCallbackHandler.RealtimeBarEvent += TwsCallbackHandler_RealtimeBarEvent;
-        //clientSocket   = new TwsClientSocket(_EClientSocket);
-        //clientSocket   = _EClientSocket;
+        TwsCallbackHandler_.RealtimeBarEvent += TwsCallbackHandler_RealtimeBarEvent;
+        //ClientSocket_   = new TwsClientSocket(_EClientSocket);
+        //ClientSocket_   = _EClientSocket;
 
-        twsCallbackHandler.UpdateAccountValueEvent += _OnUpdateAccountValueEvent;
+        TwsCallbackHandler_.UpdateAccountValueEvent += _OnUpdateAccountValueEvent;
 
-        twsCallbackHandler.ExecutionDetailsEvent += TwsCallbackHandler_ExecutionDetailsEvent;
-        twsCallbackHandler.CommissionReportEvent += TwsCallbackHandler_CommissionReportEvent;
+        TwsCallbackHandler_.ExecutionDetailsEvent += TwsCallbackHandler_ExecutionDetailsEvent;
+        TwsCallbackHandler_.CommissionReportEvent += TwsCallbackHandler_CommissionReportEvent;
 
-        twsCallbackHandler.PositionStatusEvent += TwsCallbackHandler_PositionStatusEvent;
+        TwsCallbackHandler_.PositionStatusEvent += TwsCallbackHandler_PositionStatusEvent;
     }
 
     protected void RemoveHandler_()
     {
-        twsCallbackHandler.TickByTickBidAskEvent   -= TwsCallbackHandler_TickByTickBidAskEvent;
-        twsCallbackHandler.TickByTickMidPointEvent -= TwsCallbackHandler_TickByTickMidPointEvent;
-        twsCallbackHandler.TickByTickLastEvent     -= TwsCallbackHandler_TickByTickLastEvent;
-        twsCallbackHandler.TickByTickAllLastEvent  -= TwsCallbackHandlerTickByTickAllLastEvent;
+        TwsCallbackHandler_.TickByTickBidAskEvent   -= TwsCallbackHandler_TickByTickBidAskEvent;
+        TwsCallbackHandler_.TickByTickMidPointEvent -= TwsCallbackHandler_TickByTickMidPointEvent;
+        TwsCallbackHandler_.TickByTickLastEvent     -= TwsCallbackHandler_TickByTickLastEvent;
+        TwsCallbackHandler_.TickByTickAllLastEvent  -= TwsCallbackHandlerTickByTickAllLastEvent;
 
-        twsCallbackHandler.RealtimeBarEvent -= TwsCallbackHandler_RealtimeBarEvent;
-        //clientSocket   = new TwsClientSocket(_EClientSocket);
-        //clientSocket   = _EClientSocket;
+        TwsCallbackHandler_.RealtimeBarEvent -= TwsCallbackHandler_RealtimeBarEvent;
+        //ClientSocket_   = new TwsClientSocket(_EClientSocket);
+        //ClientSocket_   = _EClientSocket;
 
-        twsCallbackHandler.UpdateAccountValueEvent -= _OnUpdateAccountValueEvent;
+        TwsCallbackHandler_.UpdateAccountValueEvent -= _OnUpdateAccountValueEvent;
 
-        twsCallbackHandler.ExecutionDetailsEvent -= TwsCallbackHandler_ExecutionDetailsEvent;
-        twsCallbackHandler.CommissionReportEvent -= TwsCallbackHandler_CommissionReportEvent;
+        TwsCallbackHandler_.ExecutionDetailsEvent -= TwsCallbackHandler_ExecutionDetailsEvent;
+        TwsCallbackHandler_.CommissionReportEvent -= TwsCallbackHandler_CommissionReportEvent;
 
-        twsCallbackHandler.PositionStatusEvent -= TwsCallbackHandler_PositionStatusEvent;
+        TwsCallbackHandler_.PositionStatusEvent -= TwsCallbackHandler_PositionStatusEvent;
     }
 
     private void TwsCallbackHandler_PositionStatusEvent(object? sender, PositionStatusEventArgs e) { this.PositionStatusEvent?.Invoke(this, e); }
@@ -121,7 +122,7 @@ public class IbClient : ObservableObject, IIbClient
 
     public async Task<bool> ConnectAsync()
     {
-        if (ConnectionStat == EConnectionStat.Disconnected)
+        if (ConnectionState == EConnectionState.Disconnected)
         {
             await this.ConnectAsync_();
 
@@ -131,7 +132,7 @@ public class IbClient : ObservableObject, IIbClient
             //await Task.Delay(5000);
         }
 
-        return ConnectionStat == EConnectionStat.Connected;
+        return ConnectionState == EConnectionState.Connected;
     }
 
 
@@ -142,18 +143,17 @@ public class IbClient : ObservableObject, IIbClient
     private Task ConnectAsync_()
     {
         Logger?.Info($"Start ConnectAsync:{this.Dump()}");
-        ConnectionStat = EConnectionStat.Connecting;
+        ConnectionState = EConnectionState.Connecting;
 
-    
 
-        var                                taskSource              = new TaskCompletionSource<bool>();
-        EventHandler<NextValidIdEventArgs> nextValidIdEventHandler = null;
-        EventHandler connectionAcknowledgementCallback = null;
+        var                                taskSource                        = new TaskCompletionSource<bool>();
+        EventHandler<NextValidIdEventArgs> nextValidIdEventHandler           = null;
+        EventHandler                       connectionAcknowledgementCallback = null;
 
         void clearHandler()
         {
-            this.twsCallbackHandler.ConnectionAcknowledgementEvent -= connectionAcknowledgementCallback;
-            this.twsCallbackHandler.NextValidIdEvent -= nextValidIdEventHandler;
+            this.TwsCallbackHandler_.ConnectionAcknowledgementEvent -= connectionAcknowledgementCallback;
+            this.TwsCallbackHandler_.NextValidIdEvent               -= nextValidIdEventHandler;
         }
 
         connectionAcknowledgementCallback = (s, e) =>
@@ -162,28 +162,28 @@ public class IbClient : ObservableObject, IIbClient
 
             // When the connection is acknowledged, create a reader to consume messages from the TWS.
             // The EReader will consume the incoming messages and the callback handler will begin to fire events.
-            this.twsCallbackHandler.ConnectionAcknowledgementEvent -= connectionAcknowledgementCallback;
-            var reader = new EReader(this.clientSocket, this.signal);
+            this.TwsCallbackHandler_.ConnectionAcknowledgementEvent -= connectionAcknowledgementCallback;
+            var reader = new EReader(this.ClientSocket_, this.Signal_);
             reader.Start();
 
-            this.readerThread = new Thread(
+            this.ReaderThread_ = new Thread(
                                            () =>
                                            {
                                                while (ThreadRunning_)
                                                {
-                                                   this.signal.waitForSignal();
+                                                   this.Signal_.waitForSignal();
                                                    reader.processMsgs();
                                                }
                                            })
                 { IsBackground = true };
-            this.readerThread.Start();
+            this.ReaderThread_.Start();
         };
 
         nextValidIdEventHandler = (s, e) =>
         {
             lock (Lock_)
             {
-                if (ConnectionStat == EConnectionStat.Disconnected)
+                if (ConnectionState == EConnectionState.Disconnected)
                     return;
 
                 clearHandler();
@@ -203,36 +203,36 @@ public class IbClient : ObservableObject, IIbClient
                 /// 超时失败
                 clearHandler();
 
-                if (ConnectionStat == EConnectionStat.Connecting)
+                if (ConnectionState == EConnectionState.Connecting)
                 {
-                    this.clientSocket.eDisconnect();
+                    this.ClientSocket_.eDisconnect();
                     this.ThreadRunning_ = false;
-                    ConnectionStat      = EConnectionStat.Disconnected;
+                    ConnectionState     = EConnectionState.Disconnected;
                 }
 
                 taskSource.TrySetCanceled();
             }
         });
 
-        this.twsCallbackHandler.ConnectionAcknowledgementEvent += connectionAcknowledgementCallback;
-        this.twsCallbackHandler.NextValidIdEvent               += nextValidIdEventHandler;
+        this.TwsCallbackHandler_.ConnectionAcknowledgementEvent += connectionAcknowledgementCallback;
+        this.TwsCallbackHandler_.NextValidIdEvent               += nextValidIdEventHandler;
 
-        this.clientSocket.eConnect(this.Host, this.Port, this.ClientId);
+        this.ClientSocket_.eConnect(this.Host, this.Port, this.ClientId);
         return taskSource.Task;
     }
 
     public Task DisconnectAsync()
     {
-        if (ConnectionStat != EConnectionStat.Connected)
+        if (ConnectionState != EConnectionState.Connected)
             return Task.CompletedTask;
 
-        ConnectionStat = EConnectionStat.Disconnecting;
+        ConnectionState = EConnectionState.Disconnecting;
 
         var          taskSource              = new TaskCompletionSource();
         EventHandler connectionClosedHandler = null;
         connectionClosedHandler = (s, e) =>
         {
-            twsCallbackHandler.ConnectionClosedEvent -= connectionClosedHandler;
+            TwsCallbackHandler_.ConnectionClosedEvent -= connectionClosedHandler;
 
             // Abort the reader thread
             ThreadRunning_ = false;
@@ -240,17 +240,17 @@ public class IbClient : ObservableObject, IIbClient
             OnDisconnected();
             taskSource.TrySetResult();
         };
-        this.twsCallbackHandler.ConnectionClosedEvent += connectionClosedHandler;
+        this.TwsCallbackHandler_.ConnectionClosedEvent += connectionClosedHandler;
 
         // Set the operation to cancel after 5 seconds
         CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
         tokenSource.Token.Register(() =>
         {
-            twsCallbackHandler.ConnectionClosedEvent -= connectionClosedHandler;
+            TwsCallbackHandler_.ConnectionClosedEvent -= connectionClosedHandler;
             taskSource.TrySetCanceled();
         });
 
-        this.clientSocket.eDisconnect();
+        this.ClientSocket_.eDisconnect();
 
         return taskSource.Task;
     }
@@ -259,33 +259,34 @@ public class IbClient : ObservableObject, IIbClient
     {
         Interlocked.Exchange(ref NextValidOrderId_, nextValidId);
 
-        twsRequestIdGenerator = new TwsRequestIdGenerator();
+        TwsRequestIdGenerator_ = new TwsRequestIdGenerator();
 
-        ServerVersion  = clientSocket.ServerVersion;
-        ServerTime     = clientSocket.ServerTime;
+        ServerVersion = ClientSocket_.ServerVersion;
+        //DateTime ret = DateTime.ParseExact(ClientSocket_.ConnectedServerTime, "yyyyMMdd  HH:mm:ss zzz", CultureInfo.InvariantCulture);
+        ConnectedServerTime = ClientSocket_.ServerTime;
 
         Logger?.Info($"Connected:{this.Dump()}");
 
-        ConnectionStat = EConnectionStat.Connected;
+        ConnectionState = EConnectionState.Connected;
     }
 
     public void OnAccountsReccieved(string accountsList) // 当连接建立后，tws后会主动发送managedAccounts
     {
-        _Accounts.Clear();
-        accountsList.Split(',').ForEach(p => _Accounts.Add(p));
+        Accounts_.Clear();
+        accountsList.Split(',').ForEach(p => Accounts_.Add(p));
     }
 
     protected void OnDisconnected()
     {
         Logger?.Info($"DisConnected:{this.Dump()}");
 
-        _RealtimeBarsSubscriptions.Clear();
-        _RealtimeBarsSubscriptionReqs.Clear();
-        _TickByTickSubscriptionReqs.Clear();
-        _TickByTickSubscriptions.Clear();
+        RealtimeBarsSubscriptions_.Clear();
+        RealtimeBarsSubscriptionReqs_.Clear();
+        TickByTickSubscriptionReqs_.Clear();
+        TickByTickSubscriptions_.Clear();
         ReqContracts.Clear();
 
-        ConnectionStat = EConnectionStat.Disconnected;
+        ConnectionState = EConnectionState.Disconnected;
     }
 
 
@@ -297,13 +298,13 @@ public class IbClient : ObservableObject, IIbClient
 
         EventHandler<AccountDownloadEndEventArgs> accountDownloadEndHandler = (s, e) => { taskSource.TrySetResult(this._AccountUpdates); };
 
-        this.twsCallbackHandler.AccountDownloadEndEvent -= accountDownloadEndHandler; // always clear
-        this.twsCallbackHandler.AccountDownloadEndEvent += accountDownloadEndHandler;
+        this.TwsCallbackHandler_.AccountDownloadEndEvent -= accountDownloadEndHandler; // always clear
+        this.TwsCallbackHandler_.AccountDownloadEndEvent += accountDownloadEndHandler;
 
         CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
         tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
 
-        this.clientSocket.reqAccountUpdates(true, accountId);
+        this.ClientSocket_.reqAccountUpdates(true, accountId);
 
         return taskSource.Task;
     }
@@ -339,7 +340,7 @@ public class IbClient : ObservableObject, IIbClient
     /// <returns>The details of the contract</returns>
     public Task<List<ContractDetails>> ReqContractAsync(Contract contract)
     {
-        int                   requestId           = this.twsRequestIdGenerator.GetNextRequestId();
+        int                   requestId           = this.TwsRequestIdGenerator_.GetNextRequestId();
         List<ContractDetails> contractDetailsList = new List<ContractDetails>();
 
         var taskSource = new TaskCompletionSource<List<ContractDetails>>();
@@ -362,11 +363,11 @@ public class IbClient : ObservableObject, IIbClient
             if (args.RequestId == requestId)
             {
                 /// clean handler
-                this.twsCallbackHandler.ContractDetailsEvent -=
+                this.TwsCallbackHandler_.ContractDetailsEvent -=
                     contractDetailsEventHandler;
-                this.twsCallbackHandler.ContractDetailsEndEvent -=
+                this.TwsCallbackHandler_.ContractDetailsEndEvent -=
                     contractDetailsEndEventHandler;
-                this.twsCallbackHandler.ErrorEvent -= errorEventHandler;
+                this.TwsCallbackHandler_.ErrorEvent -= errorEventHandler;
 
                 taskSource.TrySetResult(contractDetailsList);
             }
@@ -377,9 +378,9 @@ public class IbClient : ObservableObject, IIbClient
             if (args.Id == requestId)
             {
                 // The error is associated with this request
-                this.twsCallbackHandler.ContractDetailsEvent    -= contractDetailsEventHandler;
-                this.twsCallbackHandler.ContractDetailsEndEvent -= contractDetailsEndEventHandler;
-                this.twsCallbackHandler.ErrorEvent              -= errorEventHandler;
+                this.TwsCallbackHandler_.ContractDetailsEvent    -= contractDetailsEventHandler;
+                this.TwsCallbackHandler_.ContractDetailsEndEvent -= contractDetailsEndEventHandler;
+                this.TwsCallbackHandler_.ErrorEvent              -= errorEventHandler;
 
                 taskSource.TrySetException(new TwsException(args));
             }
@@ -389,18 +390,18 @@ public class IbClient : ObservableObject, IIbClient
         CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
         tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
 
-        this.twsCallbackHandler.ContractDetailsEvent    += contractDetailsEventHandler;
-        this.twsCallbackHandler.ContractDetailsEndEvent += contractDetailsEndEventHandler;
-        this.twsCallbackHandler.ErrorEvent              += errorEventHandler;
+        this.TwsCallbackHandler_.ContractDetailsEvent    += contractDetailsEventHandler;
+        this.TwsCallbackHandler_.ContractDetailsEndEvent += contractDetailsEndEventHandler;
+        this.TwsCallbackHandler_.ErrorEvent              += errorEventHandler;
 
-        this.clientSocket.reqContractDetails(requestId, contract);
+        this.ClientSocket_.reqContractDetails(requestId, contract);
         return taskSource.Task;
     }
 
 
     public Task<List<ContractDescription>> ReqMatchingSymbolsAsync(string pattern)
     {
-        int                       requestId           = this.twsRequestIdGenerator.GetNextRequestId();
+        int                       requestId           = this.TwsRequestIdGenerator_.GetNextRequestId();
         List<ContractDescription> contractDetailsList = new List<ContractDescription>();
 
         var taskSource = new TaskCompletionSource<List<ContractDescription>>();
@@ -413,18 +414,18 @@ public class IbClient : ObservableObject, IIbClient
             {
                 contractDetailsList.AddRange(args.Arg);
 
-                twsCallbackHandler.SymbolSamplesEvent -= symbolSamplesHandler;
+                TwsCallbackHandler_.SymbolSamplesEvent -= symbolSamplesHandler;
                 taskSource.TrySetResult(contractDetailsList);
             }
         };
-       
+
         // Set the operation to cancel after 5 seconds
         CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
         tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
 
-        this.twsCallbackHandler.SymbolSamplesEvent += symbolSamplesHandler;
+        this.TwsCallbackHandler_.SymbolSamplesEvent += symbolSamplesHandler;
 
-        clientSocket.reqMatchingSymbols(requestId, pattern);
+        ClientSocket_.reqMatchingSymbols(requestId, pattern);
         return taskSource.Task;
     }
 
@@ -440,7 +441,7 @@ public class IbClient : ObservableObject, IIbClient
 
     public Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
     {
-        int            requestId    = this.twsRequestIdGenerator.GetNextRequestId();
+        int requestId = this.TwsRequestIdGenerator_.GetNextRequestId();
         ReqContracts[requestId] = new(contract, null);
         List<TagValue> chartOptions = null;
 
@@ -452,11 +453,12 @@ public class IbClient : ObservableObject, IIbClient
 
         void clearHandler()
         {
-            this.twsCallbackHandler.HistoricalDataEvent    -= historicalDataEventHandler;
-            this.twsCallbackHandler.HistoricalDataEndEvent -= historicalDataEndEventHandler;
-            this.twsCallbackHandler.ErrorEvent             -= errorEventHandler;
-        } 
-        List<Bar> historicalDataList = new ();
+            this.TwsCallbackHandler_.HistoricalDataEvent    -= historicalDataEventHandler;
+            this.TwsCallbackHandler_.HistoricalDataEndEvent -= historicalDataEndEventHandler;
+            this.TwsCallbackHandler_.ErrorEvent             -= errorEventHandler;
+        }
+
+        List<Bar> historicalDataList = new();
 
         historicalDataEventHandler = (sender, args) =>
         {
@@ -496,12 +498,12 @@ public class IbClient : ObservableObject, IIbClient
             taskSource.TrySetCanceled();
         });
 
-        this.twsCallbackHandler.HistoricalDataEvent    += historicalDataEventHandler;
-        this.twsCallbackHandler.HistoricalDataEndEvent += historicalDataEndEventHandler;
-        this.twsCallbackHandler.ErrorEvent             += errorEventHandler;
+        this.TwsCallbackHandler_.HistoricalDataEvent    += historicalDataEventHandler;
+        this.TwsCallbackHandler_.HistoricalDataEndEvent += historicalDataEndEventHandler;
+        this.TwsCallbackHandler_.ErrorEvent             += errorEventHandler;
 
 
-        this.clientSocket.reqHistoricalData(
+        this.ClientSocket_.reqHistoricalData(
                                             requestId,
                                             contract,
                                             end.ToTwsDateTimeString(),
@@ -540,8 +542,8 @@ public class IbClient : ObservableObject, IIbClient
 
         void clearHandler()
         {
-            this.twsCallbackHandler.OpenOrderEvent -= openOrderEventCallback;
-            this.twsCallbackHandler.ErrorEvent     -= orderErrorEventCallback;
+            this.TwsCallbackHandler_.OpenOrderEvent -= openOrderEventCallback;
+            this.TwsCallbackHandler_.ErrorEvent     -= orderErrorEventCallback;
         }
 
         openOrderEventCallback = (sender, eventArgs) =>
@@ -574,8 +576,8 @@ public class IbClient : ObservableObject, IIbClient
             }
         };
 
-        this.twsCallbackHandler.ErrorEvent     += orderErrorEventCallback;
-        this.twsCallbackHandler.OpenOrderEvent += openOrderEventCallback;
+        this.TwsCallbackHandler_.ErrorEvent     += orderErrorEventCallback;
+        this.TwsCallbackHandler_.OpenOrderEvent += openOrderEventCallback;
 
 
         CancellationTokenSource cancellationToken = new CancellationTokenSource(TimeoutMilliseconds);
@@ -585,7 +587,7 @@ public class IbClient : ObservableObject, IIbClient
             taskSource.TrySetCanceled();
         });
 
-        this.clientSocket.placeOrder(orderId, contract, order);
+        this.ClientSocket_.placeOrder(orderId, contract, order);
         return taskSource.Task;
     }
 
@@ -620,11 +622,12 @@ public class IbClient : ObservableObject, IIbClient
 
         void clearHandler()
         {
-            this.twsCallbackHandler.OpenOrderEvent    -= openOrderEventHandler;
-            this.twsCallbackHandler.OpenOrderEndEvent -= openOrderEndEventHandler;
+            this.TwsCallbackHandler_.OpenOrderEvent    -= openOrderEventHandler;
+            this.TwsCallbackHandler_.OpenOrderEndEvent -= openOrderEndEventHandler;
         }
-        this.twsCallbackHandler.OpenOrderEvent    += openOrderEventHandler;
-        this.twsCallbackHandler.OpenOrderEndEvent += openOrderEndEventHandler;
+
+        this.TwsCallbackHandler_.OpenOrderEvent    += openOrderEventHandler;
+        this.TwsCallbackHandler_.OpenOrderEndEvent += openOrderEndEventHandler;
 
         // Set the operation to cancel after 5 seconds
         CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
@@ -634,7 +637,7 @@ public class IbClient : ObservableObject, IIbClient
             taskSource.TrySetCanceled();
         });
 
-        this.clientSocket.reqAllOpenOrders();
+        this.ClientSocket_.reqAllOpenOrders();
 
         return taskSource.Task;
     }
@@ -659,7 +662,7 @@ public class IbClient : ObservableObject, IIbClient
                 // 这里行为不统一，有的时候再发送submitted后，会再发送一个Cancelled状态，
                 // 但大多数情况下，不会再更新状态
                 if (eventArgs.Status == "Cancelled")
-                //if (eventArgs.Status == "Submitted")
+                    //if (eventArgs.Status == "Submitted")
                 {
                     // Unregister the callbacks
                     clearHandler();
@@ -688,8 +691,8 @@ public class IbClient : ObservableObject, IIbClient
 
         void clearHandler()
         {
-            this.twsCallbackHandler.ErrorEvent       -= errorEventCallback;
-            this.twsCallbackHandler.OrderStatusEvent -= orderStatusEventCallback;
+            this.TwsCallbackHandler_.ErrorEvent       -= errorEventCallback;
+            this.TwsCallbackHandler_.OrderStatusEvent -= orderStatusEventCallback;
         }
 
         // Set the operation to cancel after 5 seconds
@@ -700,10 +703,10 @@ public class IbClient : ObservableObject, IIbClient
             taskSource.TrySetCanceled();
         });
 
-        this.twsCallbackHandler.OrderStatusEvent += orderStatusEventCallback;
-        this.twsCallbackHandler.ErrorEvent       += errorEventCallback;
+        this.TwsCallbackHandler_.OrderStatusEvent += orderStatusEventCallback;
+        this.TwsCallbackHandler_.ErrorEvent       += errorEventCallback;
 
-        this.clientSocket.cancelOrder(orderId, null);
+        this.ClientSocket_.cancelOrder(orderId, null);
         return taskSource.Task;
     }
 
@@ -729,7 +732,7 @@ public class IbClient : ObservableObject, IIbClient
             return Task.CompletedTask;
 
 
-        int requestId = this.twsRequestIdGenerator.GetNextRequestId();
+        int requestId = this.TwsRequestIdGenerator_.GetNextRequestId();
         ReqContracts[requestId] = new(contract, tickType);
 
         var taskSource = new TaskCompletionSource();
@@ -746,31 +749,31 @@ public class IbClient : ObservableObject, IIbClient
             switch (type)
             {
                 case ETickByTickDataType.MidPoint:
-                    this.twsCallbackHandler.TickByTickMidPointEvent -= tickByTickMidPointEventHandler;
+                    this.TwsCallbackHandler_.TickByTickMidPointEvent -= tickByTickMidPointEventHandler;
                     break;
                 case
                     ETickByTickDataType.Last:
-                    this.twsCallbackHandler.TickByTickLastEvent -= tickByTickLastEventHandler;
+                    this.TwsCallbackHandler_.TickByTickLastEvent -= tickByTickLastEventHandler;
                     break;
                 case
                     ETickByTickDataType.AllLast:
-                    this.twsCallbackHandler.TickByTickAllLastEvent -= tickByTickAllLastEventHandler;
+                    this.TwsCallbackHandler_.TickByTickAllLastEvent -= tickByTickAllLastEventHandler;
                     break;
                 case
                     ETickByTickDataType.BidAsk:
-                    this.twsCallbackHandler.TickByTickBidAskEvent -= tickByTickBidAskEventHandler;
+                    this.TwsCallbackHandler_.TickByTickBidAskEvent -= tickByTickBidAskEventHandler;
                     break;
             }
 
-            this.twsCallbackHandler.ErrorEvent -= errorEventHandler;
+            this.TwsCallbackHandler_.ErrorEvent -= errorEventHandler;
         }
 
         void sucess(ETickByTickDataType type)
         {
             clearHandler(type);
             var tu = new Tuple<Contract, ETickByTickDataType>(contract, type);
-            _TickByTickSubscriptions.Add(tu);
-            _TickByTickSubscriptionReqs[requestId] = tu;
+            TickByTickSubscriptions_.Add(tu);
+            TickByTickSubscriptionReqs_[requestId] = tu;
 
             taskSource.TrySetResult();
         }
@@ -808,20 +811,20 @@ public class IbClient : ObservableObject, IIbClient
         switch (tickType)
         {
             case ETickByTickDataType.MidPoint:
-                this.twsCallbackHandler.TickByTickMidPointEvent += tickByTickMidPointEventHandler;
+                this.TwsCallbackHandler_.TickByTickMidPointEvent += tickByTickMidPointEventHandler;
                 break;
             case ETickByTickDataType.Last:
-                this.twsCallbackHandler.TickByTickLastEvent += tickByTickLastEventHandler;
+                this.TwsCallbackHandler_.TickByTickLastEvent += tickByTickLastEventHandler;
                 break;
             case ETickByTickDataType.AllLast:
-                this.twsCallbackHandler.TickByTickAllLastEvent += tickByTickAllLastEventHandler;
+                this.TwsCallbackHandler_.TickByTickAllLastEvent += tickByTickAllLastEventHandler;
                 break;
             case ETickByTickDataType.BidAsk:
-                this.twsCallbackHandler.TickByTickBidAskEvent += tickByTickBidAskEventHandler;
+                this.TwsCallbackHandler_.TickByTickBidAskEvent += tickByTickBidAskEventHandler;
                 break;
         }
 
-        this.twsCallbackHandler.ErrorEvent += errorEventHandler;
+        this.TwsCallbackHandler_.ErrorEvent += errorEventHandler;
 
 
         // Set the operation to cancel after 1 minute
@@ -836,7 +839,7 @@ public class IbClient : ObservableObject, IIbClient
             taskSource.TrySetCanceled();
         });
 
-        this.clientSocket.reqTickByTickData(requestId, contract, tickType.ToString(), 0, false);
+        this.ClientSocket_.reqTickByTickData(requestId, contract, tickType.ToString(), 0, false);
 
         return taskSource.Task;
     }
@@ -847,15 +850,15 @@ public class IbClient : ObservableObject, IIbClient
         if (sub == null)
             return;
 
-        var pair = _TickByTickSubscriptionReqs.FirstOrDefault(p => p.Value == sub);
+        var pair = TickByTickSubscriptionReqs_.FirstOrDefault(p => p.Value == sub);
 
-        this.clientSocket.cancelTickByTickData(pair.Key);
+        this.ClientSocket_.cancelTickByTickData(pair.Key);
 
-        _TickByTickSubscriptions.Remove(sub);
-        _TickByTickSubscriptionReqs.Remove(pair.Key);
+        TickByTickSubscriptions_.Remove(sub);
+        TickByTickSubscriptionReqs_.Remove(pair.Key);
     }
 
-    public ReadOnlyObservableCollection<Tuple<Contract, ETickByTickDataType>> TickByTickSubscriptions { get => new(_TickByTickSubscriptions); }
+    public ReadOnlyObservableCollection<Tuple<Contract, ETickByTickDataType>> TickByTickSubscriptions { get => new(TickByTickSubscriptions_); }
 
     public event EventHandler<TwsEventArs<Contract, HistoricalTick>>       TickByTickMidPointEvent;
     public event EventHandler<TwsEventArs<Contract, HistoricalTickLast>>   TickByTickLastEvent;
@@ -885,7 +888,7 @@ public class IbClient : ObservableObject, IIbClient
         if (RealtimeBarsSubscriptions.Any(p => p == contract))
             return Task.CompletedTask;
 
-        int requestId = this.twsRequestIdGenerator.GetNextRequestId();
+        int requestId = this.TwsRequestIdGenerator_.GetNextRequestId();
         ReqContracts[requestId] = new(contract, null);
 
         var taskSource = new TaskCompletionSource();
@@ -897,11 +900,11 @@ public class IbClient : ObservableObject, IIbClient
         {
             if (args.RequestId == requestId)
             {
-                this.twsCallbackHandler.RealtimeBarEvent -= realtimeBarEventHandler;
-                this.twsCallbackHandler.ErrorEvent       -= errorEventHandler;
+                this.TwsCallbackHandler_.RealtimeBarEvent -= realtimeBarEventHandler;
+                this.TwsCallbackHandler_.ErrorEvent       -= errorEventHandler;
 
-                _RealtimeBarsSubscriptions.Add(contract);
-                _RealtimeBarsSubscriptionReqs[requestId] = contract;
+                RealtimeBarsSubscriptions_.Add(contract);
+                RealtimeBarsSubscriptionReqs_[requestId] = contract;
 
                 taskSource.TrySetResult();
             }
@@ -915,27 +918,27 @@ public class IbClient : ObservableObject, IIbClient
                 //this.CancelRealtimeBars(requestId);
 
                 // The error is associated with this request
-                this.twsCallbackHandler.RealtimeBarEvent -= realtimeBarEventHandler;
-                this.twsCallbackHandler.ErrorEvent       -= errorEventHandler;
+                this.TwsCallbackHandler_.RealtimeBarEvent -= realtimeBarEventHandler;
+                this.TwsCallbackHandler_.ErrorEvent       -= errorEventHandler;
                 taskSource.TrySetException(new TwsException(args));
             }
         };
 
-        this.twsCallbackHandler.RealtimeBarEvent += realtimeBarEventHandler;
-        this.twsCallbackHandler.ErrorEvent       += errorEventHandler;
+        this.TwsCallbackHandler_.RealtimeBarEvent += realtimeBarEventHandler;
+        this.TwsCallbackHandler_.ErrorEvent       += errorEventHandler;
 
 
         // Set the operation to cancel after 1 minute
         CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
         tokenSource.Token.Register(() =>
         {
-            this.twsCallbackHandler.RealtimeBarEvent -= realtimeBarEventHandler;
-            this.twsCallbackHandler.ErrorEvent -= errorEventHandler;
+            this.TwsCallbackHandler_.RealtimeBarEvent -= realtimeBarEventHandler;
+            this.TwsCallbackHandler_.ErrorEvent       -= errorEventHandler;
             taskSource.TrySetCanceled();
         });
 
 
-        this.clientSocket.reqRealTimeBars(
+        this.ClientSocket_.reqRealTimeBars(
                                           requestId,
                                           contract,
                                           5, // only function on 5
@@ -952,15 +955,15 @@ public class IbClient : ObservableObject, IIbClient
         if (sub == null)
             return;
 
-        var pair = _RealtimeBarsSubscriptionReqs.FirstOrDefault(p => p.Value == sub);
+        var pair = RealtimeBarsSubscriptionReqs_.FirstOrDefault(p => p.Value == sub);
 
-        this.clientSocket.cancelRealTimeBars(pair.Key);
+        this.ClientSocket_.cancelRealTimeBars(pair.Key);
 
-        _RealtimeBarsSubscriptions.Remove(sub);
-        _RealtimeBarsSubscriptionReqs.Remove(pair.Key);
+        RealtimeBarsSubscriptions_.Remove(sub);
+        RealtimeBarsSubscriptionReqs_.Remove(pair.Key);
     }
 
-    public ReadOnlyObservableCollection<Contract> RealtimeBarsSubscriptions { get => new(_RealtimeBarsSubscriptions); }
+    public ReadOnlyObservableCollection<Contract> RealtimeBarsSubscriptions { get => new(RealtimeBarsSubscriptions_); }
 
     public event EventHandler<TwsEventArs<Contract, Bar>> RealtimeBarEvent;
 
@@ -988,14 +991,14 @@ public class IbClient : ObservableObject, IIbClient
             taskSource.TrySetResult(positionStatusEvents);
         };
 
-        this.twsCallbackHandler.PositionStatusEvent      += positionStatusEventHandler;
-        this.twsCallbackHandler.RequestPositionsEndEvent += requestPositionsEndEventHandler;
+        this.TwsCallbackHandler_.PositionStatusEvent      += positionStatusEventHandler;
+        this.TwsCallbackHandler_.RequestPositionsEndEvent += requestPositionsEndEventHandler;
 
         void clearHandler()
         {
             // Cleanup the event handlers when the positions end event is called.
-            this.twsCallbackHandler.PositionStatusEvent      -= positionStatusEventHandler;
-            this.twsCallbackHandler.RequestPositionsEndEvent -= requestPositionsEndEventHandler;
+            this.TwsCallbackHandler_.PositionStatusEvent      -= positionStatusEventHandler;
+            this.TwsCallbackHandler_.RequestPositionsEndEvent -= requestPositionsEndEventHandler;
         }
 
         // Set the operation to cancel after 1 minute
@@ -1008,7 +1011,7 @@ public class IbClient : ObservableObject, IIbClient
         });
 
 
-        this.clientSocket.reqPositions();
+        this.ClientSocket_.reqPositions();
 
         return taskSource.Task;
     }
@@ -1019,7 +1022,7 @@ public class IbClient : ObservableObject, IIbClient
     /// <summary>
     /// Sends a message to TWS telling it to stop sending position information through the socket.
     /// </summary>
-    public void UnsubPositions() { this.clientSocket.cancelPositions(); }
+    public void UnsubPositions() { this.ClientSocket_.cancelPositions(); }
 
 #endregion
 
@@ -1031,7 +1034,7 @@ public class IbClient : ObservableObject, IIbClient
     /// Gets the next request id
     /// </summary>
     /// <returns>The next request id</returns>
-    public int GetNextRequestId() { return this.twsRequestIdGenerator.GetNextRequestId(); }
+    public int GetNextRequestId() { return this.TwsRequestIdGenerator_.GetNextRequestId(); }
 
 
     public int GetNextValidOrderId()
@@ -1049,31 +1052,32 @@ public class IbClient : ObservableObject, IIbClient
     private bool ThreadRunning_ = false;
 
 //    private   bool            _Connected;
-    protected EConnectionStat ConnectionStat_;
+    protected EConnectionState ConnectionState_;
 
-    private TwsCallbackHandler twsCallbackHandler = null;
+    private TwsCallbackHandler TwsCallbackHandler_ = null;
 
-    //private TwsClientSocket    clientSocket       = null;
-    private EClientSocket clientSocket   = null;
+    //private TwsClientSocket    ClientSocket_       = null;
+    private EClientSocket ClientSocket_ = null;
 
-    private EReaderSignal signal;
+    private EReaderSignal Signal_;
 
-    private TwsRequestIdGenerator twsRequestIdGenerator = null;
+    private TwsRequestIdGenerator TwsRequestIdGenerator_ = null;
 
     /// <summary>
-    /// The background thread that will await the signal and send events to the callback handler
+    /// The background thread that will await the Signal_ and send events to the callback handler
     /// </summary>
-    private Thread readerThread;
+    private Thread ReaderThread_;
 
-    protected ObservableCollection<string> _Accounts = new ObservableCollection<string>();
+    protected ObservableCollection<string> Accounts_ = new ObservableCollection<string>();
 
 
-    protected ObservableCollection<Tuple<Contract, ETickByTickDataType>> _TickByTickSubscriptions    = new ObservableCollection<Tuple<Contract, ETickByTickDataType>>();
-    protected Dictionary<int, Tuple<Contract, ETickByTickDataType>>      _TickByTickSubscriptionReqs = new();
+    protected ObservableCollection<Tuple<Contract, ETickByTickDataType>> TickByTickSubscriptions_    = new ObservableCollection<Tuple<Contract, ETickByTickDataType>>();
+    protected Dictionary<int, Tuple<Contract, ETickByTickDataType>>      TickByTickSubscriptionReqs_ = new();
 
-    protected ObservableCollection<Contract> _RealtimeBarsSubscriptions    = new();
-    protected Dictionary<int, Contract>      _RealtimeBarsSubscriptionReqs = new();
+    protected ObservableCollection<Contract> RealtimeBarsSubscriptions_    = new();
+    protected Dictionary<int, Contract>      RealtimeBarsSubscriptionReqs_ = new();
 
     protected object Lock_ = new object();
+
 #endregion
 }

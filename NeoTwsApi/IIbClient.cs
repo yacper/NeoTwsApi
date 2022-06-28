@@ -18,7 +18,7 @@ using NeoTwsApi.Helpers;
 using NLog;
 
 namespace NeoTwsApi;
-public enum EConnectionStat
+public enum EConnectionState
 {
     Disconnected =0,
     Connecting,
@@ -53,7 +53,7 @@ public interface IIbClient : INotifyPropertyChanged
          */
     public int ServerVersion { get; }
 
-    public string ServerTime { get; }
+    public string ConnectedServerTime { get; }  // Server time when connected, some string can't recognize
 
 
 #region Login
@@ -61,7 +61,7 @@ public interface IIbClient : INotifyPropertyChanged
     /// <summary>
     /// Gets a value indicating whether is the client connected to tws
     /// </summary>
-    EConnectionStat ConnectionStat { get; }
+    EConnectionState ConnectionState { get; }
 
 
     /// <summary>
