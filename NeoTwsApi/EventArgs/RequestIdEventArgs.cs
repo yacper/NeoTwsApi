@@ -1,6 +1,6 @@
 ﻿// Licensed under the Apache License, Version 2.0.
 
-namespace AutoFinance.Broker.InteractiveBrokers.EventArgs
+namespace NeoTwsApi.EventArgs
 {
     /// <summary>
     /// The event arguments for empty events sent from TWS.

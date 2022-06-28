@@ -3,9 +3,6 @@ using System.Diagnostics;
 using MoreLinq;
 using NeoTwsApi.EventArgs;
 using NeoTwsApi.Helpers;
-using AutoFinance.Broker.InteractiveBrokers.EventArgs;
-using AutoFinance.Broker.InteractiveBrokers;
-using AutoFinance.Broker.InteractiveBrokers.Wrappers;
 using IBApi;
 using ErrorEventArgs = NeoTwsApi.EventArgs.ErrorEventArgs;
 
@@ -18,12 +15,12 @@ public class TwsCallbackHandler : EWrapper
 {
     public IList<string> Accounts { get; } = new List<string>();
 
-    protected IbClient _IbClient;
+    protected IbClient IbClient_ = null;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TwsCallbackHandler"/> class.
     /// </summary>
-    public TwsCallbackHandler(IbClient client) { _IbClient = client; }
+    public TwsCallbackHandler(IbClient client) { IbClient_ = client; }
 
     /// <summary>
     /// The event that is fired when AccountDownloadEnd is called by TWS
@@ -477,7 +474,7 @@ public class TwsCallbackHandler : EWrapper
     // 登录的时候会被自动调用，列出连接所有的Account
     public void managedAccounts(string accountsList)
     {
-        _IbClient.OnAccountsReccieved(accountsList);
+        IbClient_.OnAccountsReccieved(accountsList);
     }
 
     /// <inheritdoc/>
@@ -588,7 +585,7 @@ public class TwsCallbackHandler : EWrapper
                             decimal WAP,   int  count)
     {
         //var eventArgs = new RealtimeBarEventArgs(reqId, time, open, high, low, close, volume, WAP, count);
-        this.RealtimeBarEvent?.Invoke(this, new(reqId, _IbClient.ReqContracts[reqId].Item1,
+        this.RealtimeBarEvent?.Invoke(this, new(reqId, IbClient_.ReqContracts[reqId].Item1,
                                                 new Bar(Util.LongMaxString(time), open, high, low, close, volume, count, WAP)
                                                ));
 
@@ -655,9 +652,9 @@ public class TwsCallbackHandler : EWrapper
 
         var tick = new HistoricalTickLast(time, tickAttriblast, price, size, exchange, specialConditions);
         if (tickType == 1)
-            TickByTickLastEvent?.Invoke(this, new(reqId, _IbClient.ReqContracts[reqId].Item1, tick));
+            TickByTickLastEvent?.Invoke(this, new(reqId, IbClient_.ReqContracts[reqId].Item1, tick));
         else
-            TickByTickAllLastEvent?.Invoke(this, new(reqId, _IbClient.ReqContracts[reqId].Item1, tick));
+            TickByTickAllLastEvent?.Invoke(this, new(reqId, IbClient_.ReqContracts[reqId].Item1, tick));
 
 
         //Console.WriteLine(
@@ -674,7 +671,7 @@ public class TwsCallbackHandler : EWrapper
     {
         TickByTickBidAskEvent?.Invoke(this,
                                       new(reqId,
-                                          _IbClient.ReqContracts[reqId].Item1,
+                                          IbClient_.ReqContracts[reqId].Item1,
                                           new HistoricalTickBidAsk(
                                                                    time, tickAttribBidAsk,
                                                                    bidPrice,
@@ -694,7 +691,7 @@ public class TwsCallbackHandler : EWrapper
     {
         TickByTickMidPointEvent?.Invoke(this,
                                       new(reqId,
-                                          _IbClient.ReqContracts[reqId].Item1,
+                                          IbClient_.ReqContracts[reqId].Item1,
                                           new HistoricalTick(
                                                              time, midPoint, 
                                                              decimal.MaxValue  // decimal.MaxValue indicate no value

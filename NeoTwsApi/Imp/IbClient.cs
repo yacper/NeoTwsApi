@@ -10,13 +10,9 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using AutoFinance.Broker.InteractiveBrokers;
-using AutoFinance.Broker.InteractiveBrokers.Constants;
-using AutoFinance.Broker.InteractiveBrokers.Wrappers;
 using IBApi;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using NLog;
-using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using Microsoft.VisualBasic.CompilerServices;
 using MoreLinq;
 using NeoTwsApi.Enums;
@@ -26,6 +22,8 @@ using NeoTwsApi.Helpers;
 using NeoTwsApi.Imp;
 using ErrorEventArgs = NeoTwsApi.EventArgs.ErrorEventArgs;
 using System.Globalization;
+using NeoTwsApi.Constants;
+using NeoTwsApi.Models;
 
 namespace NeoTwsApi;
 
@@ -167,14 +165,14 @@ public class IbClient : ObservableObject, IIbClient
             reader.Start();
 
             this.ReaderThread_ = new Thread(
-                                           () =>
-                                           {
-                                               while (ThreadRunning_)
-                                               {
-                                                   this.Signal_.waitForSignal();
-                                                   reader.processMsgs();
-                                               }
-                                           })
+                                            () =>
+                                            {
+                                                while (ThreadRunning_)
+                                                {
+                                                    this.Signal_.waitForSignal();
+                                                    reader.processMsgs();
+                                                }
+                                            })
                 { IsBackground = true };
             this.ReaderThread_.Start();
         };
@@ -292,11 +290,11 @@ public class IbClient : ObservableObject, IIbClient
 
 #region Account
 
-    public Task<ConcurrentDictionary<string, string>> ReqAccountDetailsAsync(string accountId)
+    public Task<AccountDetails> ReqAccountDetailsAsync(string accountId)
     {
-        var taskSource = new TaskCompletionSource<ConcurrentDictionary<string, string>>();
+        var taskSource = new TaskCompletionSource<AccountDetails>();
 
-        EventHandler<AccountDownloadEndEventArgs> accountDownloadEndHandler = (s, e) => { taskSource.TrySetResult(this._AccountUpdates); };
+        EventHandler<AccountDownloadEndEventArgs> accountDownloadEndHandler = (s, e) => { taskSource.TrySetResult(this.AccountUpdates_[accountId]); };
 
         this.TwsCallbackHandler_.AccountDownloadEndEvent -= accountDownloadEndHandler; // always clear
         this.TwsCallbackHandler_.AccountDownloadEndEvent += accountDownloadEndHandler;
@@ -317,7 +315,10 @@ public class IbClient : ObservableObject, IIbClient
     /// <param name="eventArgs">The event arguments</param>
     private void _OnUpdateAccountValueEvent(object sender, UpdateAccountValueEventArgs eventArgs)
     {
-        this._AccountUpdates.AddOrUpdate(eventArgs.Key, eventArgs.Value, (key, value) =>
+        if (!AccountUpdates_.ContainsKey(eventArgs.AccountName))
+            AccountUpdates_[eventArgs.AccountName] = new AccountDetails();
+
+        this.AccountUpdates_[eventArgs.AccountName].AddOrUpdate(eventArgs.Key, eventArgs.Value, (key, value) =>
         {
             return eventArgs.Value; // Always take the most recent result
         });
@@ -326,7 +327,7 @@ public class IbClient : ObservableObject, IIbClient
     /// <summary>
     /// The account updates dictionary
     /// </summary>
-    private ConcurrentDictionary<string, string> _AccountUpdates = new();
+    private Dictionary<string, AccountDetails> AccountUpdates_ = new();
 
 #endregion
 
@@ -504,16 +505,16 @@ public class IbClient : ObservableObject, IIbClient
 
 
         this.ClientSocket_.reqHistoricalData(
-                                            requestId,
-                                            contract,
-                                            end.ToTwsDateTimeString(),
-                                            duration.ToString(),
-                                            tf.ToTwsString(),
-                                            dataType.ToString(),
-                                            useRth ? 1 : 0,
-                                            1,     // default format date
-                                            false, // not keep update
-                                            chartOptions);
+                                             requestId,
+                                             contract,
+                                             end.ToTwsDateTimeString(),
+                                             duration.ToString(),
+                                             tf.ToTwsString(),
+                                             dataType.ToString(),
+                                             useRth ? 1 : 0,
+                                             1,     // default format date
+                                             false, // not keep update
+                                             chartOptions);
 
         return taskSource.Task;
     }
@@ -939,12 +940,12 @@ public class IbClient : ObservableObject, IIbClient
 
 
         this.ClientSocket_.reqRealTimeBars(
-                                          requestId,
-                                          contract,
-                                          5, // only function on 5
-                                          datType.ToString(),
-                                          useRTH,
-                                          null);
+                                           requestId,
+                                           contract,
+                                           5, // only function on 5
+                                           datType.ToString(),
+                                           useRTH,
+                                           null);
 
         return taskSource.Task;
     }

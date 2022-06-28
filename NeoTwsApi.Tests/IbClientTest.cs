@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoFinance.Broker.InteractiveBrokers.Constants;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using IBApi;
@@ -12,6 +11,7 @@ using NeoTwsApi.Enums;
 using NeoTwsApi.EventArgs;
 using NeoTwsApi.Exceptions;
 using NeoTwsApi.Helpers;
+using NeoTwsApi.Imp;
 using NLog;
 using NLog.Config;
 using NUnit.Framework;
@@ -20,27 +20,22 @@ namespace NeoTwsApi.Tests
 {
 public partial class Tests
 {
-    private IbClient client = null;
+    private IIbClient client = null;
 
 
     [OneTimeSetUp]
     public async Task Setup()
     {
-        Debug.WriteLine(Environment.CurrentDirectory);
         ILogger defaultLogger = null;
         LogManager.Configuration = new XmlLoggingConfiguration("NLog.config");
         defaultLogger            = LogManager.GetCurrentClassLogger();
 
-        client = new IbClient(TestConstants.Host, TestConstants.Port, TestConstants.ClientId, defaultLogger);
-        // Setup
+        /// connect
+        client = new IbClient(TestConstants.Host, TestConstants.Port, TestConstants.ClientId, defaultLogger); // defaultLogger - can be null
         bool connected = await client.ConnectAsync();
         connected.Should().BeTrue();
 
-        //client.Accounts.Should().NotBeEmpty();
-
         Debug.WriteLine(client.Dump());
-
-        //await Reconnect_Test();
     }
 
     [OneTimeTearDown]

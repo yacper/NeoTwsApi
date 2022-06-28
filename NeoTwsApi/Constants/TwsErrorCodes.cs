@@ -1,6 +1,6 @@
 ﻿// Licensed under the Apache License, Version 2.0.
 
-namespace AutoFinance.Broker.InteractiveBrokers.Constants
+namespace NeoTwsApi.Constants
 {
     /// <summary>
     /// The class that holds the error codes for TWS

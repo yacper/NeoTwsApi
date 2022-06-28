@@ -15,6 +15,7 @@ using Microsoft.Toolkit.Mvvm.ComponentModel;
 using NeoTwsApi.Enums;
 using NeoTwsApi.EventArgs;
 using NeoTwsApi.Helpers;
+using NeoTwsApi.Models;
 using NLog;
 
 namespace NeoTwsApi;
@@ -79,9 +80,9 @@ public interface IIbClient : INotifyPropertyChanged
 #endregion
 
 #region Account
-    ReadOnlyObservableCollection<string> Accounts { get; }
+    ReadOnlyObservableCollection<string> Accounts { get; } 
 
-    Task<ConcurrentDictionary<string, string>> ReqAccountDetailsAsync(string accountId);
+    Task<AccountDetails> ReqAccountDetailsAsync(string accountId); // get account details
 
 #endregion
 

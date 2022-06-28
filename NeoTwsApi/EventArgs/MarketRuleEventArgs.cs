@@ -2,7 +2,7 @@
 
 using IBApi;
 
-namespace AutoFinance.Broker.InteractiveBrokers.EventArgs
+namespace NeoTwsApi.EventArgs
 {
     /// <summary>
     /// The event arguments for the account download end event

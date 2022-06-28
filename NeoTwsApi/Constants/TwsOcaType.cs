@@ -1,6 +1,6 @@
 ﻿// Licensed under the Apache License, Version 2.0.
 
-namespace AutoFinance.Broker.InteractiveBrokers.Constants
+namespace NeoTwsApi.Constants
 {
     /// <summary>
     /// Oca type used for One Cancels All orders

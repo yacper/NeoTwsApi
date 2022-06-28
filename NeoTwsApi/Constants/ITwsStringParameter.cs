@@ -1,16 +1,17 @@
 // Licensed under the Apache License, Version 2.0.
 
-namespace AutoFinance.Broker.InteractiveBrokers.Constants
+
+namespace NeoTwsApi.Constants
+{
+/// <summary>
+/// String parameter conversion for TWS parameters
+/// </summary>
+public interface ITwsStringParameter
 {
     /// <summary>
-    /// String parameter conversion for TWS parameters
+    /// Conver to the TWS string parameter version
     /// </summary>
-    public interface ITwsStringParameter
-    {
-        /// <summary>
-        /// Conver to the TWS string parameter version
-        /// </summary>
-        /// <returns>The TWS parameter</returns>
-        string ToTwsParameter();
-    }
+    /// <returns>The TWS parameter</returns>
+    string ToTwsParameter();
+}
 }
