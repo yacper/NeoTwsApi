@@ -41,7 +41,7 @@ public class IbClient : ObservableObject, IIbClient
     public ILogger? Logger { get; protected set; }
 
 
-    public bool Connected { get => _Connected; protected set => SetProperty(ref _Connected, value); }
+    public EConnectionStat ConnectionStat { get =>ConnectionStat_; protected set => SetProperty(ref ConnectionStat_, value); }
 
     public int ServerVersion { get; protected set; } = 0;
 
@@ -53,14 +53,14 @@ public class IbClient : ObservableObject, IIbClient
 
     public IbClient(string host, int port, int clientId, ILogger? logger = null)
     {
-        Host     = host;
-        Port     = port;
-        ClientId = clientId;
-        Logger   = logger;
+        Host               = host;
+        Port               = port;
+        ClientId           = clientId;
+        Logger             = logger;
 
-        twsCallbackHandler                         =  new TwsCallbackHandler(this);
-        clientSocket                               =  new EClientSocket(twsCallbackHandler, signal);
-
+        signal = new EReaderMonitorSignal();
+        twsCallbackHandler = new TwsCallbackHandler(this);
+        clientSocket = new EClientSocket(twsCallbackHandler, signal);
         AddHandler_();
     }
 
@@ -121,17 +121,17 @@ public class IbClient : ObservableObject, IIbClient
 
     public async Task<bool> ConnectAsync()
     {
-        if (!this.Connected)
+        if (ConnectionStat == EConnectionStat.Disconnected)
         {
-            await this._ConnectAsync();
+            await this.ConnectAsync_();
 
-            // Sometimes TWS flushes the socket on a new connection
-            // And the socket will get really fucked up any commands come in during that time
-            // Just wait 5 seconds for it to finish
-            await Task.Delay(5000);
+            //// Sometimes TWS flushes the socket on a new connection
+            //// And the socket will get really fucked up any commands come in during that time
+            //// Just wait 5 seconds for it to finish
+            //await Task.Delay(5000);
         }
 
-        return Connected;
+        return ConnectionStat == EConnectionStat.Connected;
     }
 
 
@@ -139,20 +139,30 @@ public class IbClient : ObservableObject, IIbClient
     /// Connect to the TWS socket and launch a background thread to begin firing the events.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    private Task _ConnectAsync()
+    private Task ConnectAsync_()
     {
         Logger?.Info($"Start ConnectAsync:{this.Dump()}");
-        this.ThreadRunning_ = true;
+        ConnectionStat = EConnectionStat.Connecting;
+
+    
 
         var                                taskSource              = new TaskCompletionSource<bool>();
         EventHandler<NextValidIdEventArgs> nextValidIdEventHandler = null;
-        EventHandler ConnectionAcknowledgementCallback = null;
+        EventHandler connectionAcknowledgementCallback = null;
 
-        ConnectionAcknowledgementCallback = (s, e) =>
+        void clearHandler()
         {
+            this.twsCallbackHandler.ConnectionAcknowledgementEvent -= connectionAcknowledgementCallback;
+            this.twsCallbackHandler.NextValidIdEvent -= nextValidIdEventHandler;
+        }
+
+        connectionAcknowledgementCallback = (s, e) =>
+        {
+            this.ThreadRunning_ = true;
+
             // When the connection is acknowledged, create a reader to consume messages from the TWS.
             // The EReader will consume the incoming messages and the callback handler will begin to fire events.
-            this.twsCallbackHandler.ConnectionAcknowledgementEvent -= ConnectionAcknowledgementCallback;
+            this.twsCallbackHandler.ConnectionAcknowledgementEvent -= connectionAcknowledgementCallback;
             var reader = new EReader(this.clientSocket, this.signal);
             reader.Start();
 
@@ -171,25 +181,40 @@ public class IbClient : ObservableObject, IIbClient
 
         nextValidIdEventHandler = (s, e) =>
         {
-            this.twsCallbackHandler.NextValidIdEvent -= nextValidIdEventHandler;
+            lock (Lock_)
+            {
+                if (ConnectionStat == EConnectionStat.Disconnected)
+                    return;
 
-            //nextValidId() indicate really connected
-            OnConnected(e.OrderId);
+                clearHandler();
+                //nextValidId() indicate really connected
+                OnConnected(e.OrderId);
 
-            taskSource.TrySetResult(true);
+                taskSource.TrySetResult(true);
+            }
         };
 
         // Set the operation to cancel after 5 seconds
-        CancellationTokenSource tokenSource = new CancellationTokenSource(this.TimeoutMilliseconds);
+        CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
         tokenSource.Token.Register(() =>
         {
-            this.ThreadRunning_ = false;
-            this.twsCallbackHandler.ConnectionAcknowledgementEvent -= ConnectionAcknowledgementCallback;
+            lock (Lock_)
+            {
+                /// 超时失败
+                clearHandler();
 
-            taskSource.TrySetCanceled();
+                if (ConnectionStat == EConnectionStat.Connecting)
+                {
+                    this.clientSocket.eDisconnect();
+                    this.ThreadRunning_ = false;
+                    ConnectionStat      = EConnectionStat.Disconnected;
+                }
+
+                taskSource.TrySetCanceled();
+            }
         });
 
-        this.twsCallbackHandler.ConnectionAcknowledgementEvent += ConnectionAcknowledgementCallback;
+        this.twsCallbackHandler.ConnectionAcknowledgementEvent += connectionAcknowledgementCallback;
         this.twsCallbackHandler.NextValidIdEvent               += nextValidIdEventHandler;
 
         this.clientSocket.eConnect(this.Host, this.Port, this.ClientId);
@@ -198,10 +223,12 @@ public class IbClient : ObservableObject, IIbClient
 
     public Task DisconnectAsync()
     {
-        if (!Connected)
+        if (ConnectionStat != EConnectionStat.Connected)
             return Task.CompletedTask;
 
-        var          taskSource              = new TaskCompletionSource<bool>();
+        ConnectionStat = EConnectionStat.Disconnecting;
+
+        var          taskSource              = new TaskCompletionSource();
         EventHandler connectionClosedHandler = null;
         connectionClosedHandler = (s, e) =>
         {
@@ -211,7 +238,7 @@ public class IbClient : ObservableObject, IIbClient
             ThreadRunning_ = false;
 
             OnDisconnected();
-            taskSource.TrySetResult(true);
+            taskSource.TrySetResult();
         };
         this.twsCallbackHandler.ConnectionClosedEvent += connectionClosedHandler;
 
@@ -234,15 +261,16 @@ public class IbClient : ObservableObject, IIbClient
 
         twsRequestIdGenerator = new TwsRequestIdGenerator();
 
-        Connected     = true;
-        ServerVersion = clientSocket.ServerVersion;
-        ServerTime    = clientSocket.ServerTime;
+        ServerVersion  = clientSocket.ServerVersion;
+        ServerTime     = clientSocket.ServerTime;
 
 
         //twsCallbackHandler.Accounts.ForEach(p => _Accounts.Add(p));
 
 
         Logger?.Info($"Connected:{this.Dump()}");
+
+        ConnectionStat = EConnectionStat.Connected;
     }
 
     public void OnAccountsReccieved(string accountsList) // 当连接建立后，tws后会主动发送managedAccounts
@@ -255,7 +283,13 @@ public class IbClient : ObservableObject, IIbClient
     {
         Logger?.Info($"DisConnected:{this.Dump()}");
 
-        Connected = false;
+        _RealtimeBarsSubscriptions.Clear();
+        _RealtimeBarsSubscriptionReqs.Clear();
+        _TickByTickSubscriptionReqs.Clear();
+        _TickByTickSubscriptions.Clear();
+        ReqContracts.Clear();
+
+        ConnectionStat = EConnectionStat.Disconnected;
     }
 
 
@@ -387,25 +421,12 @@ public class IbClient : ObservableObject, IIbClient
                 taskSource.TrySetResult(contractDetailsList);
             }
         };
-        //EventHandler<ErrorEventArgs> errorEventHandler = (sender, args) =>
-        //{
-        //    if (args.Id == requestId)
-        //    {
-        //        // The error is associated with this request
-        //        this.twsCallbackHandler.ContractDetailsEvent -= contractDetailsEventHandler;
-        //        this.twsCallbackHandler.ContractDetailsEndEvent -= contractDetailsEndEventHandler;
-        //        this.twsCallbackHandler.ErrorEvent -= errorEventHandler;
-
-        //        taskSource.TrySetException(new TwsException(args));
-        //    }
-        //};
-
+       
         // Set the operation to cancel after 5 seconds
         CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
         tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
 
         this.twsCallbackHandler.SymbolSamplesEvent += symbolSamplesHandler;
-        //this.twsCallbackHandler.ErrorEvent += errorEventHandler;
 
         clientSocket.reqMatchingSymbols(requestId, pattern);
         return taskSource.Task;
@@ -424,9 +445,8 @@ public class IbClient : ObservableObject, IIbClient
     public Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
     {
         int            requestId    = this.twsRequestIdGenerator.GetNextRequestId();
+        ReqContracts[requestId] = new(contract, null);
         List<TagValue> chartOptions = null;
-
-        string value = string.Empty;
 
         var taskSource = new TaskCompletionSource<List<Bar>>();
 
@@ -434,7 +454,13 @@ public class IbClient : ObservableObject, IIbClient
         EventHandler<TwsEventArs<DateTime, DateTime>> historicalDataEndEventHandler = null;
         EventHandler<ErrorEventArgs>                  errorEventHandler             = null;
 
-        List<Bar> historicalDataList = new List<Bar>();
+        void clearHandler()
+        {
+            this.twsCallbackHandler.HistoricalDataEvent    -= historicalDataEventHandler;
+            this.twsCallbackHandler.HistoricalDataEndEvent -= historicalDataEndEventHandler;
+            this.twsCallbackHandler.ErrorEvent             -= errorEventHandler;
+        } 
+        List<Bar> historicalDataList = new ();
 
         historicalDataEventHandler = (sender, args) =>
         {
@@ -445,9 +471,7 @@ public class IbClient : ObservableObject, IIbClient
         {
             if (args.RequestId == requestId)
             {
-                this.twsCallbackHandler.HistoricalDataEvent    -= historicalDataEventHandler;
-                this.twsCallbackHandler.HistoricalDataEndEvent -= historicalDataEndEventHandler;
-                this.twsCallbackHandler.ErrorEvent             -= errorEventHandler;
+                clearHandler();
                 taskSource.TrySetResult(historicalDataList);
             }
         };
@@ -460,9 +484,7 @@ public class IbClient : ObservableObject, IIbClient
                 //this.CancelHistoricalData(requestId);
 
                 // The error is associated with this request
-                this.twsCallbackHandler.HistoricalDataEvent    -= historicalDataEventHandler;
-                this.twsCallbackHandler.HistoricalDataEndEvent -= historicalDataEndEventHandler;
-                this.twsCallbackHandler.ErrorEvent             -= errorEventHandler;
+                clearHandler();
                 taskSource.TrySetException(new TwsException(args));
             }
         };
@@ -473,10 +495,7 @@ public class IbClient : ObservableObject, IIbClient
         {
             //todo:warn
             //this.CancelHistoricalData(requestId);
-
-            this.twsCallbackHandler.HistoricalDataEvent    -= historicalDataEventHandler;
-            this.twsCallbackHandler.HistoricalDataEndEvent -= historicalDataEndEventHandler;
-            this.twsCallbackHandler.ErrorEvent             -= errorEventHandler;
+            clearHandler();
 
             taskSource.TrySetCanceled();
         });
@@ -523,6 +542,12 @@ public class IbClient : ObservableObject, IIbClient
         EventHandler<OpenOrderEventArgs> openOrderEventCallback  = null;
         EventHandler<ErrorEventArgs>     orderErrorEventCallback = null;
 
+        void clearHandler()
+        {
+            this.twsCallbackHandler.OpenOrderEvent -= openOrderEventCallback;
+            this.twsCallbackHandler.ErrorEvent     -= orderErrorEventCallback;
+        }
+
         openOrderEventCallback = (sender, eventArgs) =>
         {
             if (eventArgs.OrderId == orderId)
@@ -531,9 +556,7 @@ public class IbClient : ObservableObject, IIbClient
                     eventArgs.OrderState.Status == TwsOrderStatus.Presubmitted)
                 {
                     // Unregister the callbacks
-                    this.twsCallbackHandler.OpenOrderEvent -= openOrderEventCallback;
-                    this.twsCallbackHandler.ErrorEvent     -= orderErrorEventCallback;
-
+                    clearHandler();
                     taskSource.TrySetResult(eventArgs);
                 }
             }
@@ -549,8 +572,7 @@ public class IbClient : ObservableObject, IIbClient
                     eventArgs.ErrorCode == TwsErrorCodes.OrderRejected)
                 {
                     // Unregister the callbacks
-                    this.twsCallbackHandler.OpenOrderEvent -= openOrderEventCallback;
-                    this.twsCallbackHandler.ErrorEvent     -= orderErrorEventCallback;
+                    clearHandler();
                     taskSource.TrySetException(new TwsException(eventArgs));
                 }
             }
@@ -561,7 +583,11 @@ public class IbClient : ObservableObject, IIbClient
 
 
         CancellationTokenSource cancellationToken = new CancellationTokenSource(TimeoutMilliseconds);
-        cancellationToken.Token.Register(() => { taskSource.TrySetCanceled(); });
+        cancellationToken.Token.Register(() =>
+        {
+            clearHandler();
+            taskSource.TrySetCanceled();
+        });
 
         this.clientSocket.placeOrder(orderId, contract, order);
         return taskSource.Task;
@@ -592,18 +618,25 @@ public class IbClient : ObservableObject, IIbClient
         openOrderEndEventHandler = (sender, args) =>
         {
             // Cleanup the event handlers when the positions end event is called.
-            this.twsCallbackHandler.OpenOrderEvent    -= openOrderEventHandler;
-            this.twsCallbackHandler.OpenOrderEndEvent -= openOrderEndEventHandler;
-
+            clearHandler();
             taskSource.TrySetResult(openOrderEvents);
         };
 
+        void clearHandler()
+        {
+            this.twsCallbackHandler.OpenOrderEvent    -= openOrderEventHandler;
+            this.twsCallbackHandler.OpenOrderEndEvent -= openOrderEndEventHandler;
+        }
         this.twsCallbackHandler.OpenOrderEvent    += openOrderEventHandler;
         this.twsCallbackHandler.OpenOrderEndEvent += openOrderEndEventHandler;
 
         // Set the operation to cancel after 5 seconds
         CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
-        tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
+        tokenSource.Token.Register(() =>
+        {
+            clearHandler();
+            taskSource.TrySetCanceled();
+        });
 
         this.clientSocket.reqAllOpenOrders();
 
@@ -627,7 +660,10 @@ public class IbClient : ObservableObject, IIbClient
             if (eventArgs.OrderId == orderId)
             {
                 Debug.WriteLine($"Cancel order status:{eventArgs.Status}");
+                // 这里行为不统一，有的时候再发送submitted后，会再发送一个Cancelled状态，
+                // 但大多数情况下，不会再更新状态
                 if (eventArgs.Status == "Cancelled")
+                //if (eventArgs.Status == "Submitted")
                 {
                     // Unregister the callbacks
                     clearHandler();
@@ -661,7 +697,7 @@ public class IbClient : ObservableObject, IIbClient
         }
 
         // Set the operation to cancel after 5 seconds
-        CancellationTokenSource tokenSource = new CancellationTokenSource(20000);
+        CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
         tokenSource.Token.Register(() =>
         {
             clearHandler();
@@ -892,6 +928,17 @@ public class IbClient : ObservableObject, IIbClient
         this.twsCallbackHandler.RealtimeBarEvent += realtimeBarEventHandler;
         this.twsCallbackHandler.ErrorEvent       += errorEventHandler;
 
+
+        // Set the operation to cancel after 1 minute
+        CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
+        tokenSource.Token.Register(() =>
+        {
+            this.twsCallbackHandler.RealtimeBarEvent -= realtimeBarEventHandler;
+            this.twsCallbackHandler.ErrorEvent -= errorEventHandler;
+            taskSource.TrySetCanceled();
+        });
+
+
         this.clientSocket.reqRealTimeBars(
                                           requestId,
                                           contract,
@@ -1005,15 +1052,15 @@ public class IbClient : ObservableObject, IIbClient
 
     private bool ThreadRunning_ = false;
 
-    private bool _Connected;
+//    private   bool            _Connected;
+    protected EConnectionStat ConnectionStat_;
 
     private TwsCallbackHandler twsCallbackHandler = null;
 
     //private TwsClientSocket    clientSocket       = null;
     private EClientSocket clientSocket   = null;
-    private EClientSocket _EClientSocket = null;
 
-    private EReaderSignal signal = new EReaderMonitorSignal();
+    private EReaderSignal signal;
 
     private TwsRequestIdGenerator twsRequestIdGenerator = null;
 
@@ -1031,5 +1078,6 @@ public class IbClient : ObservableObject, IIbClient
     protected ObservableCollection<Contract> _RealtimeBarsSubscriptions    = new();
     protected Dictionary<int, Contract>      _RealtimeBarsSubscriptionReqs = new();
 
+    protected object Lock_ = new object();
 #endregion
 }

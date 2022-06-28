@@ -328,6 +328,8 @@ public class TwsCallbackHandler : EWrapper
     /// <inheritdoc/>
     public void completedOrder(Contract contract, Order order, OrderState orderState)
     {
+        Debug.WriteLine($"completedOrder: orderId:{order.OrderId} status:{orderState.Status}");
+
         var eventArgs = new CompletedOrderEventArgs(contract, order, orderState);
         this.CompletedOrderEvent?.Invoke(this, eventArgs);
     }
@@ -370,7 +372,10 @@ public class TwsCallbackHandler : EWrapper
     public void displayGroupUpdated(int reqId, string contractInfo) { throw new NotImplementedException(); }
 
     /// <inheritdoc/>
-    public void error(Exception e) { throw e; }
+    public void error(Exception e)
+    {
+        throw e;
+    }
 
     /// <inheritdoc/>
     public void error(string str)
@@ -535,6 +540,8 @@ public class TwsCallbackHandler : EWrapper
                             double lastFillPrice, int    clientId, string  whyHeld, double  mktCapPrice)
     {
         var eventArgs = new OrderStatusEventArgs(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld);
+
+        Debug.WriteLine($"orderStatus: orderId:{orderId} status:{status} filled:{filled} remainning{remaining}");
         this.OrderStatusEvent?.Invoke(this, eventArgs);
     }
 

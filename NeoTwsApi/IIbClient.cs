@@ -18,6 +18,13 @@ using NeoTwsApi.Helpers;
 using NLog;
 
 namespace NeoTwsApi;
+public enum EConnectionStat
+{
+    Disconnected =0,
+    Connecting,
+    Connected,
+    Disconnecting,
+}
 
 public interface IIbClient : INotifyPropertyChanged
 {
@@ -54,7 +61,7 @@ public interface IIbClient : INotifyPropertyChanged
     /// <summary>
     /// Gets a value indicating whether is the client connected to tws
     /// </summary>
-    bool Connected { get; }
+    EConnectionStat ConnectionStat { get; }
 
 
     /// <summary>
