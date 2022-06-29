@@ -10,23 +10,22 @@ using NeoTwsApi.Enums;
 
 namespace NeoTwsApi.Models;
 
-public class AccountDetails:ConcurrentDictionary<string, string>
+public class AccountDetails : ConcurrentDictionary<string, string>
 {
-    public string AccountCode => this.ContainsKey(nameof(AccountCode)) ? this[nameof(BuyingPower)] : null;
-    public string AccountType => this.ContainsKey(nameof(AccountType)) ? this[nameof(AccountType)] : null;
-    public ECurrencyTws? Currency => this.ContainsKey(nameof(Currency)) ? Enum.Parse<ECurrencyTws>(this[nameof(Currency)]) : null;
+    public string?       AccountCode => this.ContainsKey(nameof(AccountCode)) ? this[nameof(BuyingPower)] : null;
+    public string?       AccountType => this.ContainsKey(nameof(AccountType)) ? this[nameof(AccountType)] : null;
+    public ECurrencyTws? Currency    => this.ContainsKey(nameof(Currency)) ? Enum.Parse<ECurrencyTws>(this[nameof(Currency)]) : null;
 
 
-    public double? BuyingPower => this.ContainsKey(nameof(BuyingPower)) ? Convert.ToDouble(this[nameof(BuyingPower)]) : null;
-    public double? TotalCashValue => this.ContainsKey(nameof(TotalCashValue)) ? Convert.ToDouble(this[nameof(TotalCashValue)]) : null;
+    public double? BuyingPower        => this.ContainsKey(nameof(BuyingPower)) ? Convert.ToDouble(this[nameof(BuyingPower)]) : null;
+    public double? TotalCashValue     => this.ContainsKey(nameof(TotalCashValue)) ? Convert.ToDouble(this[nameof(TotalCashValue)]) : null;
     public double? GrossPositionValue => this.ContainsKey(nameof(GrossPositionValue)) ? Convert.ToDouble(this[nameof(GrossPositionValue)]) : null;
-    public double? StockMarketValue => this.ContainsKey(nameof(StockMarketValue)) ? Convert.ToDouble(this[nameof(StockMarketValue)]) : null;
+    public double? StockMarketValue   => this.ContainsKey(nameof(StockMarketValue)) ? Convert.ToDouble(this[nameof(StockMarketValue)]) : null;
 
-    public double? InitMarginReq => this.ContainsKey(nameof(InitMarginReq)) ? Convert.ToDouble(this[nameof(InitMarginReq)]) : null;
+    public double? InitMarginReq  => this.ContainsKey(nameof(InitMarginReq)) ? Convert.ToDouble(this[nameof(InitMarginReq)]) : null;
     public double? MaintMarginReq => this.ContainsKey(nameof(MaintMarginReq)) ? Convert.ToDouble(this[nameof(MaintMarginReq)]) : null;
 
     public double? DayTradesRemaining => this.ContainsKey(nameof(DayTradesRemaining)) ? Convert.ToDouble(this[nameof(DayTradesRemaining)]) : null;
-
 
 
     /* possible kvs

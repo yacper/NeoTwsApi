@@ -294,13 +294,21 @@ public class IbClient : ObservableObject, IIbClient
     {
         var taskSource = new TaskCompletionSource<AccountDetails>();
 
-        EventHandler<AccountDownloadEndEventArgs> accountDownloadEndHandler = (s, e) => { taskSource.TrySetResult(this.AccountUpdates_[accountId]); };
+        EventHandler<AccountDownloadEndEventArgs> accountDownloadEndHandler = null;
+        accountDownloadEndHandler = (s, e) =>
+        {
+            this.TwsCallbackHandler_.AccountDownloadEndEvent -= accountDownloadEndHandler; // always clear
+            taskSource.TrySetResult(this.AccountUpdates_[accountId]);
+        };
 
-        this.TwsCallbackHandler_.AccountDownloadEndEvent -= accountDownloadEndHandler; // always clear
         this.TwsCallbackHandler_.AccountDownloadEndEvent += accountDownloadEndHandler;
 
         CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
-        tokenSource.Token.Register(() => { taskSource.TrySetCanceled(); });
+        tokenSource.Token.Register(() =>
+        {
+            this.TwsCallbackHandler_.AccountDownloadEndEvent -= accountDownloadEndHandler; // always clear
+            taskSource.TrySetCanceled();
+        });
 
         this.ClientSocket_.reqAccountUpdates(true, accountId);
 

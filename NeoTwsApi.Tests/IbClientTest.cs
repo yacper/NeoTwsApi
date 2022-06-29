@@ -72,9 +72,9 @@ public partial class Tests
         acc.Should().NotBeNullOrEmpty();
 
         var ret = await client.ReqAccountDetailsAsync(acc);
-        Debug.WriteLine(ret.Dump());
-
         ret.Should().NotBeEmpty();
+
+        Debug.WriteLine(ret.Dump());
     }
 
 #endregion
@@ -87,20 +87,19 @@ public partial class Tests
         Contract contract = QQQContract_ETF;
 
         var ret = await client.ReqContractAsync(contract);
-        Debug.WriteLine(ret.Dump());
-
         // Assert
         ret.First().Should().NotBeNull();
+
+        Debug.WriteLine(ret.Dump());
     }
 
     [Test]
     public async Task ReqMatchingSymbols_Test()
     {
-        var ret = await client.ReqMatchingSymbolsAsync("Ib");
-        Debug.WriteLine(ret.Dump());
-
-        // Assert
+        var ret = await client.ReqMatchingSymbolsAsync("MSFT");
         ret.Should().NotBeEmpty();
+
+        Debug.WriteLine(ret.Dump());
     }
 
 #endregion
@@ -111,16 +110,14 @@ public partial class Tests
     public async Task ReqHistoricalDataAsync_Test()
     {
         Contract    contract = XauusdContract_CMDTY;
-
         DurationTws duration = new DurationTws(3, EDurationStep.D);
         DateTime    end      = 17.March(2022).At(23, 59);
 
         var ret = await client.ReqHistoricalDataAsync(contract, end, duration,
                                                       ETimeFrameTws.H1, EDataType.MIDPOINT);
-        Debug.WriteLine(ret.Dump());
+        ret.Should().NotBeEmpty();
 
-        // Assert
-        ret.First().Should().NotBeNull();
+        Debug.WriteLine(ret.Dump());
     }
 
 #endregion
@@ -335,19 +332,9 @@ public partial class Tests
         var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
         successfullyPlaced.Should().NotBeNull();
 
-        try
-        {
-            var ret = await client.CancelOrderAsync(successfullyPlaced.OrderId);
+        var ret = await client.CancelOrderAsync(successfullyPlaced.OrderId);
+        ret.Should().BeTrue();
 
-            // Assert
-            ret.Should().BeTrue();
-
-
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
 
         //await TearDown();
     }
