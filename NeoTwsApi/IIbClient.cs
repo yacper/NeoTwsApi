@@ -106,8 +106,17 @@ public interface IIbClient : INotifyPropertyChanged
 
 #region HistoricalData
 
-    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime begin, DateTime    end,      ETimeFrameTws tf, EDataType dataType, bool useRth = true);
-    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end,   DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true);
+//    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime begin, DateTime    end,      ETimeFrameTws tf, EDataType dataType, bool useRth = true);
+
+    /// <summary>
+    /// Request historical data from TWS
+    /// </summary>
+    /// <param name="contract">The contract</param>
+    /// <param name="end">The end time</param>
+    /// <param name="duration">The duration string</param>
+    /// <param name="dataType">The things to show (?)</param>
+    /// <param name="useRth">Whether to use regular trading hours</param>
+    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true);
 
 #endregion
 

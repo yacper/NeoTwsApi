@@ -442,11 +442,11 @@ public class IbClient : ObservableObject, IIbClient
 
 #region HistoricalData
 
-    public Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime begin, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
-    {
-        // covert [begin. end] to duration
-        throw new NotImplementedException();
-    }
+    //public Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime begin, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
+    //{
+    //    // covert [begin. end] to duration
+    //    throw new NotImplementedException();
+    //}
 
     public Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
     {
@@ -496,7 +496,7 @@ public class IbClient : ObservableObject, IIbClient
             }
         };
 
-        // Set the operation to cancel after 1 minute
+        // Set the operation to cancel after 2 minute
         CancellationTokenSource tokenSource = new CancellationTokenSource(60 * 1000);
         tokenSource.Token.Register(() =>
         {

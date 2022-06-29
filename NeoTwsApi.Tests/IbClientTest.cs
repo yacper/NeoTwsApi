@@ -118,6 +118,20 @@ public partial class Tests
         ret.Should().NotBeEmpty();
 
         Debug.WriteLine(ret.Dump());
+
+    }
+    [Test]
+    public async Task ReqHistoricalDataAsync_Test2()
+    {
+        Contract    contract = XauusdContract_CMDTY;
+        DurationTws duration = new DurationTws(1, EDurationStep.Y);
+        DateTime    end      = 24.May(2022).At(16, 00);
+
+        var ret = await client.ReqHistoricalDataAsync(contract, end, duration,
+                                                      ETimeFrameTws.S5, EDataType.MIDPOINT);
+        ret.Should().NotBeEmpty();
+
+        Debug.WriteLine(ret.Dump());
     }
 
 #endregion

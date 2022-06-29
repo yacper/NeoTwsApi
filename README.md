@@ -1,10 +1,12 @@
 # NeoTwsApi
-Easy to use C# TWS api.
+Mvvm style easy to use C# Interactive Brokers(IB) TWS api.
 
-This project is inpired by AutoFinance.Broker, which is very good, but still have some bugs and flaws.
-Thanks for your great efforts taken guys.
+This project is inspired by AutoFinance.Broker, which is very good, but still have some bugs and flaws.
+Thanks for your great efforts guys.
 
-## 0. IIbClient -- IbApi Interface
+TWS Documentation: https://interactivebrokers.github.io/tws-api/index.html
+
+## 0. IIbClient -- IB TWS Api Interface
 ```cs
 public interface IIbClient : INotifyPropertyChanged
 {
@@ -59,7 +61,7 @@ public enum EConnectionState
 ```
 ### Connect
 ```cs
-IIbClient client = new IbClient(TestConstants.Host, TestConstants.Port, TestConstants.ClientId, defaultLogger); // defaultLogger - can be null
+IIbClient client = new IbClient("localhost", 4002, 0, logger); // logger - can be null
 bool connected = await client.ConnectAsync();
 connected.Should().BeTrue();
 ```
