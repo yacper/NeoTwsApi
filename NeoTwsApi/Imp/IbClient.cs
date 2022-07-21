@@ -22,6 +22,7 @@ using NeoTwsApi.Helpers;
 using NeoTwsApi.Imp;
 using ErrorEventArgs = NeoTwsApi.EventArgs.ErrorEventArgs;
 using System.Globalization;
+using MoreLinq.Extensions;
 using NeoTwsApi.Constants;
 using NeoTwsApi.Models;
 
@@ -118,11 +119,11 @@ public class IbClient : ObservableObject, IIbClient
 
     private void TwsCallbackHandler_RealtimeBarEvent(object? sender, TwsEventArs<Contract, Bar> e) { RealtimeBarEvent?.Invoke(this, e); }
 
-    public async Task<bool> ConnectAsync()
+    public async Task<bool> ConnectAsync(string host = null, int? port = null, int? clientId = null)
     {
         if (ConnectionState == EConnectionState.Disconnected)
         {
-            await this.ConnectAsync_();
+            await this.ConnectAsync_(host, port, clientId);
 
             //// Sometimes TWS flushes the socket on a new connection
             //// And the socket will get really fucked up any commands come in during that time
@@ -138,10 +139,13 @@ public class IbClient : ObservableObject, IIbClient
     /// Connect to the TWS socket and launch a background thread to begin firing the events.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    private Task ConnectAsync_()
+    private Task ConnectAsync_(string host = null, int? port = null, int? clientId = null)
     {
         Logger?.Info($"Start ConnectAsync:{this.Dump()}");
         ConnectionState = EConnectionState.Connecting;
+        if (host != null) Host = host;
+        if(port!= null) Port = port.Value;
+        if(clientId!=null) ClientId = clientId.Value;
 
 
         var                                taskSource                        = new TaskCompletionSource<bool>();
@@ -271,7 +275,7 @@ public class IbClient : ObservableObject, IIbClient
     public void OnAccountsReccieved(string accountsList) // 当连接建立后，tws后会主动发送managedAccounts
     {
         Accounts_.Clear();
-        accountsList.Split(',').ForEach(p => Accounts_.Add(p));
+        MoreEnumerable.ForEach(accountsList.Split(','), p => Accounts_.Add(p));
     }
 
     protected void OnDisconnected()
@@ -527,6 +531,15 @@ public class IbClient : ObservableObject, IIbClient
         return taskSource.Task;
     }
 
+
+    public async Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime start, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
+    {
+        var ret = await ReqHistoricalDataAsync(contract, end, DurationTwsEx.ToDurationTws(start, end, tf), tf, dataType, useRth);
+        // 如果有多余，截掉多余
+        int index = ret.FindIndex(p => p.Time() >= start);
+        ret.RemoveRange(0, index);
+        return ret;
+    }
 #endregion
 
 

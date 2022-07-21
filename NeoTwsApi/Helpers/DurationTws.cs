@@ -69,19 +69,25 @@ public static class DurationTwsEx
     /// <param name="end"></param>
     /// <param name="tf"></param>
     /// <returns></returns>
-    public static string ToDurationTws(DateTime start, DateTime end, ETimeFrameTws tf)
-    {
+    public static DurationTws ToDurationTws(DateTime start, DateTime end, ETimeFrameTws tf)
+    {// 大部分情况下，只能转换成以D为表示的区间，s不能多于86400，也就是不能多于1天
+        // todo:
+        // tws在分钟级别的时候，如果设置duration 1天，获得的数据很可能是少于一天的，
+        // 这个跟时区有关,虽然设置了duration为1天，但是时区不同，造成获取的数据可能会少，这里简单处理下+1天
         TimeSpan ts = end - start;
+        switch (tf)
+        {
+            case < ETimeFrameTws.M1 and >=ETimeFrameTws.S1:
+                return new DurationTws((int)Math.Ceiling(ts.TotalSeconds), EDurationStep.S);
+            case < ETimeFrameTws.H1 and >=ETimeFrameTws.M1:
+                return new DurationTws((int)Math.Ceiling(ts.TotalDays+1), EDurationStep.D);
+            case <= ETimeFrameTws.D1 and >=ETimeFrameTws.H1:
+                return new DurationTws((int)Math.Ceiling(ts.TotalDays), EDurationStep.D);
+             case <= ETimeFrameTws.MN1 and >=ETimeFrameTws.W1:
+                return new DurationTws((int)Math.Ceiling(ts.TotalDays), EDurationStep.D);
+        }
 
-        return $"{Math.Ceiling(ts.TotalSeconds)} S";
-
-        //return tf switch
-        //       {
-        //           >=ETimeFrameTws.S1 and <= ETimeFrameTws.H8 => $"{Math.Ceiling(ts.TotalSeconds)} S",
-        //           >=ETimeFrameTws.M1 and <= ETimeFrameTws.M30 => $"{ts.TotalMinutes} S",
-
-        //       }
-
+        throw new NotImplementedException();
     }
 
     

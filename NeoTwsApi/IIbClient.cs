@@ -69,7 +69,7 @@ public interface IIbClient : INotifyPropertyChanged
     /// connect to tws
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    Task<bool> ConnectAsync();
+    Task<bool> ConnectAsync(string host = null, int? port = null, int? clientId = null);
 
     /// <summary>
     /// Disconnects the session
@@ -105,9 +105,6 @@ public interface IIbClient : INotifyPropertyChanged
 
 
 #region HistoricalData
-
-//    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime begin, DateTime    end,      ETimeFrameTws tf, EDataType dataType, bool useRth = true);
-
     /// <summary>
     /// Request historical data from TWS
     /// </summary>
@@ -118,6 +115,8 @@ public interface IIbClient : INotifyPropertyChanged
     /// <param name="useRth">Whether to use regular trading hours</param>
     Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true);
 
+    // 模拟而得
+    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime start, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true);
 #endregion
 
 
