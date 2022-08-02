@@ -29,6 +29,13 @@ namespace NeoTwsApi.Helpers;
 
 public static class TwsDatetimeEx
 {
+    public static DateTime UnixTimeZero = DateTime.SpecifyKind(new DateTime(1970, 1, 1), DateTimeKind.Utc);
+
+   public static DateTime ToTwsDateTime(this long mili)
+    {// unix mili
+        return UnixTimeZero.AddMilliseconds(mili);
+    }
+
     public static DateTime ToTwsDateTime(this string dt)
     {
         //  yyyyMMdd HH:mm:ss {TMZ}
