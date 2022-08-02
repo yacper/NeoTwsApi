@@ -35,7 +35,7 @@ public partial class Tests
         bool connected = await client.ConnectAsync();
         connected.Should().BeTrue();
 
-        Debug.WriteLine(client.Dump());
+        Debug.WriteLine(client.Dump(new DumpOptions(){ExcludeProperties = new List<string>(){"Logger"}}));
     }
 
     [OneTimeTearDown]
@@ -44,7 +44,7 @@ public partial class Tests
         await client.DisconnectAsync();
 
         client.ConnectionState.Should().Be(EConnectionState.Disconnected);
-        Debug.WriteLine(client.Dump());
+        Debug.WriteLine(client.Dump(new DumpOptions(){ExcludeProperties = new List<string>(){"Logger"}}));
     }
 
     [Test]
@@ -52,12 +52,12 @@ public partial class Tests
     {
         await client.DisconnectAsync();
         client.ConnectionState.Should().Be(EConnectionState.Disconnected);
-        Debug.WriteLine(client.Dump());
+        Debug.WriteLine(client.Dump(new DumpOptions(){ExcludeProperties = new List<string>(){"Logger"}}));
 
         /// reconnect
         bool connected = await client.ConnectAsync();
         connected.Should().BeTrue();
-        Debug.WriteLine(client.Dump());
+        Debug.WriteLine(client.Dump(new DumpOptions(){ExcludeProperties = new List<string>(){"Logger"}}));
 
         // wait some time for account info
         await Task.Delay(5000);
@@ -196,34 +196,42 @@ public partial class Tests
     [Test]
     public async Task SubTickByTickData_BidAsk()
     {
-        Contract contract = new Contract();
-        contract.Symbol   = "EUR";
-        contract.SecType  = "CASH";
-        contract.Currency = "USD";
-        contract.Exchange = "IDEALPRO";
+        Contract            contract     = EurContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
+        ETickByTickDataType tickDataType = ETickByTickDataType.BidAsk;
 
-        var historicalTickBidAsks = new List<HistoricalTickBidAsk>();
+        var      historicalTickBidAsks = new List<HistoricalTickBidAsk>();
         client.TickByTickBidAskEvent += (s, e) =>
         {
             historicalTickBidAsks.Add(e.Arg2);
+            Debug.WriteLine($"{contract.Symbol} BidAsk:");
+            Debug.WriteLine(e.Arg2.Dump());
+        };
+        var      historicalTickMidPoints = new List<HistoricalTick>();
+        client.TickByTickMidPointEvent += (s, e) =>
+        {
+            historicalTickMidPoints.Add(e.Arg2);
+            Debug.WriteLine($"{contract.Symbol} MidPoint:");
             Debug.WriteLine(e.Arg2.Dump());
         };
 
-        await client.SubTickByTickDataAsync(contract, ETickByTickDataType.BidAsk);
 
-        await client.SubTickByTickDataAsync(contract, ETickByTickDataType.BidAsk);
+        await client.SubTickByTickDataAsync(contract, tickDataType);
 
+        await client.SubTickByTickDataAsync(contract, ETickByTickDataType.MidPoint);
         client.TickByTickSubscriptions.Should().NotBeEmpty();
         historicalTickBidAsks.Should().NotBeEmpty();
 
+        await Task.Delay(3000);
+
         // cancel
-        client.UnsubTickByTickData(contract, ETickByTickDataType.BidAsk);
+        client.UnsubTickByTickData(contract, tickDataType);
+        client.UnsubTickByTickData(contract, ETickByTickDataType.MidPoint);
         client.TickByTickSubscriptions.Should().BeEmpty();
-        await Task.Delay(5000);
+        await Task.Delay(2000);
     }
 
     [Test]
-    public async Task SubTickByTickData_Last()
+    public async Task SubTickByTickData_MidPoint()
     {
         return;
         Contract contract = new Contract();
@@ -248,13 +256,8 @@ public partial class Tests
     [Test]
     public async Task SubRealtimeBarsAsync_Test()
     {
-        Contract contract = new Contract();
-        contract.Symbol   = "EUR";
-        contract.SecType  = "CASH";
-        contract.Currency = "USD";
-        contract.Exchange = "IDEALPRO";
-
-        var bars = new List<Bar>();
+        Contract contract = EurContract;
+        var      bars     = new List<Bar>();
         client.RealtimeBarEvent += (s, e) =>
         {
             bars.Add(e.Arg2);
@@ -267,6 +270,7 @@ public partial class Tests
         client.RealtimeBarsSubscriptions.Should().NotBeEmpty();
         bars.Should().NotBeEmpty();
 
+        await Task.Delay(5000);
         // cancel
         client.UnsubRealtimeBars(contract);
         client.RealtimeBarsSubscriptions.Should().BeEmpty();

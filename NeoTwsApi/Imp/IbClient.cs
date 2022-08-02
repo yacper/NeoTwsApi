@@ -36,12 +36,24 @@ public class IbClient : ObservableObject, IIbClient
 
     public int ClientId { get; protected set; }
 
+    public override string ToString() => $"IbClient[{Host}:{Port}-{ClientId}]";
+
     public int TimeoutMilliseconds { get; set; } = 5000;
 
     public ILogger? Logger { get; protected set; }
 
 
-    public EConnectionState ConnectionState { get => ConnectionState_; protected set => SetProperty(ref ConnectionState_, value); }
+    public EConnectionState ConnectionState
+    {
+        get => ConnectionState_;
+        protected set
+        {
+            if(value != ConnectionState)
+                Logger?.Info($"{this.ToString()} {value} ");
+
+            SetProperty(ref ConnectionState_, value);
+        }
+    }
 
     public int ServerVersion { get; protected set; } = 0;
 
@@ -141,12 +153,11 @@ public class IbClient : ObservableObject, IIbClient
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     private Task ConnectAsync_(string host = null, int? port = null, int? clientId = null)
     {
-        Logger?.Info($"Start ConnectAsync:{this.Dump()}");
-        ConnectionState = EConnectionState.Connecting;
         if (host != null) Host = host;
         if(port!= null) Port = port.Value;
         if(clientId!=null) ClientId = clientId.Value;
 
+        ConnectionState = EConnectionState.Connecting;
 
         var                                taskSource                        = new TaskCompletionSource<bool>();
         EventHandler<NextValidIdEventArgs> nextValidIdEventHandler           = null;
@@ -267,8 +278,6 @@ public class IbClient : ObservableObject, IIbClient
         //DateTime ret = DateTime.ParseExact(ClientSocket_.ConnectedServerTime, "yyyyMMdd  HH:mm:ss zzz", CultureInfo.InvariantCulture);
         ConnectedServerTime = ClientSocket_.ServerTime;
 
-        Logger?.Info($"Connected:{this.Dump()}");
-
         ConnectionState = EConnectionState.Connected;
     }
 
@@ -280,8 +289,6 @@ public class IbClient : ObservableObject, IIbClient
 
     protected void OnDisconnected()
     {
-        Logger?.Info($"DisConnected:{this.Dump()}");
-
         RealtimeBarsSubscriptions_.Clear();
         RealtimeBarsSubscriptionReqs_.Clear();
         TickByTickSubscriptionReqs_.Clear();
