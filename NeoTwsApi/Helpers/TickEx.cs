@@ -17,7 +17,7 @@ namespace NeoTwsApi.Helpers
 {
     public static class HistoricalTickBidAskEx
     {
-        public static DateTime Time(this HistoricalTickBidAsk t) { return t.Time.ToTwsDateTimeSec(); }
+        public static DateTime Time(this HistoricalTickBidAsk t) { return t.Time.ToTwsDateTimeSec(); } // tick 时间精确到second
  
     }
 }
