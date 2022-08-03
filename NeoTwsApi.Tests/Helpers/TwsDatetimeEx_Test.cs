@@ -20,6 +20,8 @@ public class TwsDatetimeEx_Test
         "20220317  00:00:00".ToTwsDateTime().Should().Be(17.March(2022));
 
 
+        var dt = TwsDatetimeEx.ToTwsDateTimeSec(1659507276);
+
     }
 
     [Test]

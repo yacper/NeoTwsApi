@@ -31,10 +31,19 @@ public static class TwsDatetimeEx
 {
     public static DateTime UnixTimeZero = DateTime.SpecifyKind(new DateTime(1970, 1, 1), DateTimeKind.Utc);
 
-   public static DateTime ToTwsDateTime(this long mili)
-    {// unix mili
-        return UnixTimeZero.AddMilliseconds(mili);
+    public static DateTime ToTwsDateTimeMili(this long mili, DateTimeKind kind = DateTimeKind.Local)
+    {
+        var dt = UnixTimeZero.AddMilliseconds(mili);
+        return kind == DateTimeKind.Local ? dt.ToLocalTime() : dt.ToUniversalTime();
     }
+
+    public static DateTime ToTwsDateTimeSec(this long seconds, DateTimeKind kind = DateTimeKind.Local)
+    {
+        var dt = UnixTimeZero.AddSeconds(seconds);
+        return kind == DateTimeKind.Local ? dt.ToLocalTime() : dt.ToUniversalTime();
+    }
+
+
 
     public static DateTime ToTwsDateTime(this string dt)
     {
