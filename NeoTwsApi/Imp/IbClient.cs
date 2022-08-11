@@ -62,6 +62,8 @@ public class IbClient : ObservableObject, IIbClient
 
     public ReadOnlyObservableCollection<string> Accounts { get => new(Accounts_); }
 
+    public event EventHandler<UpdateAccountValueEventArgs> UpdateAccountValueEvent;
+
 
     public IbClient(string host, int port, int clientId, ILogger? logger = null)
     {
@@ -341,6 +343,13 @@ public class IbClient : ObservableObject, IIbClient
         {
             return eventArgs.Value; // Always take the most recent result
         });
+
+        UpdateAccountValueEvent?.Invoke(this, eventArgs);
+    }
+
+    public void CancelAccountDetails(string accountId)
+    {
+        this.ClientSocket_.reqAccountUpdates(false, accountId);
     }
 
     /// <summary>

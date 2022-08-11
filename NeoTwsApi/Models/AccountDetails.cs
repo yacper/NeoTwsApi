@@ -12,21 +12,48 @@ namespace NeoTwsApi.Models;
 
 public class AccountDetails : ConcurrentDictionary<string, string>
 {
-    public string?       AccountCode => this.ContainsKey(nameof(AccountCode)) ? this[nameof(BuyingPower)] : null;
-    public string?       AccountType => this.ContainsKey(nameof(AccountType)) ? this[nameof(AccountType)] : null;
-    public ECurrencyTws? Currency    => this.ContainsKey(nameof(Currency)) ? Enum.Parse<ECurrencyTws>(this[nameof(Currency)]) : null;
+    public string       AccountCode => this[nameof(AccountCode)];
+    public string       AccountType => this[nameof(AccountType)];
+    public ECurrencyTws Currency    => Enum.Parse<ECurrencyTws>(this[nameof(Currency)]);
 
+#region 余额
 
-    public double? BuyingPower        => this.ContainsKey(nameof(BuyingPower)) ? Convert.ToDouble(this[nameof(BuyingPower)]) : null;
-    public double? TotalCashValue     => this.ContainsKey(nameof(TotalCashValue)) ? Convert.ToDouble(this[nameof(TotalCashValue)]) : null;
-    public double? GrossPositionValue => this.ContainsKey(nameof(GrossPositionValue)) ? Convert.ToDouble(this[nameof(GrossPositionValue)]) : null;
-    public double? StockMarketValue   => this.ContainsKey(nameof(StockMarketValue)) ? Convert.ToDouble(this[nameof(StockMarketValue)]) : null;
+    public double NetLiquidation => Convert.ToDouble(this[nameof(NetLiquidation)]); // 净清算值
+    public double TotalCashValue => Convert.ToDouble(this[nameof(TotalCashValue)]); // 现金
+    public double AccruedCash    => Convert.ToDouble(this[nameof(AccruedCash)]);    // 月初至今利息
 
-    public double? InitMarginReq  => this.ContainsKey(nameof(InitMarginReq)) ? Convert.ToDouble(this[nameof(InitMarginReq)]) : null;
-    public double? MaintMarginReq => this.ContainsKey(nameof(MaintMarginReq)) ? Convert.ToDouble(this[nameof(MaintMarginReq)]) : null;
+#endregion
 
-    public double? DayTradesRemaining => this.ContainsKey(nameof(DayTradesRemaining)) ? Convert.ToDouble(this[nameof(DayTradesRemaining)]) : null;
+#region margin
 
+    public double InitMarginReq  => Convert.ToDouble(this[nameof(InitMarginReq)]);  // 初始保证金
+    public double MaintMarginReq => Convert.ToDouble(this[nameof(MaintMarginReq)]); // 维持保证金
+
+#endregion
+
+#region 可用于交易
+
+    public double BuyingPower     => Convert.ToDouble(this[nameof(BuyingPower)]);     // 购买力
+    public double AvailableFunds  => Convert.ToDouble(this[nameof(AvailableFunds)]);  // 当前可用资金
+    public double ExcessLiquidity => Convert.ToDouble(this[nameof(ExcessLiquidity)]); // 剩余/过剩流动性
+
+    public double DayTradesRemaining => Convert.ToDouble(this[nameof(DayTradesRemaining)]);
+
+#endregion
+
+#region Position
+
+    public double GrossPositionValue => Convert.ToDouble(this[nameof(GrossPositionValue)]);
+    public double StockMarketValue   => Convert.ToDouble(this[nameof(StockMarketValue)]);
+
+#endregion
+
+#region 盈亏
+
+    public double RealizedPnL   => Convert.ToDouble(this[nameof(RealizedPnL)]);   // 已实现盈余
+    public double UnrealizedPnL => Convert.ToDouble(this[nameof(UnrealizedPnL)]); // 未实现盈余
+
+#endregion
 
     /* possible kvs
     {

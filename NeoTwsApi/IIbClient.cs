@@ -80,9 +80,11 @@ public interface IIbClient : INotifyPropertyChanged
 #endregion
 
 #region Account
-    ReadOnlyObservableCollection<string> Accounts { get; } 
 
-    Task<AccountDetails> ReqAccountDetailsAsync(string accountId); // get account details
+    ReadOnlyObservableCollection<string>            Accounts { get; }
+    Task<AccountDetails>                            ReqAccountDetailsAsync(string accountId); // get account details
+    void                                            CancelAccountDetails(string accountId);
+    event EventHandler<UpdateAccountValueEventArgs> UpdateAccountValueEvent;
 
 #endregion
 

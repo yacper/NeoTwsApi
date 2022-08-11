@@ -9,6 +9,18 @@ namespace NeoTwsApi.Enums;
 
 public enum ECurrencyTws
 {
-    USD,
-    EUR
+    Unknown             = 0, // 虚拟币
+    AUD                 = 1,
+    CAD                 = 2,
+    CHF                 = 4,
+    CNY                 = 8,
+    EUR                 = 16,
+    GBP                 = 32,
+    JPY                 = 64,
+    NZD                 = 128,
+    USD                 = 256,
+    HKD                 = 512,
+
+    PLY                 = 1024, // 虚拟币
+    CalendarCurrencyAll = 1023,
 }
