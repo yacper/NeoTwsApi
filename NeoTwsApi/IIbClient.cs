@@ -177,11 +177,10 @@ public interface IIbClient : INotifyPropertyChanged
     /// <returns>True if acknowledged</returns>
     Task<OpenOrderEventArgs> PlaceOrderAsync(Contract contract, Order order);
 
-    /// <summary>
+    event EventHandler<OrderStatusEventArgs> OrderStatusEvent;  // 订单状态变化时间
+    event EventHandler<OpenOrderEventArgs> OpenOrderEvent;  // 新订单事件 当订单状态发生变化时，也会调用该事件（该事件在新开订单时，可能会被调用6,7次）
     /// 订单成交后，将触发ExecutionDetailsEvent&CommissionReportEvent 这2个事件
-    /// </summary>
     event EventHandler<ExecutionDetailsEventArgs> ExecutionDetailsEvent;
-
     event EventHandler<CommissionReport> CommissionReportEvent;
 
 
@@ -190,6 +189,7 @@ public interface IIbClient : INotifyPropertyChanged
     /// </summary>
     /// <returns>Open orders</returns>
     Task<List<OpenOrderEventArgs>> RequestOpenOrdersAsync();
+
 
     /// <summary>
     /// Cancels an order

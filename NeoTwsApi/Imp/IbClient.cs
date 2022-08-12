@@ -48,7 +48,7 @@ public class IbClient : ObservableObject, IIbClient
         get => ConnectionState_;
         protected set
         {
-            if(value != ConnectionState)
+            if (value != ConnectionState)
                 Logger?.Info($"{this.ToString()} {value} ");
 
             SetProperty(ref ConnectionState_, value);
@@ -91,11 +91,14 @@ public class IbClient : ObservableObject, IIbClient
 
         TwsCallbackHandler_.UpdateAccountValueEvent += _OnUpdateAccountValueEvent;
 
+        TwsCallbackHandler_.OrderStatusEvent      += TwsCallbackHandler__OrderStatusEvent;
+        TwsCallbackHandler_.OpenOrderEvent        += TwsCallbackHandler__OpenOrderEvent;
         TwsCallbackHandler_.ExecutionDetailsEvent += TwsCallbackHandler_ExecutionDetailsEvent;
         TwsCallbackHandler_.CommissionReportEvent += TwsCallbackHandler_CommissionReportEvent;
 
         TwsCallbackHandler_.PositionStatusEvent += TwsCallbackHandler_PositionStatusEvent;
     }
+
 
     protected void RemoveHandler_()
     {
@@ -115,6 +118,12 @@ public class IbClient : ObservableObject, IIbClient
 
         TwsCallbackHandler_.PositionStatusEvent -= TwsCallbackHandler_PositionStatusEvent;
     }
+
+
+    private void TwsCallbackHandler__OpenOrderEvent(object? sender, OpenOrderEventArgs e) { this.OpenOrderEvent?.Invoke(this, e); }
+
+    private void TwsCallbackHandler__OrderStatusEvent(object? sender, OrderStatusEventArgs e) { this.OrderStatusEvent?.Invoke(this, e); }
+
 
     private void TwsCallbackHandler_PositionStatusEvent(object? sender, PositionStatusEventArgs e) { this.PositionStatusEvent?.Invoke(this, e); }
 
@@ -155,9 +164,9 @@ public class IbClient : ObservableObject, IIbClient
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     private Task ConnectAsync_(string host = null, int? port = null, int? clientId = null)
     {
-        if (host != null) Host = host;
-        if(port!= null) Port = port.Value;
-        if(clientId!=null) ClientId = clientId.Value;
+        if (host != null) Host         = host;
+        if (port != null) Port         = port.Value;
+        if (clientId != null) ClientId = clientId.Value;
 
         ConnectionState = EConnectionState.Connecting;
 
@@ -347,10 +356,7 @@ public class IbClient : ObservableObject, IIbClient
         UpdateAccountValueEvent?.Invoke(this, eventArgs);
     }
 
-    public void CancelAccountDetails(string accountId)
-    {
-        this.ClientSocket_.reqAccountUpdates(false, accountId);
-    }
+    public void CancelAccountDetails(string accountId) { this.ClientSocket_.reqAccountUpdates(false, accountId); }
 
     /// <summary>
     /// The account updates dictionary
@@ -556,6 +562,7 @@ public class IbClient : ObservableObject, IIbClient
         ret.RemoveRange(0, index);
         return ret;
     }
+
 #endregion
 
 
@@ -629,9 +636,10 @@ public class IbClient : ObservableObject, IIbClient
         return taskSource.Task;
     }
 
-    /// <summary>
+    public event EventHandler<OrderStatusEventArgs>    OrderStatusEvent;    // 订单状态变化时间
+    public event EventHandler<OpenOrderEventArgs>      OpenOrderEvent;      // 新订单事件
+
     /// 订单成交后，将触发ExecutionDetailsEvent&CommissionReportEvent 这2个事件
-    /// </summary>
     public event EventHandler<ExecutionDetailsEventArgs> ExecutionDetailsEvent;
 
     public event EventHandler<CommissionReport> CommissionReportEvent;
