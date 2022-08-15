@@ -636,8 +636,8 @@ public class IbClient : ObservableObject, IIbClient
         return taskSource.Task;
     }
 
-    public event EventHandler<OrderStatusEventArgs>    OrderStatusEvent;    // 订单状态变化时间
-    public event EventHandler<OpenOrderEventArgs>      OpenOrderEvent;      // 新订单事件
+    public event EventHandler<OrderStatusEventArgs> OrderStatusEvent; // 订单状态变化时间
+    public event EventHandler<OpenOrderEventArgs>   OpenOrderEvent;   // 新订单事件
 
     /// 订单成交后，将触发ExecutionDetailsEvent&CommissionReportEvent 这2个事件
     public event EventHandler<ExecutionDetailsEventArgs> ExecutionDetailsEvent;
@@ -650,7 +650,7 @@ public class IbClient : ObservableObject, IIbClient
     /// </summary>
     /// <param name="cancellationToken">The cancellation token used to cancel the request</param>
     /// <returns>A list of execution details events from TWS.</returns>
-    public Task<List<OpenOrderEventArgs>> RequestOpenOrdersAsync()
+    public Task<List<OpenOrderEventArgs>> ReqOpenOrdersAsync()
     {
         List<OpenOrderEventArgs>            openOrderEvents          = new List<OpenOrderEventArgs>();
         var                                 taskSource               = new TaskCompletionSource<List<OpenOrderEventArgs>>();
@@ -687,6 +687,46 @@ public class IbClient : ObservableObject, IIbClient
 
         return taskSource.Task;
     }
+
+
+    public Task<List<CompletedOrderEventArgs>> ReqCompletedOrdersAsync()
+    {
+        List<CompletedOrderEventArgs>         completedOrders                = new List<CompletedOrderEventArgs>();
+        var                                   taskSource                     = new TaskCompletionSource<List<CompletedOrderEventArgs>>();
+        EventHandler<CompletedOrderEventArgs> completedOrderEventHandler     = null;
+        EventHandler                          completedOrdersEndEventHandler = null;
+
+        completedOrderEventHandler = (sender, args) => { completedOrders.Add(args); };
+
+        completedOrdersEndEventHandler = (sender, args) =>
+        {
+            // Cleanup the event handlers when the positions end event is called.
+            clearHandler();
+            taskSource.TrySetResult(completedOrders);
+        };
+
+        void clearHandler()
+        {
+            this.TwsCallbackHandler_.CompletedOrderEvent     -= completedOrderEventHandler;
+            this.TwsCallbackHandler_.CompletedOrdersEndEvent -= completedOrdersEndEventHandler;
+        }
+
+        this.TwsCallbackHandler_.CompletedOrderEvent     += completedOrderEventHandler;
+        this.TwsCallbackHandler_.CompletedOrdersEndEvent += completedOrdersEndEventHandler;
+
+        // Set the operation to cancel after 5 seconds
+        CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
+        tokenSource.Token.Register(() =>
+        {
+            clearHandler();
+            taskSource.TrySetCanceled();
+        });
+
+        this.ClientSocket_.reqCompletedOrders(false);
+
+        return taskSource.Task;
+    }
+
 
     /// <summary>
     /// Cancels an order in TWS.
@@ -1021,7 +1061,7 @@ public class IbClient : ObservableObject, IIbClient
     /// Get a list of all the positions in TWS.
     /// </summary>
     /// <returns>A list of position status events from TWS.</returns>
-    public Task<List<PositionStatusEventArgs>> RequestPositions()
+    public Task<List<PositionStatusEventArgs>> ReqPositions()
     {
         List<PositionStatusEventArgs>              positionStatusEvents            = new List<PositionStatusEventArgs>();
         var                                        taskSource                      = new TaskCompletionSource<List<PositionStatusEventArgs>>();

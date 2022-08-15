@@ -51,9 +51,19 @@ public static class TwsDatetimeEx
         // 目前发现这两种
         // 20220317  00:00:00
         // 20220317  
+        // 20220815-10:21:34 China Standard Time
         if (dt.Length == 8)
         {
             DateTime ret = DateTime.ParseExact(dt, "yyyyMMdd", CultureInfo.InvariantCulture);
+            return ret;
+        }
+        else if (dt.Contains('-'))
+        {
+            var      ss      = dt.Split(' ');
+            var      dstring = ss[0];
+            var      tz      = ss[1];   // todo: timezone parse
+            DateTime ret     = DateTime.ParseExact(dstring, "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture);
+
             return ret;
         }
         else

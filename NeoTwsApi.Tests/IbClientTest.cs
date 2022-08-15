@@ -352,7 +352,7 @@ public partial class Tests
         successfullyPlaced.Should().NotBeNull();
 
 
-        var ret = await client.RequestOpenOrdersAsync();
+        var ret = await client.ReqOpenOrdersAsync();
 
         // Assert
         ret.Should().NotBeEmpty();
@@ -432,7 +432,7 @@ public partial class Tests
 
             await Task.Delay(3000);
         }
-        var ret = await client.RequestPositions();
+        var ret = await client.ReqPositions();
         ret.Should().NotBeEmpty();
 
         {

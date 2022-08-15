@@ -188,8 +188,9 @@ public interface IIbClient : INotifyPropertyChanged
     /// Requests open orders
     /// </summary>
     /// <returns>Open orders</returns>
-    Task<List<OpenOrderEventArgs>> RequestOpenOrdersAsync();
+    Task<List<OpenOrderEventArgs>> ReqOpenOrdersAsync();
 
+    Task<List<CompletedOrderEventArgs>> ReqCompletedOrdersAsync();
 
     /// <summary>
     /// Cancels an order
@@ -207,7 +208,7 @@ public interface IIbClient : INotifyPropertyChanged
     //Also, subscribe the status changes of the positions
     /// </summary>
     /// <returns>A list of position status events from TWS.</returns>
-    Task<List<PositionStatusEventArgs>> RequestPositions();
+    Task<List<PositionStatusEventArgs>> ReqPositions();
 
     event EventHandler<PositionStatusEventArgs> PositionStatusEvent;
 
