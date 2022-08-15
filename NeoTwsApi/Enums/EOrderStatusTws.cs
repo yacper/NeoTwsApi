@@ -9,6 +9,7 @@ namespace NeoTwsApi.Enums;
 
 public enum EOrderStatusTws
 {
+    PreSubmitted,
     Submitted,      // 已提交
     Filled,
 
