@@ -12,5 +12,6 @@ public enum EOrderStatusTws
     PreSubmitted,
     Submitted,      // 已提交
     Filled,
+    Cancelled,      // 已取消
 
 }
