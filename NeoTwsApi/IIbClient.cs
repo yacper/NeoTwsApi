@@ -57,6 +57,8 @@ public interface IIbClient : INotifyPropertyChanged
     public string ConnectedServerTime { get; }  // Server time when connected, some string can't recognize
 
 
+    public event EventHandler<NeoTwsApi.EventArgs.ErrorEventArgs> ErrorEvent;
+
 #region Login
 
     /// <summary>

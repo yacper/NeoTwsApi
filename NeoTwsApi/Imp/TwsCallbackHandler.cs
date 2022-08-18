@@ -669,6 +669,9 @@ public class TwsCallbackHandler : EWrapper
     /// <inheritdoc/>
     public void tickByTickBidAsk(int reqId, long time, double bidPrice, double askPrice, decimal bidSize, decimal askSize, TickAttribBidAsk tickAttribBidAsk)
     {
+        if(!IbClient_.ReqContracts.ContainsKey(reqId))
+            return;
+
         TickByTickBidAskEvent?.Invoke(this,
                                       new(reqId,
                                           IbClient_.ReqContracts[reqId].Item1,

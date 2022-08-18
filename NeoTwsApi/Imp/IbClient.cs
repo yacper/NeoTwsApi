@@ -60,6 +60,8 @@ public class IbClient : ObservableObject, IIbClient
     public string ConnectedServerTime { get; protected set; } = null;
 
 
+    public event EventHandler<NeoTwsApi.EventArgs.ErrorEventArgs> ErrorEvent;
+
     public ReadOnlyObservableCollection<string> Accounts { get => new(Accounts_); }
 
     public event EventHandler<UpdateAccountValueEventArgs> UpdateAccountValueEvent;
@@ -80,6 +82,7 @@ public class IbClient : ObservableObject, IIbClient
 
     protected void AddHandler_()
     {
+        TwsCallbackHandler_.ErrorEvent += TwsCallbackHandler__ErrorEvent;
         TwsCallbackHandler_.TickByTickBidAskEvent   += TwsCallbackHandler_TickByTickBidAskEvent;
         TwsCallbackHandler_.TickByTickMidPointEvent += TwsCallbackHandler_TickByTickMidPointEvent;
         TwsCallbackHandler_.TickByTickLastEvent     += TwsCallbackHandler_TickByTickLastEvent;
@@ -99,7 +102,7 @@ public class IbClient : ObservableObject, IIbClient
         TwsCallbackHandler_.PositionStatusEvent += TwsCallbackHandler_PositionStatusEvent;
     }
 
-
+ 
     protected void RemoveHandler_()
     {
         TwsCallbackHandler_.TickByTickBidAskEvent   -= TwsCallbackHandler_TickByTickBidAskEvent;
@@ -119,6 +122,10 @@ public class IbClient : ObservableObject, IIbClient
         TwsCallbackHandler_.PositionStatusEvent -= TwsCallbackHandler_PositionStatusEvent;
     }
 
+    private void TwsCallbackHandler__ErrorEvent(object? sender, ErrorEventArgs e)
+    {
+        ErrorEvent?.Invoke(this, e);
+    }
 
     private void TwsCallbackHandler__OpenOrderEvent(object? sender, OpenOrderEventArgs e) { this.OpenOrderEvent?.Invoke(this, e); }
 
