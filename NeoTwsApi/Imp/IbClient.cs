@@ -74,9 +74,8 @@ public class IbClient : ObservableObject, IIbClient
         ClientId = clientId;
         Logger   = logger;
 
-        Signal_             = new EReaderMonitorSignal();
         TwsCallbackHandler_ = new TwsCallbackHandler(this);
-        ClientSocket_       = new EClientSocket(TwsCallbackHandler_, Signal_);
+
         AddHandler_();
     }
 
@@ -176,6 +175,9 @@ public class IbClient : ObservableObject, IIbClient
         if (clientId != null) ClientId = clientId.Value;
 
         ConnectionState = EConnectionState.Connecting;
+
+        Signal_             = new EReaderMonitorSignal();
+        ClientSocket_       = new EClientSocket(TwsCallbackHandler_, Signal_);
 
         var                                taskSource                        = new TaskCompletionSource<bool>();
         EventHandler<NextValidIdEventArgs> nextValidIdEventHandler           = null;

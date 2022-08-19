@@ -371,6 +371,7 @@ public class TwsCallbackHandler : EWrapper
     /// <inheritdoc/>
     public void error(Exception e)
     {
+        Debug.WriteLine($"Tws Exception:{e}");
         throw e;
     }
 
