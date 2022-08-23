@@ -7,7 +7,7 @@ namespace NeoTwsApi.EventArgs;
 /// </summary>
 public class ErrorEventArgs
 {
-    public override string ToString() => $"[{ErrorCode}]{ErrorMessage}";
+    public override string ToString() => $"[{Id}]-[{ErrorCode}]{ErrorMessage}";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ErrorEventArgs"/> class.
