@@ -8,7 +8,7 @@ namespace IBApi
      * @brief The historical data bar's description.
      * @sa EClient, EWrapper
      */
-    public partial class Bar
+    public class Bar
     {
         public Bar(string time, double open, double high, double low, double close, decimal volume, int count, decimal wap)
         {

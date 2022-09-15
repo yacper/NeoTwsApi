@@ -111,7 +111,7 @@ public partial class Tests
     {
         Contract    contract = XauusdContract_CMDTY;
         DurationTws duration = new DurationTws(3, EDurationStep.D);
-        DateTime    end      = 17.March(2022).At(23, 59);
+        DateTime    end      = 14.September(2022).At(0, 0);
 
         var ret = await client.ReqHistoricalDataAsync(contract, end, duration,
                                                       ETimeFrameTws.H1, EDataType.MIDPOINT);

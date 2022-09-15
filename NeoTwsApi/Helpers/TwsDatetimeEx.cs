@@ -47,7 +47,7 @@ public static class TwsDatetimeEx
 
     public static DateTime ToTwsDateTime(this string dt)
     {
-        //  yyyyMMdd HH:mm:ss {TMZ}
+        //  yyyyMMdd HH:mm:ss {TMZ}  20220317 00:00:00 Asia/Shanghai
         // 目前发现这两种
         // 20220317  00:00:00
         // 20220317  
@@ -68,15 +68,24 @@ public static class TwsDatetimeEx
         }
         else
         {
-            DateTime ret = DateTime.ParseExact(dt, "yyyyMMdd  HH:mm:ss", CultureInfo.InvariantCulture);
+            var      ss      = dt.Split(' ');
+            if(ss.Length ==2)
+                return DateTime.ParseExact(dt, "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            else if (ss.Length == 3)
+            {
+                var ret = DateTime.ParseExact($"{ss[0]} {ss[1]}", "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+                var tz  = TimeZoneInfo.FindSystemTimeZoneById(ss[2]);
+                return TimeZoneInfo.ConvertTime(ret, tz);
+            }
 
-            return ret;
+            throw new ArgumentException();
         }
     }
 
     public static string ToTwsDateTimeString(this DateTime dt)
     {// 20220317  00:00:00
-        return dt.ToString("yyyyMMdd  HH:mm:ss");
+        return dt.ToUniversalTime().ToString("yyyyMMdd-HH:mm:ss");      // 作为utc datetime表示
+        //return $"{dt.ToString("yyyyMMdd HH:mm:ss")} Asia/Shanghai";
     }
 
 

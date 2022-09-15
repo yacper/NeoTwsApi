@@ -22,12 +22,12 @@ namespace Samples
         public static int Main(string[] args)
         {
             RequestContractDetails testImpl = new RequestContractDetails();
-            testImpl.ClientSocket.eConnect("127.0.0.1", 7497, 0);
+            testImpl.ClientSocket.eConnect("127.0.0.1", 7496, 0);
             while (testImpl.NextOrderId <= 0) { }
 
             //We can request the whole option's chain by giving a brief description of the contract
             //i.e. we only specify symbol, currency, secType and exchange (SMART)
-            Contract optionContract = ContractSamples.EurGbpFx();
+            Contract optionContract = ContractSamples.OptionForQuery();
 
             testImpl.ClientSocket.reqContractDetails(1, optionContract);
 

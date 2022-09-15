@@ -32,8 +32,4 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Extends\" />
-  </ItemGroup>
-
 </Project>
