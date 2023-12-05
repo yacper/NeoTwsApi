@@ -86,12 +86,149 @@ public partial class Tests
     {
         Contract contract = QQQContract_ETF;
 
-        var ret = await client.ReqContractAsync(contract);
+        //var ret = await client.ReqContractAsync(contract);
+        //var ret = await client.ReqContractAsync(MsftContract);
+        var ret = await client.ReqContractAsync(AaplContract);
+        //var ret = await client.ReqContractAsync(EurContract);
+
+
         // Assert
         ret.First().Should().NotBeNull();
 
         Debug.WriteLine(ret.Dump());
     }
+        /* aapl contract
+    {ContractDetails}
+  Contract: {Contract}
+    ConId: 265598
+    Symbol: "AAPL"
+    SecType: "STK"
+    LastTradeDateOrContractMonth: null
+    Strike: 0
+    Right: null
+    Multiplier: null
+    Exchange: "SMART"
+    Currency: "USD"
+    LocalSymbol: "AAPL"
+    PrimaryExch: "NASDAQ"
+    TradingClass: "NMS"
+    IncludeExpired: false
+    SecIdType: null
+    SecId: null
+    ComboLegsDescription: null
+    ComboLegs: null
+    DeltaNeutralContract: null
+  MarketName: "NMS"
+  MinTick: 0.01
+  PriceMagnifier: 1
+  OrderTypes: "ACTIVETIM,AD,ADJUST,ALERT,ALGO,ALLOC,AON,AVGCOST,BASKET,BENCHPX,CASHQTY,COND,CONDORDER,DARKONLY,DARKPOLL,DAY,DEACT,DEACTDIS,DEACTEOD,DIS,DUR,GAT,GTC,GTD,GTT,HID,IBKRATS,ICE,IMB,IOC,LIT,LMT,LOC,MIDPX,MIT,MKT,MOC,MTL,NGCOMB,NODARK,NONALGO,OCA,OPG,OPGREROUT,PEGBENCH,PEGMID,POSTATS,POSTONLY,PREOPGRTH,PRICECHK,REL,REL2MID,RELPCTOFS,RPI,RTH,SCALE,SCALEODD,SCALERST,SIZECHK,SMARTSTG,SNAPMID,SNAPMKT,SNAPREL,STP,STPLMT,SWEEP,TRAIL,TRAILLIT,TRAILLMT,TRAILMIT,WHATIF"
+  ValidExchanges: "SMART,AMEX,NYSE,CBOE,PHLX,ISE,CHX,ARCA,ISLAND,DRCTEDGE,BEX,BATS,EDGEA,JEFFALGO,BYX,IEX,EDGX,FOXRIVER,PEARL,NYSENAT,LTSE,MEMX,IBEOS,OVERNIGHT,PSX"
+  UnderConId: 0
+  LongName: "APPLE INC"
+  ContractMonth: null
+  Industry: "Technology"
+  Category: "Computers"
+  Subcategory: "Computers"
+  TimeZoneId: "US/Eastern"
+  TradingHours: "20231205:0400-20231205:2000;20231206:0400-20231206:2000;20231207:0400-20231207:2000;20231208:0400-20231208:2000"
+  LiquidHours: "20231205:0930-20231205:1600;20231206:0930-20231206:1600;20231207:0930-20231207:1600;20231208:0930-20231208:1600"
+  EvRule: null
+  EvMultiplier: 0
+  AggGroup: 1
+  SecIdList: ...
+    {TagValue}
+      Tag: "ISIN"
+      Value: "US0378331005"
+  UnderSymbol: null
+  UnderSecType: null
+  MarketRuleIds: "26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26"
+  RealExpirationDate: null
+  LastTradeTime: null
+  StockType: "COMMON"
+  Cusip: null
+  Ratings: null
+  DescAppend: null
+  BondType: null
+  CouponType: null
+  Callable: false
+  Putable: false
+  Coupon: 0
+  Convertible: false
+  Maturity: null
+  IssueDate: null
+  NextOptionDate: null
+  NextOptionType: null
+  NextOptionPartial: false
+  Notes: null
+  MinSize: 0.0001
+  SizeIncrement: 0.0001
+  SuggestedSizeIncrement: 100
+         
+        Eur contract
+{ContractDetails}
+  Contract: {Contract}
+    ConId: 12087792
+    Symbol: "EUR"
+    SecType: "CASH"
+    LastTradeDateOrContractMonth: null
+    Strike: 0
+    Right: null
+    Multiplier: null
+    Exchange: "IDEALPRO"
+    Currency: "USD"
+    LocalSymbol: "EUR.USD"
+    PrimaryExch: null
+    TradingClass: "EUR.USD"
+    IncludeExpired: false
+    SecIdType: null
+    SecId: null
+    ComboLegsDescription: null
+    ComboLegs: null
+    DeltaNeutralContract: null
+  MarketName: "EUR.USD"
+  MinTick: 5E-05
+  PriceMagnifier: 1
+  OrderTypes: "ACTIVETIM,AD,ADJUST,ALERT,ALGO,ALLOC,AVGCOST,BASKET,CASHQTY,COND,CONDORDER,DAY,DEACT,DEACTDIS,DEACTEOD,GAT,GTC,GTD,GTT,HID,IOC,LIT,LMT,MIT,MKT,NONALGO,OCA,REL,RELPCTOFS,SCALE,SCALERST,STP,STPLMT,TRAIL,TRAILLIT,TRAILLMT,TRAILMIT,WHATIF"
+  ValidExchanges: "IDEALPRO"
+  UnderConId: 0
+  LongName: "European Monetary Union Euro"
+  ContractMonth: null
+  Industry: null
+  Category: null
+  Subcategory: null
+  TimeZoneId: "US/Eastern"
+  TradingHours: "20231204:1715-20231205:1700;20231205:1715-20231206:1700;20231206:1715-20231207:1700;20231207:1715-20231208:1700;20231209:CLOSED;20231210:1715-20231211:1700"
+  LiquidHours: "20231204:1715-20231205:1700;20231205:1715-20231206:1700;20231206:1715-20231207:1700;20231207:1715-20231208:1700;20231209:CLOSED;20231210:1715-20231211:1700"
+  EvRule: null
+  EvMultiplier: 0
+  AggGroup: 4
+  SecIdList: null
+  UnderSymbol: null
+  UnderSecType: null
+  MarketRuleIds: "3188"
+  RealExpirationDate: null
+  LastTradeTime: null
+  StockType: null
+  Cusip: null
+  Ratings: null
+  DescAppend: null
+  BondType: null
+  CouponType: null
+  Callable: false
+  Putable: false
+  Coupon: 0
+  Convertible: false
+  Maturity: null
+  IssueDate: null
+  NextOptionDate: null
+  NextOptionType: null
+  NextOptionPartial: false
+  Notes: null
+  MinSize: 0.01
+  SizeIncrement: 0.01
+  SuggestedSizeIncrement: 0.01
+         *
+         */
 
     [Test]
     public async Task ReqMatchingSymbols_Test()
@@ -109,7 +246,8 @@ public partial class Tests
     [Test]
     public async Task ReqHistoricalDataAsync_Test()
     {
-        Contract    contract = XauusdContract_CMDTY;
+        //Contract    contract = XauusdContract_CMDTY;
+        Contract    contract = AaplContract;
         DurationTws duration = new DurationTws(3, EDurationStep.D);
         DateTime    end      = 14.September(2022).At(0, 0);
 
@@ -197,6 +335,7 @@ public partial class Tests
     public async Task SubTickByTickData_BidAsk()
     {
         Contract            contract     = EurContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
+        //Contract            contract     = AaplContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
         ETickByTickDataType tickDataType = ETickByTickDataType.BidAsk;
 
         var      historicalTickBidAsks = new List<HistoricalTickBidAsk>();

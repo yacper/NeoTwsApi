@@ -22,6 +22,18 @@ public partial class Tests
         Currency    = ECurrencyTws.USD.ToString()
     };
 
+    // aapl明明在nasdaq上市，但是这里不能用nasdaq，只能用nyse，或者smart路由
+    Contract AaplContract = new Contract
+    {
+        SecType     = ESecTypeTws.STK.ToString(),
+        Symbol      = "AAPL",
+        //Exchange    = EExchangeTws.NASDAQ.ToString(), // 这里不能用nasdaq， ib认为aapl在nyse上市
+        Exchange    = EExchangeTws.SMART.ToString(), // 可以用smart
+        //Exchange    = EExchangeTws.NYSE.ToString(), // 或者nyse
+        //PrimaryExch = EExchangeTws.NYSE.ToString(),
+        Currency    = ECurrencyTws.USD.ToString()
+    };
+
     private Contract EurContract = new Contract()
     {
         Symbol   = "EUR",

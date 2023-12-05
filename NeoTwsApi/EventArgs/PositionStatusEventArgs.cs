@@ -9,6 +9,8 @@ using IBApi;
 /// </summary>
 public class PositionStatusEventArgs
 {
+    public override string ToString() => $"{Account} {Contract} {Position}@{AverageCost}";
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PositionStatusEventArgs"/> class.
     /// </summary>

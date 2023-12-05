@@ -9,6 +9,9 @@ using IBApi;
 /// </summary>
 public class OpenOrderEventArgs
 {
+
+    public override string ToString() => $"{Contract} {Order}";
+
     /// <summary>
     /// Initializes a new instance of the <see cref="OpenOrderEventArgs"/> class.
     /// </summary>
