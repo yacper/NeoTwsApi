@@ -618,10 +618,10 @@ public class IbClient : ObservableObject, IIbClient
         {
             if (orderId == eventArgs.Id)
             {
-                if (
-                    eventArgs.ErrorCode == TwsErrorCodes.InvalidOrderType ||
-                    eventArgs.ErrorCode == TwsErrorCodes.AmbiguousContract ||
-                    eventArgs.ErrorCode == TwsErrorCodes.OrderRejected)
+                //if (
+                //    eventArgs.ErrorCode == TwsErrorCodes.InvalidOrderType ||
+                //    eventArgs.ErrorCode == TwsErrorCodes.AmbiguousContract ||
+                //    eventArgs.ErrorCode == TwsErrorCodes.OrderRejected)
                 {
                     // Unregister the callbacks
                     clearHandler();
