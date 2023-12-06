@@ -617,16 +617,23 @@ public class IbClient : ObservableObject, IIbClient
         orderErrorEventCallback = (sender, eventArgs) =>
         {
             if (orderId == eventArgs.Id)
-            {
-                //if (
+            {   
+                // ib的错误和正常的状态混在一起，这里只处理明确的错误，实际很多应该作为wanrning处理，现在这样，导致不能处理所以情况
+                // TwsErrorCodes.OrderMessageError // 如果 lot被修改，也会发送这个错误，但其实订单时正确完成了，这个时候不能作为error处理
+                //if (// 以下是明确错误的情况
                 //    eventArgs.ErrorCode == TwsErrorCodes.InvalidOrderType ||
                 //    eventArgs.ErrorCode == TwsErrorCodes.AmbiguousContract ||
-                //    eventArgs.ErrorCode == TwsErrorCodes.OrderRejected)
+                //    eventArgs.ErrorCode == TwsErrorCodes.OrderRejected
+                //    || eventArgs.ErrorCode ==TwsErrorCodes.InvalidEndTime //[errorMsg]:End Time: The date, time, or time-zone entered is invalid. The correct format is yyyymmdd hh:mm:ss xx/xxxx where yyyymmdd and xx/xxxx are optional
+                //    || eventArgs.ErrorCode == TwsErrorCodes.OrderNotSupportFractionalQuantity 
+                //    )
+                if (eventArgs.ErrorCode != TwsErrorCodes.OrderMessageError)
                 {
                     // Unregister the callbacks
                     clearHandler();
                     taskSource.TrySetException(new TwsException(eventArgs));
                 }
+                //Logger?.Error($"Ib PlaceOrderAsync error:{eventArgs.ErrorCode} {eventArgs.ErrorMessage}");
             }
         };
 

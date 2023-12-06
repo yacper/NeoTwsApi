@@ -435,7 +435,19 @@ public partial class Tests
         {
             Action        = "BUY",
             OrderType     = "MKT",
-            TotalQuantity = 2000
+            TotalQuantity = 2000,
+            //TotalQuantity = 2000.01m,   在tws客户端上，eur最小支持0.01单子，也可以被执行，但是通过api无法执行，返回TwsErrorCodes.OrderNotSupportFractionalQuantity
+            Tif = ETifTws.GTC.ToString()
+        };
+
+
+        // Initialize the order
+        Order closeOrder = new Order
+        {
+            Action        = "SELL",
+            OrderType     = "MKT",
+            TotalQuantity = 12000M,
+            Tif           = ETifTws.GTC.ToString()
         };
 
         ExecutionDetailsEventArgs details = null;
@@ -451,6 +463,7 @@ public partial class Tests
 
         // Call the API
         var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
+        //var successfullyPlaced = await client.PlaceOrderAsync(contract, closeOrder);
 
         // Assert
         successfullyPlaced.Should().NotBeNull();

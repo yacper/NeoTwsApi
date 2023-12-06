@@ -11,8 +11,8 @@ public enum ETifTws
 {
     Unknown = 0,
     GTC     = 1, // Good-Till-Cancelled
-    GTD     = 2, // Good-Till-Day
+    GTD     = 2, // Good-Till-Date       ib的gtd，实际上是指定日期，必须提供时间，否则报错
     IOC     = 3, // Immediate-or-Cancel
     FOK     = 4, // Fill-or-Kill
-    DAY     = 5, // Day
+    DAY     = 5, // Day         // 当天，一般意义上的GTD
 }

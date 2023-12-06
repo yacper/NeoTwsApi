@@ -42,7 +42,7 @@ public class PositionStatusEventArgs
     public decimal Position { get; private set; }
 
     /// <summary>
-    /// Gets the average cost
+    /// Gets the average cost, 这个平均成本不是平均价格，是包含了手续费的真实成本
     /// </summary>
     public double AverageCost { get; private set; }
 }
