@@ -283,6 +283,9 @@ public class IbClient : ObservableObject, IIbClient
             taskSource.TrySetCanceled();
         });
 
+        // 意外中断事件删除
+        TwsCallbackHandler_.ConnectionClosedEvent -= TwsCallbackHandler_OnConnectionClosedEvent;
+
         this.ClientSocket_.eDisconnect();
 
         return taskSource.Task;
@@ -299,6 +302,20 @@ public class IbClient : ObservableObject, IIbClient
         ConnectedServerTime = ClientSocket_.ServerTime;
 
         ConnectionState = EConnectionState.Connected;
+
+        // 中途断线
+        this.TwsCallbackHandler_.ConnectionClosedEvent += TwsCallbackHandler_OnConnectionClosedEvent;
+    }
+
+    private void TwsCallbackHandler_OnConnectionClosedEvent(object? sender, System.EventArgs e)
+    {
+        TwsCallbackHandler_.ConnectionClosedEvent -= TwsCallbackHandler_OnConnectionClosedEvent;
+        Logger?.Error("IB 连接中断");
+
+        // Abort the reader thread
+        ThreadRunning_ = false;
+
+        OnDisconnected();
     }
 
     public void OnAccountsReccieved(string accountsList) // 当连接建立后，tws后会主动发送managedAccounts

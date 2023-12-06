@@ -28,7 +28,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NeoTwsApi\NeoTwsApi.csproj" />
-    <ProjectReference Include="..\TWS API\source\CSharpClient\client\CSharpAPI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
