@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2023 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 using System;
 using System.Collections.Generic;
@@ -212,7 +212,8 @@ namespace Samples
                 ", LmtPrice: " + Util.DoubleMaxString(order.LmtPrice) + ", AuxPrice: " + Util.DoubleMaxString(order.AuxPrice) + ", Status: " + orderState.Status +
                 ", MinTradeQty: " + Util.IntMaxString(order.MinTradeQty) + ", MinCompeteSize: " + Util.IntMaxString(order.MinCompeteSize) +
                 ", CompeteAgainstBestOffset: " + (order.CompeteAgainstBestOffset == Order.COMPETE_AGAINST_BEST_OFFSET_UP_TO_MID ? "UpToMid" : Util.DoubleMaxString(order.CompeteAgainstBestOffset)) +
-                ", MidOffsetAtWhole: " + Util.DoubleMaxString(order.MidOffsetAtWhole) + ", MidOffsetAtHalf: " + Util.DoubleMaxString(order.MidOffsetAtHalf));
+                ", MidOffsetAtWhole: " + Util.DoubleMaxString(order.MidOffsetAtWhole) + ", MidOffsetAtHalf: " + Util.DoubleMaxString(order.MidOffsetAtHalf) +
+                ", FAGroup: " + order.FaGroup + ", FAMethod: " + order.FaMethod);
         }
         //! [openorder]
 
@@ -277,6 +278,29 @@ namespace Samples
             Console.WriteLine("\tMinSize: " + Util.DecimalMaxString(contractDetails.MinSize));
             Console.WriteLine("\tSizeIncrement: " + Util.DecimalMaxString(contractDetails.SizeIncrement));
             Console.WriteLine("\tSuggestedSizeIncrement: " + Util.DecimalMaxString(contractDetails.SuggestedSizeIncrement));
+
+            if (contractDetails.Contract.SecType == "FUND")
+            {
+                Console.WriteLine("\tFund Data: ");
+                Console.WriteLine("\t\tFundName: " + contractDetails.FundName);
+                Console.WriteLine("\t\tFundFamily: " + contractDetails.FundFamily);
+                Console.WriteLine("\t\tFundType: " + contractDetails.FundType);
+                Console.WriteLine("\t\tFundFrontLoad: " + contractDetails.FundFrontLoad);
+                Console.WriteLine("\t\tFundBackLoad: " + contractDetails.FundBackLoad);
+                Console.WriteLine("\t\tFundBackLoadTimeInterval: " + contractDetails.FundBackLoadTimeInterval);
+                Console.WriteLine("\t\tFundManagementFee: " + contractDetails.FundManagementFee);
+                Console.WriteLine("\t\tFundClosed: " + (contractDetails.FundClosed ? "yes" : "no"));
+                Console.WriteLine("\t\tFundClosedForNewInvestors: " + (contractDetails.FundClosedForNewInvestors ? "yes" : "no"));
+                Console.WriteLine("\t\tFundClosedForNewMoney: " + (contractDetails.FundClosedForNewMoney ? "yes" : "no"));
+                Console.WriteLine("\t\tFundNotifyAmount: " + contractDetails.FundNotifyAmount);
+                Console.WriteLine("\t\tFundMinimumInitialPurchase: " + contractDetails.FundMinimumInitialPurchase);
+                Console.WriteLine("\t\tFundSubsequentMinimumPurchase: " + contractDetails.FundSubsequentMinimumPurchase);
+                Console.WriteLine("\t\tFundBlueSkyStates: " + contractDetails.FundBlueSkyStates);
+                Console.WriteLine("\t\tFundBlueSkyTerritories: " + contractDetails.FundBlueSkyTerritories);
+                Console.WriteLine("\t\tFundDistributionPolicyIndicator: " + CFundDistributionPolicyIndicator.getFundDistributionPolicyIndicatorName(contractDetails.FundDistributionPolicyIndicator));
+                Console.WriteLine("\t\tFundAssetType: " + CFundAssetType.getFundAssetTypeName(contractDetails.FundAssetType));
+            }
+
             printContractDetailsSecIdList(contractDetails.SecIdList);
         }
 
@@ -344,7 +368,7 @@ namespace Samples
         public virtual void execDetails(int reqId, Contract contract, Execution execution)
         {
             Console.WriteLine("ExecDetails. " + reqId + " - " + contract.Symbol + ", " + contract.SecType+", " + contract.Currency+" - " + execution.ExecId + ", " + Util.IntMaxString(execution.OrderId) + 
-                ", " + Util.DecimalMaxString(execution.Shares) + ", " + Util.DecimalMaxString(execution.CumQty) + ", " + execution.LastLiquidity);
+                ", " + Util.DecimalMaxString(execution.Shares) + ", " + Util.DecimalMaxString(execution.CumQty) + ", " + execution.LastLiquidity + ", " + execution.PendingPriceRevision);
         }
         //! [execdetails]
 
@@ -593,9 +617,9 @@ namespace Samples
                     derivSecTypes += derivSecType;
                     derivSecTypes += " ";
                 }
-                Console.WriteLine("Contract: conId - {0}, symbol - {1}, secType - {2}, primExchange - {3}, currency - {4}, derivativeSecTypes - {5}", 
+                Console.WriteLine("Contract: conId - {0}, symbol - {1}, secType - {2}, primExchange - {3}, currency - {4}, derivativeSecTypes - {5}, description - {6}, issuerId - {7}", 
                     contractDescription.Contract.ConId, contractDescription.Contract.Symbol, contractDescription.Contract.SecType, 
-                    contractDescription.Contract.PrimaryExch, contractDescription.Contract.Currency, derivSecTypes);
+                    contractDescription.Contract.PrimaryExch, contractDescription.Contract.Currency, derivSecTypes, contractDescription.Contract.Description, contractDescription.Contract.IssuerId);
             }
         }
         //! [symbolSamples]

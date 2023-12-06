@@ -3,7 +3,7 @@
 
 namespace IBApi
 {
-    interface EClientMsgSink
+    internal interface EClientMsgSink
     {
         void serverVersion(int version, string time);
         void redirect(string host);

@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2023 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 using System.Collections.Generic;
@@ -216,6 +216,7 @@ namespace IBSampleApp.ui
             tradeLogGrid[6, index].Value = message.Contract.Symbol + " " + message.Contract.SecType + " " + message.Contract.Exchange;
             tradeLogGrid[7, index].Value = Util.DoubleMaxString(message.Execution.Price);
             tradeLogGrid["LastLiquidity", index].Value = message.Execution.LastLiquidity;
+            tradeLogGrid["PendingPriceRevision", index].Value = message.Execution.PendingPriceRevision;
         }
 
         public void HandleOrderStatus(OrderStatusMessage statusMessage)

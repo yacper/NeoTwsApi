@@ -1,9 +1,11 @@
-﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2023 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 
@@ -14,15 +16,13 @@ namespace IBApi
      * @brief TWS/Gateway client class
      * This client class contains all the available methods to communicate with IB. Up to 32 clients can be connected to a single instance of the TWS/Gateway simultaneously. From herein, the TWS/Gateway will be referred to as the Host.
      */
-    public class EClientSocket : EClient,  EClientMsgSink
+    public class EClientSocket : EClient, EClientMsgSink
     {
         private int port;
+        private TcpClient tcpClient;
 
-        public EClientSocket(EWrapper wrapper, EReaderSignal eReaderSignal):
-            base(wrapper)
-        {
-            this.eReaderSignal = eReaderSignal;
-        }
+        public EClientSocket(EWrapper wrapper, EReaderSignal eReaderSignal) :
+            base(wrapper) => this.eReaderSignal = eReaderSignal;
 
         void EClientMsgSink.serverVersion(int version, string time)
         {
@@ -46,7 +46,7 @@ namespace IBApi
             {
                 if (serverVersion < MinServerVer.LINKING)
                 {
-                    List<byte> buf = new List<byte>();
+                    var buf = new List<byte>();
 
                     buf.AddRange(Encoding.UTF8.GetBytes(clientId.ToString()));
                     buf.Add(Constants.EOL);
@@ -62,21 +62,24 @@ namespace IBApi
         }
 
         /**
-        * Creates socket connection to TWS/IBG. This earlier version of eConnect does not have extraAuth parameter.
-        */
-        public void eConnect(string host, int port, int clientId)
-        {
-            eConnect(host, port, clientId, false);
-        }
+         * @brief Establishes a connection to the designated Host. This earlier version of eConnect does not have extraAuth parameter.
+         */
+        public void eConnect(string host, int port, int clientId) => eConnect(host, port, clientId, false);
 
         protected virtual Stream createClientStream(string host, int port)
         {
-            return new TcpClient(host, port).GetStream();
+            tcpClient = new TcpClient(host, port);
+            return tcpClient.GetStream();
         }
 
         /**
-        * @brief Creates socket connection to TWS/IBG.
-        */
+         * @brief Establishes a connection to the designated Host.
+         * After establishing a connection successfully, the Host will provide the next valid order id, server's current time, managed accounts and open orders among others depending on the Host version.
+         * @param host the Host's IP address. Leave blank for localhost.
+         * @param port the Host's port. 7496 by default for the TWS, 4001 by default on the Gateway.
+         * @param clientId Every API client program requires a unique id which can be any integer. Note that up to 32 clients can be connected simultaneously to a single Host.
+         * @sa EWrapper, EWrapper::nextValidId, EWrapper::currentTime
+         */
         public void eConnect(string host, int port, int clientId, bool extraAuth)
         {
             if (isConnected)
@@ -116,7 +119,7 @@ namespace IBApi
             }
             catch (EClientException e)
             {
-                var cmp = (e as EClientException).Err;
+                var cmp = e.Err;
 
                 wrapper.error(-1, cmp.Code, cmp.Message, "");
             }
@@ -126,7 +129,7 @@ namespace IBApi
             }
         }
 
-        private EReaderSignal eReaderSignal;
+        private readonly EReaderSignal eReaderSignal;
         private int redirectCount;
 
         protected override uint prepareBuffer(BinaryWriter paramsList)
@@ -150,13 +153,13 @@ namespace IBApi
             request.Seek(0, SeekOrigin.Begin);
 
             var buf = new MemoryStream();
-            
+
             request.BaseStream.CopyTo(buf);
             socketTransport.Send(new EMessage(buf.ToArray()));
         }
 
         /**
-        * @brief Redirects connection to different host. 
+        * @brief Redirects connection to different host.
         */
         public void redirect(string host)
         {
@@ -168,10 +171,7 @@ namespace IBApi
 
             var srv = host.Split(':');
 
-            if (srv.Length > 1)
-                if (!int.TryParse(srv[1], out port))
-                    throw new EClientException(EClientErrors.BAD_MESSAGE);
-
+            if (srv.Length > 1 && !int.TryParse(srv[1], out port)) throw new EClientException(EClientErrors.BAD_MESSAGE);
 
             ++redirectCount;
 
@@ -184,8 +184,6 @@ namespace IBApi
 
             eDisconnect(false);
             eConnect(srv[0], port, clientId, extraAuth);
-
-            return;
         }
 
         public override void eDisconnect(bool resetState = true)
@@ -196,6 +194,42 @@ namespace IBApi
             }
 
             base.eDisconnect(resetState);
+        }
+
+        public override bool IsConnected()
+        {
+            IPGlobalProperties ipProperties = IPGlobalProperties.GetIPGlobalProperties();
+
+            try
+            {
+                TcpConnectionInformation[] tcpConnections = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Where(x => x.LocalEndPoint.Equals(tcpClient.Client.LocalEndPoint) && x.RemoteEndPoint.Equals(tcpClient.Client.RemoteEndPoint)).ToArray();
+                if (tcpConnections != null && tcpConnections.Length > 0)
+                {
+                    TcpState stateOfConnection = tcpConnections.First().State;
+                    if (stateOfConnection == TcpState.Established)
+                    {
+                        isConnected = true;
+                    }
+                    else
+                    {
+                        isConnected = false;
+                        wrapper.connectionClosed();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is ObjectDisposedException || e is NullReferenceException)
+                {
+                    isConnected = false;
+                    wrapper.connectionClosed();
+                }
+                else
+                {
+                    wrapper.error(e);
+                }
+            }
+            return isConnected;
         }
     }
 }

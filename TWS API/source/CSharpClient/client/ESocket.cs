@@ -5,15 +5,12 @@ using System.IO;
 
 namespace IBApi
 {
-    class ESocket : ETransport, IDisposable
+    internal class ESocket : ETransport, IDisposable
     {
-        BinaryWriter tcpWriter;
-        object tcpWriterLock = new object();
+        private readonly BinaryWriter tcpWriter;
+        private readonly object tcpWriterLock = new object();
 
-        public ESocket(Stream socketStream)
-        {
-            tcpWriter = new BinaryWriter(socketStream);
-        }
+        public ESocket(Stream socketStream) => tcpWriter = new BinaryWriter(socketStream);
 
         public void Send(EMessage msg)
         {
@@ -23,9 +20,6 @@ namespace IBApi
             }
         }
 
-        public void Dispose()
-        {
-            tcpWriter.Dispose();
-        }
+        public void Dispose() => tcpWriter.Dispose();
     }
 }

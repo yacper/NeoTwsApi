@@ -1,6 +1,7 @@
-﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2023 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
+using IBApi;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -102,5 +103,39 @@ namespace TWSLib
         object sizeIncrement { get; }
         [DispId(48)]
         object suggestedSizeIncrement { get; }
+        [DispId(49)]
+        string fundName { get; }
+        [DispId(50)]
+        string fundFamily { get; }
+        [DispId(51)]
+        string fundType { get; }
+        [DispId(52)]
+        string fundFrontLoad { get; }
+        [DispId(53)]
+        string fundBackLoad { get; }
+        [DispId(54)]
+        string fundBackLoadTimeInterval { get; }
+        [DispId(55)]
+        string fundManagementFee { get; }
+        [DispId(56)]
+        bool fundClosed { get; }
+        [DispId(57)]
+        bool fundClosedForNewInvestors { get; }
+        [DispId(58)]
+        bool fundClosedForNewMoney { get; }
+        [DispId(59)]
+        string fundNotifyAmount { get; }
+        [DispId(60)]
+        string fundMinimumInitialPurchase { get; }
+        [DispId(61)]
+        string fundSubsequentMinimumPurchase { get; }
+        [DispId(62)]
+        string fundBlueSkyStates { get; }
+        [DispId(63)]
+        string fundBlueSkyTerritories { get; }
+        [DispId(64)]
+        string fundDistributionPolicyIndicator { get; }
+        [DispId(65)]
+        string fundAssetType { get; }
     }
 }

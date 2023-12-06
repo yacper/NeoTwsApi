@@ -13,8 +13,8 @@ namespace IBApi
     public class Contract
     {
         /**
-        * @brief The unique IB contract identifier
-        */
+         * @brief The unique IB contract identifier
+         */
         public int ConId { get; set; }
 
 
@@ -36,13 +36,13 @@ namespace IBApi
          *      BOND- bond
          *      CMDTY- commodity
          *      NEWS- news
-         *		FUND- mutual fund
-		 */
+         *      FUND- mutual fund
+         */
         public string SecType { get; set; }
 
         /**
-        * @brief The contract's last trading day or contract month (for Options and Futures). Strings with format YYYYMM will be interpreted as the Contract Month whereas YYYYMMDD will be interpreted as Last Trading Day.
-        */
+         * @brief The contract's last trading day or contract month (for Options and Futures). Strings with format YYYYMM will be interpreted as the Contract Month whereas YYYYMMDD will be interpreted as Last Trading Day.
+         */
         public string LastTradeDateOrContractMonth { get; set; }
 
         /**
@@ -72,15 +72,15 @@ namespace IBApi
 
         /**
          * @brief The contract's symbol within its primary exchange
-		 * For options, this will be the OCC symbol
+         * For options, this will be the OCC symbol
          */
         public string LocalSymbol { get; set; }
 
         /**
          * @brief The contract's primary exchange.
-		 * For smart routed contracts, used to define contract in case of ambiguity. 
-		 * Should be defined as native exchange of contract
-		 * For exchanges which contain a period in name, will only be part of exchange name prior to period, i.e. ENEXT for ENEXT.BE
+         * For smart routed contracts, used to define contract in case of ambiguity. 
+         * Should be defined as native exchange of contract
+         * For exchanges which contain a period in name, will only be part of exchange name prior to period, i.e. ENEXT for ENEXT.BE
          */
         public string PrimaryExch { get; set; }
 
@@ -91,9 +91,9 @@ namespace IBApi
         public string TradingClass { get; set; }
 
         /**
-        * @brief If set to true, contract details requests and historical data queries can be performed pertaining to expired futures contracts.
-        * Expired options or other instrument types are not available.
-        */
+         * @brief If set to true, contract details requests and historical data queries can be performed pertaining to expired futures contracts.
+         * Expired options or other instrument types are not available.
+         */
         public bool IncludeExpired { get; set; }
 
         /**
@@ -104,10 +104,20 @@ namespace IBApi
         public string SecIdType { get; set; }
 
         /**
-        * @brief Identifier of the security type
-        * @sa secIdType
-        */
+         * @brief Identifier of the security type
+         * @sa secIdType
+         */
         public string SecId { get; set; }
+
+        /**
+         * @brief Description of the contract
+         */
+        public string Description { get; set; }
+
+        /**
+         * @brief IssuerId of the contract
+         */
+        public string IssuerId { get; set; }
 
         /**
          * @brief Description of the combo legs.
@@ -127,9 +137,6 @@ namespace IBApi
          */
         public DeltaNeutralContract DeltaNeutralContract { get; set; }
 
-        public override string ToString()
-        {
-            return SecType + " " + Symbol + " " + Currency + " " + Exchange;
-        }
+        public override string ToString() => $"{SecType} {Symbol} {Currency} {Exchange}";
     }
 }

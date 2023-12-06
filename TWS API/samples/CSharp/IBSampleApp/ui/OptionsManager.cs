@@ -1,4 +1,4 @@
-﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2023 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 using System;
 using System.Collections.Generic;
@@ -218,7 +218,7 @@ namespace IBSampleApp.ui
 
         public bool IsRequestActive { get; set; }
 
-        public void ExerciseOptions(int ovrd, int quantity, string exchange, int action) 
+        public void ExerciseOptions(int ovrd, int quantity, string exchange, int action, string manualOrderTime) 
         {
             if (positionsGrid.SelectedRows.Count > 0 )
             {
@@ -227,7 +227,7 @@ namespace IBSampleApp.ui
                 string account = (string)selectedRow.Cells[POS_ACCOUNT_IDX].Value;
                 Contract contract = currentOptionsPositions[contractIndex];
                 contract.Exchange = exchange;
-                ibClient.ClientSocket.exerciseOptions(currentOptionsExercisingRequest, contract, action, quantity, account, ovrd);
+                ibClient.ClientSocket.exerciseOptions(currentOptionsExercisingRequest, contract, action, quantity, account, ovrd, manualOrderTime);
             }
         }
 

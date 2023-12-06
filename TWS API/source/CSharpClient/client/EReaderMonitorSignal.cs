@@ -7,8 +7,8 @@ namespace IBApi
 {
     public class EReaderMonitorSignal : EReaderSignal
     {
-        object cs = new object();
-        bool open;
+        private readonly object cs = new object();
+        private bool open;
 
         public void issueSignal()
         {
@@ -24,8 +24,7 @@ namespace IBApi
         {
             lock (cs)
             {
-                while (!open)
-                    Monitor.Wait(cs);
+                while (!open) Monitor.Wait(cs);
 
                 open = false;
             }

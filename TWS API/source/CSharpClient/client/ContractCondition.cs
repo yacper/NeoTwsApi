@@ -5,41 +5,30 @@ using System;
 
 namespace IBApi
 {
-	public abstract class ContractCondition : OperatorCondition
+    public abstract class ContractCondition : OperatorCondition
     {
         public int ConId { get; set; }
         public string Exchange { get; set; }
 
-        const string delimiter = " of ";
+        private const string delimiter = " of ";
 
         public Func<int, string, string> ContractResolver { get; set; }
 
-        public ContractCondition()
-        {
-            ContractResolver = (conid, exch) => conid + "(" + exch + ")";
-        }
+        public ContractCondition() => ContractResolver = (conid, exch) => $"{conid}({exch})";
 
-        public override string ToString()
-        {
-            return Type + delimiter + ContractResolver(ConId, Exchange) + base.ToString();
-        }
+        public override string ToString() => Type + delimiter + ContractResolver(ConId, Exchange) + base.ToString();
 
         public override bool Equals(object obj)
         {
-            var other = obj as ContractCondition;
-
-            if (other == null)
+            if (!(obj is ContractCondition other))
                 return false;
 
             return base.Equals(obj)
                 && ConId == other.ConId
-                && Exchange.Equals(other.Exchange);
+                && Exchange.Equals(other.Exchange, StringComparison.Ordinal);
         }
 
-        public override int GetHashCode()
-        {
-            return base.GetHashCode() + ConId.GetHashCode() + Exchange.GetHashCode();
-        }
+        public override int GetHashCode() => base.GetHashCode() + ConId.GetHashCode() + Exchange.GetHashCode();
 
         protected override bool TryParse(string cond)
         {
@@ -49,9 +38,8 @@ namespace IBApi
                     return false;
 
                 cond = cond.Substring(cond.IndexOf(delimiter) + delimiter.Length);
-                int conid;
 
-                if (!int.TryParse(cond.Substring(0, cond.IndexOf("(")), out conid))
+                if (!int.TryParse(cond.Substring(0, cond.IndexOf("(")), out var conid))
                     return false;
 
                 ConId = conid;

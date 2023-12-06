@@ -1,4 +1,4 @@
-﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2023 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 using IBApi;
@@ -425,6 +425,159 @@ namespace TWSLib
             set { if (data != null) data.SuggestedSizeIncrement = Util.GetDecimal(value); }
         }
 
+        /**
+        * @brief Fund's name
+        */
+        string FundName
+        {
+            get { return data != null ? data.FundName : default(string); }
+            set { if (data != null) data.FundName = value; }
+        }
+
+        /**
+        * @brief Fund's family
+        */
+        string FundFamily
+        {
+            get { return data != null ? data.FundFamily : default(string); }
+            set { if (data != null) data.FundFamily = value; }
+        }
+
+        /**
+        * @brief Fund's type
+        */
+        string FundType
+        {
+            get { return data != null ? data.FundType : default(string); }
+            set { if (data != null) data.FundType = value; }
+        }
+
+        /**
+        * @brief Fund's front load
+        */
+        string FundFrontLoad
+        {
+            get { return data != null ? data.FundFrontLoad : default(string); }
+            set { if (data != null) data.FundFrontLoad = value; }
+        }
+
+        /**
+        * @brief Fund's back load
+        */
+        string FundBackLoad
+        {
+            get { return data != null ? data.FundBackLoad : default(string); }
+            set { if (data != null) data.FundBackLoad = value; }
+        }
+
+        /**
+        * @brief Fund's back load time interval
+        */
+        string FundBackLoadTimeInterval
+        {
+            get { return data != null ? data.FundBackLoadTimeInterval : default(string); }
+            set { if (data != null) data.FundBackLoadTimeInterval = value; }
+        }
+
+        /**
+        * @brief Fund's management fee
+        */
+        string FundManagementFee
+        {
+            get { return data != null ? data.FundManagementFee : default(string); }
+            set { if (data != null) data.FundManagementFee = value; }
+        }
+
+        /**
+        * @brief Fund closed flag
+        */
+        bool FundClosed
+        {
+            get { return data != null ? data.FundClosed : default(bool); }
+            set { if (data != null) data.FundClosed = value; }
+        }
+
+        /**
+        * @brief Fund closed for new investors flag
+        */
+        bool FundClosedForNewInvestors
+        {
+            get { return data != null ? data.FundClosedForNewInvestors : default(bool); }
+            set { if (data != null) data.FundClosedForNewInvestors = value; }
+        }
+
+        /**
+        * @brief Fund closed for new money flag
+        */
+        bool FundClosedForNewMoney
+        {
+            get { return data != null ? data.FundClosedForNewMoney : default(bool); }
+            set { if (data != null) data.FundClosedForNewMoney = value; }
+        }
+
+        /**
+        * @brief Fund's notify amount
+        */
+        string FundNotifyAmount
+        {
+            get { return data != null ? data.FundNotifyAmount : default(string); }
+            set { if (data != null) data.FundNotifyAmount = value; }
+        }
+
+        /**
+        * @brief Fund's minimum initial purchase
+        */
+        string FundMinimumInitialPurchase
+        {
+            get { return data != null ? data.FundMinimumInitialPurchase : default(string); }
+            set { if (data != null) data.FundMinimumInitialPurchase = value; }
+        }
+
+        /**
+        * @brief Fund's subsequent minimum purchase
+        */
+        string FundSubsequentMinimumPurchase
+        {
+            get { return data != null ? data.FundSubsequentMinimumPurchase : default(string); }
+            set { if (data != null) data.FundSubsequentMinimumPurchase = value; }
+        }
+
+        /**
+        * @brief Fund's blue sky states
+        */
+        string FundBlueSkyStates
+        {
+            get { return data != null ? data.FundBlueSkyStates : default(string); }
+            set { if (data != null) data.FundBlueSkyStates = value; }
+        }
+
+        /**
+        * @brief Fund's blue sky territories
+        */
+        string FundBlueSkyTerritories
+        {
+            get { return data != null ? data.FundBlueSkyTerritories : default(string); }
+            set { if (data != null) data.FundBlueSkyTerritories = value; }
+        }
+
+        /**
+        * @brief Fund's distribution policy inducator
+        */
+        string FundDistributionPolicyIndicator
+        {
+            get { return data != null ? CFundDistributionPolicyIndicator.getFundDistributionPolicyIndicatorName(data.FundDistributionPolicyIndicator) : default(string); }
+            set { if (data != null) data.FundDistributionPolicyIndicator = CFundDistributionPolicyIndicator.getFundDistributionPolicyIndicator(value); }
+        }
+
+        /**
+        * @brief Fund's asset type
+        */
+        string FundAssetType
+        {
+            get { return data != null ? CFundAssetType.getFundAssetTypeName(data.FundAssetType) : default(string); }
+            set { if (data != null) data.FundAssetType = CFundAssetType.getFundAssetType(value); }
+        }
+
         string TWSLib.IContractDetails.marketName
         {
             get { return MarketName; }
@@ -638,6 +791,91 @@ namespace TWSLib
         object TWSLib.IContractDetails.suggestedSizeIncrement
         {
             get { return SuggestedSizeIncrement; }
+        }
+
+        string TWSLib.IContractDetails.fundName
+        {
+            get { return FundName; }
+        }
+
+        string TWSLib.IContractDetails.fundFamily
+        {
+            get { return FundFamily; }
+        }
+
+        string TWSLib.IContractDetails.fundType
+        {
+            get { return FundType; }
+        }
+
+        string TWSLib.IContractDetails.fundFrontLoad
+        {
+            get { return FundFrontLoad; }
+        }
+
+        string TWSLib.IContractDetails.fundBackLoad
+        {
+            get { return FundBackLoad; }
+        }
+
+        string TWSLib.IContractDetails.fundBackLoadTimeInterval
+        {
+            get { return FundBackLoadTimeInterval; }
+        }
+
+        string TWSLib.IContractDetails.fundManagementFee
+        {
+            get { return FundManagementFee; }
+        }
+
+        bool TWSLib.IContractDetails.fundClosed
+        {
+            get { return FundClosed; }
+        }
+
+        bool TWSLib.IContractDetails.fundClosedForNewInvestors
+        {
+            get { return FundClosedForNewInvestors; }
+        }
+
+        bool TWSLib.IContractDetails.fundClosedForNewMoney
+        {
+            get { return FundClosedForNewMoney; }
+        }
+
+        string TWSLib.IContractDetails.fundNotifyAmount
+        {
+            get { return FundNotifyAmount; }
+        }
+
+        string TWSLib.IContractDetails.fundMinimumInitialPurchase
+        {
+            get { return FundMinimumInitialPurchase; }
+        }
+
+        string TWSLib.IContractDetails.fundSubsequentMinimumPurchase
+        {
+            get { return FundSubsequentMinimumPurchase; }
+        }
+
+        string TWSLib.IContractDetails.fundBlueSkyStates
+        {
+            get { return FundBlueSkyStates; }
+        }
+
+        string TWSLib.IContractDetails.fundBlueSkyTerritories
+        {
+            get { return FundBlueSkyTerritories; }
+        }
+
+        string TWSLib.IContractDetails.fundDistributionPolicyIndicator
+        {
+            get { return FundDistributionPolicyIndicator; }
+        }
+
+        string TWSLib.IContractDetails.fundAssetType
+        {
+            get { return FundAssetType; }
         }
 
         public static explicit operator ComContractDetails(ContractDetails cd)

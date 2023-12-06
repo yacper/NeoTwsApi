@@ -1,4 +1,4 @@
-﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2023 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 using IBApi;
@@ -181,6 +181,10 @@ namespace TWSLib
             get { return data != null ? data.LastLiquidity + "" : default(string); }            
         }
 
+        public bool PendingPriceRevision
+        {
+            get { return data != null ? data.PendingPriceRevision : default(bool); }
+        }
 
         public override bool Equals(Object p_other)
         {
@@ -300,6 +304,11 @@ namespace TWSLib
         string IExecution.lastLiquidity
         {
             get { return LastLiquidity; }
+        }
+
+        bool IExecution.pendingPriceRevision
+        {
+            get { return PendingPriceRevision; }
         }
     }
 }

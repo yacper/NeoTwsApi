@@ -1,4 +1,4 @@
-﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2023 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 using System;
@@ -16,7 +16,7 @@ namespace IBSampleApp.util
 
         public static string ContractToString(Contract contract)
         {
-            return contract.Symbol + " " + contract.SecType + " " + contract.Currency + " @ " + contract.Exchange;
+            return contract.Symbol + " " + contract.SecType + " " + contract.Strike + " " + contract.Right + " " + contract.Currency + " @ " + contract.Exchange ;
         }
 
         public static bool ContractsAreEqual(Contract contractA, Contract contractB)

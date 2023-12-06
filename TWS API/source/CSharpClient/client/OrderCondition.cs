@@ -60,17 +60,11 @@ namespace IBApi
             return rval;
         }
 
-        public virtual void Serialize(BinaryWriter outStream)
-        {
-            outStream.AddParameter(IsConjunctionConnection ? "a" : "o");
-        }
+        public virtual void Serialize(BinaryWriter outStream) => outStream.AddParameter(IsConjunctionConnection ? "a" : "o");
 
-        public virtual void Deserialize(IDecoder inStream)
-        {
-            IsConjunctionConnection = inStream.ReadString() == "a";
-        }
+        public virtual void Deserialize(IDecoder inStream) => IsConjunctionConnection = inStream.ReadString() == "a";
 
-        virtual protected bool TryParse(string cond)
+        protected virtual bool TryParse(string cond)
         {
             IsConjunctionConnection = cond == " and";
 
@@ -86,31 +80,20 @@ namespace IBApi
 
         public override bool Equals(object obj)
         {
-            var other = obj as OrderCondition;
-
-            if (other == null)
+            if (!(obj is OrderCondition other))
                 return false;
 
             return IsConjunctionConnection == other.IsConjunctionConnection && Type == other.Type;
         }
 
-        public override int GetHashCode()
-        {
-            return IsConjunctionConnection.GetHashCode() + Type.GetHashCode();
-        }
+        public override int GetHashCode() => IsConjunctionConnection.GetHashCode() + Type.GetHashCode();
     }
 
-    class StringSuffixParser
+    internal class StringSuffixParser
     {
-        public StringSuffixParser(string str)
-        {
-            Rest = str;
-        }
+        public StringSuffixParser(string str) => Rest = str;
 
-        string SkipSuffix(string perfix)
-        {
-            return Rest.Substring(Rest.IndexOf(perfix) + perfix.Length);
-        }
+        private string SkipSuffix(string perfix) => Rest.Substring(Rest.IndexOf(perfix) + perfix.Length);
 
         public string GetNextSuffixedValue(string perfix)
         {

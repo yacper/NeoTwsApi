@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2023 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 using System;
@@ -71,7 +71,7 @@ namespace IBSampleApp
             orderManager = new OrderManager(ibClient, liveOrdersGrid, completedOrdersGrid, tradeLogGrid);
             accountManager = new AccountManager(ibClient, accountSelector, accSummaryGrid, accountValuesGrid, accountPortfolioGrid, positionsGrid, familyCodesGrid);
             contractManager = new ContractManager(ibClient, fundamentalsOutput, contractDetailsGrid, bondContractDetailsGrid, comboBoxMarketRuleId, dataGridViewMarketRule, labelMarketRuleIdRes);
-            advisorManager = new AdvisorManager(ibClient, advisorAliasesGrid, advisorGroupsGrid, advisorProfilesGrid);
+            advisorManager = new AdvisorManager(ibClient, advisorAliasesGrid, advisorGroupsGrid);
             optionsManager = new OptionsManager(ibClient, optionChainCallGrid, optionChainPutGrid, optionPositionsGrid, listViewOptionParams);
             acctPosMultiManager = new AcctPosMultiManager(ibClient, positionsMultiGrid, accountUpdatesMultiGrid);
             symbolSamplesManagerData = new SymbolSamplesManager(ibClient, symbolSamplesDataGridData);
@@ -125,13 +125,9 @@ namespace IBSampleApp
             comboBoxMarketDataType_MDT.Items.AddRange(MarketDataType.GetAll());
             comboBoxMarketDataType_MDT.SelectedIndex = 0;
 
-            groupMethod.DataSource = AllocationGroupMethod.GetAsData();
+            groupMethod.DataSource = FaMethod.GetAsData();
             groupMethod.ValueMember = "Value";
             groupMethod.DisplayMember = "Name";
-
-            profileType.DataSource = AllocationProfileType.GetAsData();
-            profileType.ValueMember = "Value";
-            profileType.DisplayMember = "Name";
 
             hdRequest_EndTime.Text = DateTime.Now.ToUniversalTime().ToString("yyyyMMdd-HH:mm:ss");
             bboExchange_comboBox.DataSource = bboExchangeList;
@@ -827,6 +823,7 @@ namespace IBSampleApp
             contract.Strike = stringToDouble(conDetStrike.Text);
             contract.Multiplier = conDetMultiplier.Text;
             contract.LocalSymbol = conDetLocalSymbol.Text;
+            contract.IssuerId = conDetIssuerId.Text;
 
             if (!conDetRight.Text.Equals("") && !conDetRight.Text.Equals("None"))
                 contract.Right = (string)((IBType)conDetRight.SelectedItem).Value;
@@ -852,17 +849,6 @@ namespace IBSampleApp
         {
             advisorGroupsGrid.Rows.Clear();
             advisorManager.RequestFAData(FinancialAdvisorDataType.Groups);
-        }
-
-        private void loadProfiles_Click(object sender, EventArgs e)
-        {
-            advisorProfilesGrid.Rows.Clear();
-            advisorManager.RequestFAData(FinancialAdvisorDataType.Profiles);
-        }
-
-        private void saveProfiles_Click(object sender, EventArgs e)
-        {
-            advisorManager.SaveProfiles();
         }
 
         private void saveGroups_Click(object sender, EventArgs e)
@@ -950,19 +936,16 @@ namespace IBSampleApp
         {
             int ovrd = overrideOption.Checked == true ? 1 : 0;
             string exchange = optionExchange.Text;
-            optionsManager.ExerciseOptions(ovrd, int.Parse(optionExerciseQuan.Text), exchange, 1);
+            string manualOrderTime = optionManualOrderTime.Text;
+            optionsManager.ExerciseOptions(ovrd, int.Parse(optionExerciseQuan.Text), exchange, 1, manualOrderTime);
         }
 
         private void lapseOption_Click(object sender, EventArgs e)
         {
             int ovrd = overrideOption.Checked == true ? 1 : 0;
             string exchange = optionExchange.Text;
-            optionsManager.ExerciseOptions(ovrd, int.Parse(optionExerciseQuan.Text), exchange, 2);
-        }
-
-        private void optionsTab_Click(object sender, EventArgs e)
-        {
-
+            string manualOrderTime = optionManualOrderTime.Text;
+            optionsManager.ExerciseOptions(ovrd, int.Parse(optionExerciseQuan.Text), exchange, 2, manualOrderTime);
         }
 
         private void buttonRequestPositionsMulti_Click(object sender, EventArgs e)
