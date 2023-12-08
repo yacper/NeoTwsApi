@@ -84,11 +84,12 @@ public partial class Tests
     [Test]
     public async Task GetContractAsync_Test()
     {
-        Contract contract = QQQContract_ETF;
+        //Contract contract = QQQContract_ETF;
+        Contract contract = TmfContract;
 
-        //var ret = await client.ReqContractAsync(contract);
+
+        var ret = await client.ReqContractAsync(contract);
         //var ret = await client.ReqContractAsync(MsftContract);
-        var ret = await client.ReqContractAsync(AaplContract);
         //var ret = await client.ReqContractAsync(EurContract);
 
 
@@ -247,7 +248,8 @@ public partial class Tests
     public async Task ReqHistoricalDataAsync_Test()
     {
         //Contract    contract = XauusdContract_CMDTY;
-        Contract    contract = AaplContract;
+        //Contract    contract = AaplContract;
+        Contract    contract = MsftContract;
         DurationTws duration = new DurationTws(3, EDurationStep.D);
         DateTime    end      = 14.September(2022).At(0, 0);
 
@@ -334,9 +336,12 @@ public partial class Tests
     [Test]
     public async Task SubTickByTickData_BidAsk()
     {
-        Contract            contract     = EurContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
+        //Contract            contract     = EurContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
         //Contract            contract     = AaplContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
-        ETickByTickDataType tickDataType = ETickByTickDataType.BidAsk;
+        Contract            contract     = TmfContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
+        //Contract            contract     = BacContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
+        //ETickByTickDataType tickDataType = ETickByTickDataType.BidAsk;
+        ETickByTickDataType tickDataType = ETickByTickDataType.AllLast;
 
         var      historicalTickBidAsks = new List<HistoricalTickBidAsk>();
         client.TickByTickBidAskEvent += (s, e) =>
@@ -352,13 +357,22 @@ public partial class Tests
             Debug.WriteLine($"{contract.Symbol} MidPoint:");
             Debug.WriteLine(e.Arg2.Dump());
         };
-
+        client.TickByTickLastEvent += (s, e) =>
+        {
+            Debug.WriteLine($"{contract.Symbol} Last:");
+            Debug.WriteLine(e.Arg2.Dump());
+        };
+        client.TickByTickAllLastEvent += (s, e) =>
+        {
+            Debug.WriteLine($"{contract.Symbol} AllLast:");
+            Debug.WriteLine(e.Arg2.Dump());
+        };
 
         await client.SubTickByTickDataAsync(contract, tickDataType);
 
-        await client.SubTickByTickDataAsync(contract, ETickByTickDataType.MidPoint);
+        //await client.SubTickByTickDataAsync(contract, ETickByTickDataType.MidPoint);
         client.TickByTickSubscriptions.Should().NotBeEmpty();
-        historicalTickBidAsks.Should().NotBeEmpty();
+        //historicalTickBidAsks.Should().NotBeEmpty();
 
         await Task.Delay(3000);
 
@@ -395,7 +409,8 @@ public partial class Tests
     [Test]
     public async Task SubRealtimeBarsAsync_Test()
     {
-        Contract contract = EurContract;
+        //Contract contract = EurContract;
+        Contract contract = MsftContract;
         var      bars     = new List<Bar>();
         client.RealtimeBarEvent += (s, e) =>
         {
@@ -424,11 +439,8 @@ public partial class Tests
     public async Task PlaceOrderAsync_Test()
     {
         // Initialize the contract
-        Contract contract = new Contract();
-        contract.Symbol   = "EUR";
-        contract.SecType  = "CASH";
-        contract.Currency = "USD";
-        contract.Exchange = "IDEALPRO";
+        Contract contract = EurContract;
+
 
         // Initialize the order
         Order order = new Order

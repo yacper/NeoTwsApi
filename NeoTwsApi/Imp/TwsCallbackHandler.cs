@@ -252,8 +252,10 @@ public class TwsCallbackHandler : EWrapper
 
     /// <summary>
     /// The event that is fired when historical ticks bid ask data is received.
+    /// 在
     /// </summary>
     public event EventHandler<HistoricalTicksBidAskEventArgs> HistoricalTicksBidAskEvent;
+
 
     /// <summary>
     /// The event that is fired when historical ticks last are received.
@@ -453,21 +455,33 @@ public class TwsCallbackHandler : EWrapper
     /// <inheritdoc/>
     public void historicalTicks(int reqId, HistoricalTick[] ticks, bool done)
     {
-        var eventArgs = new HistoricalTicksEventArgs(reqId, ticks, done);
+        Contract con = null;
+        if (IbClient_.ReqContracts.TryGetValue(reqId, out Tuple<Contract, object?> o))
+            con = o.Item1;
+        var eventArgs = new HistoricalTicksEventArgs(reqId, con, ticks, done);
         this.HistoricalTicksEvent?.Invoke(this, eventArgs);
     }
 
     /// <inheritdoc/>
     public void historicalTicksBidAsk(int reqId, HistoricalTickBidAsk[] ticks, bool done)
     {
-        var eventArgs = new HistoricalTicksBidAskEventArgs(reqId, ticks, done);
+        Contract con = null;
+        if (IbClient_.ReqContracts.TryGetValue(reqId, out Tuple<Contract, object?> o))
+            con = o.Item1;
+
+        var eventArgs = new HistoricalTicksBidAskEventArgs(reqId, con, ticks, done);
+
         this.HistoricalTicksBidAskEvent?.Invoke(this, eventArgs);
     }
 
     /// <inheritdoc/>
     public void historicalTicksLast(int reqId, HistoricalTickLast[] ticks, bool done)
     {
-        var eventArgs = new HistoricalTicksLastEventArgs(reqId, ticks, done);
+        Contract con = null;
+        if (IbClient_.ReqContracts.TryGetValue(reqId, out Tuple<Contract, object?> o))
+            con = o.Item1;
+
+        var eventArgs = new HistoricalTicksLastEventArgs(reqId,con, ticks, done);
         this.HistoricalTicksLastEvent?.Invoke(this, eventArgs);
     }
 

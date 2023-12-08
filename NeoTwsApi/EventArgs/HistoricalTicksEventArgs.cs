@@ -15,17 +15,24 @@ namespace NeoTwsApi.EventArgs
         /// <param name="reqId">The request identifier.</param>
         /// <param name="ticks">The historical ticks.</param>
         /// <param name="done">True if all data has been received. Otherwise false.</param>
-        public HistoricalTicksEventArgs(int reqId, HistoricalTick[] ticks, bool done)
+        public HistoricalTicksEventArgs(int reqId, Contract reqContract, HistoricalTick[] ticks, bool done)
         {
-            this.RequestId = reqId;
-            this.Ticks = ticks;
-            this.Done = done;
+            this.RequestId   = reqId;
+            this.Ticks       = ticks;
+            this.Done        = done;
+            this.ReqContract = reqContract;
         }
 
         /// <summary>
         /// Gets the request id.
         /// </summary>
         public int RequestId { get; private set; }
+
+
+        /// <summary>
+        ///  请求的contract， 如果有
+        /// </summary>
+        public Contract ReqContract { get; protected set; }
 
         /// <summary>
         /// Gets the historical ticks.

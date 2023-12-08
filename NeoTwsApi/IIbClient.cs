@@ -142,6 +142,7 @@ public interface IIbClient : INotifyPropertyChanged
           */
     Task SubTickByTickDataAsync(Contract contract, ETickByTickDataType tickType);
 
+    // 取消订阅，但并不能保证成功，即便取消了，也可能还会收到数据
     void UnsubTickByTickData(Contract contract, ETickByTickDataType tickType);
 
     ReadOnlyObservableCollection<Tuple<Contract, ETickByTickDataType>> TickByTickSubscriptions { get; }

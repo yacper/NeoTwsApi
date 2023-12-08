@@ -13,22 +13,44 @@ namespace NeoTwsApi.Tests;
 
 public partial class Tests
 {
+    // nyse
+    Contract BacContract = new Contract
+    {
+        SecType     = ESecTypeTws.STK.ToString(),
+        Symbol      = "BAC",
+        Exchange    = EExchangeTws.SMART.ToString(),
+        //PrimaryExch = EExchangeTws.NYSE.ToString(),
+        Currency    = ECurrencyTws.USD.ToString()
+    };
+
     Contract MsftContract = new Contract
     {
         SecType     = ESecTypeTws.STK.ToString(),
         Symbol      = "MSFT",
         Exchange    = EExchangeTws.SMART.ToString(),
-        PrimaryExch = EExchangeTws.NYSE.ToString(),
+        //PrimaryExch = EExchangeTws.NYSE.ToString(),
         Currency    = ECurrencyTws.USD.ToString()
     };
+    Contract TmfContract = new Contract
+    {
+        SecType     = ESecTypeTws.STK.ToString(),
+        //Symbol      = "TMF",
+        LocalSymbol = "TMF",
+        Exchange    = EExchangeTws.SMART.ToString(),
+        //PrimaryExch = EExchangeTws.NYSE.ToString(),
+        Currency    = ECurrencyTws.USD.ToString()
+    };
+
 
     // aapl明明在nasdaq上市，但是这里不能用nasdaq，只能用nyse，或者smart路由
     Contract AaplContract = new Contract
     {
         SecType     = ESecTypeTws.STK.ToString(),
         Symbol      = "AAPL",
+        LocalSymbol      = "AAPL",
         //Exchange    = EExchangeTws.NASDAQ.ToString(), // 这里不能用nasdaq， ib认为aapl在nyse上市
         Exchange    = EExchangeTws.SMART.ToString(), // 可以用smart
+        //PrimaryExch = EExchangeTws.NASDAQ.ToString(),
         //Exchange    = EExchangeTws.NYSE.ToString(), // 或者nyse
         //PrimaryExch = EExchangeTws.NYSE.ToString(),
         Currency    = ECurrencyTws.USD.ToString()
@@ -36,7 +58,8 @@ public partial class Tests
 
     private Contract EurContract = new Contract()
     {
-        Symbol   = "EUR",
+        //Symbol   = "EUR",
+        LocalSymbol  = "EUR.USD",       //ib使用localsymbol更为准确
         SecType  = ESecTypeTws.CASH.ToString(),
         Currency = ECurrencyTws.USD.ToString(),
         Exchange = EExchangeTws.IDEALPRO.ToString()

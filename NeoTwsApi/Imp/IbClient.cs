@@ -101,7 +101,8 @@ public class IbClient : ObservableObject, IIbClient
         TwsCallbackHandler_.PositionStatusEvent += TwsCallbackHandler_PositionStatusEvent;
     }
 
- 
+
+
     protected void RemoveHandler_()
     {
         TwsCallbackHandler_.TickByTickBidAskEvent   -= TwsCallbackHandler_TickByTickBidAskEvent;
@@ -145,6 +146,7 @@ public class IbClient : ObservableObject, IIbClient
     private void TwsCallbackHandler_TickByTickMidPointEvent(object? sender, TwsEventArs<Contract, HistoricalTick> e) { TickByTickMidPointEvent?.Invoke(this, e); }
 
     private void TwsCallbackHandler_TickByTickBidAskEvent(object? sender, TwsEventArs<Contract, HistoricalTickBidAsk> e) { TickByTickBidAskEvent?.Invoke(this, e); }
+
 
     private void TwsCallbackHandler_RealtimeBarEvent(object? sender, TwsEventArs<Contract, Bar> e) { RealtimeBarEvent?.Invoke(this, e); }
 
@@ -265,13 +267,17 @@ public class IbClient : ObservableObject, IIbClient
         EventHandler connectionClosedHandler = null;
         connectionClosedHandler = (s, e) =>
         {
-            TwsCallbackHandler_.ConnectionClosedEvent -= connectionClosedHandler;
+            lock (Lock_)
+            {
+                this.TwsCallbackHandler_.ConnectionClosedEvent -= connectionClosedHandler;
 
-            // Abort the reader thread
-            ThreadRunning_ = false;
+                // Abort the reader thread
+                ThreadRunning_ = false;
 
-            OnDisconnected();
-            taskSource.TrySetResult();
+                OnDisconnected();
+                taskSource.TrySetResult();
+            }
+
         };
         this.TwsCallbackHandler_.ConnectionClosedEvent += connectionClosedHandler;
 
@@ -279,12 +285,15 @@ public class IbClient : ObservableObject, IIbClient
         CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
         tokenSource.Token.Register(() =>
         {
-            TwsCallbackHandler_.ConnectionClosedEvent -= connectionClosedHandler;
-            taskSource.TrySetCanceled();
+            lock (Lock_)
+            {
+                this.TwsCallbackHandler_.ConnectionClosedEvent -= connectionClosedHandler;
+                taskSource.TrySetCanceled();
+            }
         });
 
         // 意外中断事件删除
-        TwsCallbackHandler_.ConnectionClosedEvent -= TwsCallbackHandler_OnConnectionClosedEvent;
+        this.TwsCallbackHandler_.ConnectionClosedEvent -= TwsCallbackHandler_OnConnectionClosedEvent;
 
         this.ClientSocket_.eDisconnect();
 
@@ -309,7 +318,7 @@ public class IbClient : ObservableObject, IIbClient
 
     private void TwsCallbackHandler_OnConnectionClosedEvent(object? sender, System.EventArgs e)
     {
-        TwsCallbackHandler_.ConnectionClosedEvent -= TwsCallbackHandler_OnConnectionClosedEvent;
+        this.TwsCallbackHandler_.ConnectionClosedEvent -= TwsCallbackHandler_OnConnectionClosedEvent;
         Logger?.Error("IB 连接中断");
 
         // Abort the reader thread
@@ -475,7 +484,7 @@ public class IbClient : ObservableObject, IIbClient
             {
                 contractDetailsList.AddRange(args.Arg);
 
-                TwsCallbackHandler_.SymbolSamplesEvent -= symbolSamplesHandler;
+                this.TwsCallbackHandler_.SymbolSamplesEvent -= symbolSamplesHandler;
                 taskSource.TrySetResult(contractDetailsList);
             }
         };
@@ -847,7 +856,7 @@ public class IbClient : ObservableObject, IIbClient
           */
     public Task SubTickByTickDataAsync(Contract contract, ETickByTickDataType tickType)
     {
-        if (TickByTickSubscriptions.Any(p => p.Item1 == contract && p.Item2 == tickType))
+        if (TickByTickSubscriptions.Any(p => p.Item1.EqualSimple(contract) && p.Item2 == tickType))
             return Task.CompletedTask;
 
 
@@ -856,10 +865,15 @@ public class IbClient : ObservableObject, IIbClient
 
         var taskSource = new TaskCompletionSource();
 
-        EventHandler<TwsEventArs<Contract, HistoricalTick>>       tickByTickMidPointEventHandler = null;
-        EventHandler<TwsEventArs<Contract, HistoricalTickLast>>   tickByTickLastEventHandler     = null;
-        EventHandler<TwsEventArs<Contract, HistoricalTickLast>>   tickByTickAllLastEventHandler  = null;
-        EventHandler<TwsEventArs<Contract, HistoricalTickBidAsk>> tickByTickBidAskEventHandler   = null;
+        EventHandler<TwsEventArs<Contract, HistoricalTick>> tickByTickMidPointEventHandler = null;
+        EventHandler<TwsEventArs<Contract, HistoricalTickLast>> tickByTickLastEventHandler = null;
+        EventHandler<TwsEventArs<Contract, HistoricalTickLast>> tickByTickAllLastEventHandler = null;
+        EventHandler<TwsEventArs<Contract, HistoricalTickBidAsk>> tickByTickBidAskEventHandler = null;
+
+        EventHandler<HistoricalTicksEventArgs>       historicalTicksEventHandler       = null;
+        EventHandler<HistoricalTicksBidAskEventArgs> historicalTicksBidAskEventHandler = null;
+        EventHandler<HistoricalTicksLastEventArgs>   historicalTicksLastEventHandler   = null;
+
 
         EventHandler<ErrorEventArgs> errorEventHandler = null;
 
@@ -869,18 +883,22 @@ public class IbClient : ObservableObject, IIbClient
             {
                 case ETickByTickDataType.MidPoint:
                     this.TwsCallbackHandler_.TickByTickMidPointEvent -= tickByTickMidPointEventHandler;
+                    this.TwsCallbackHandler_.HistoricalTicksEvent -= historicalTicksEventHandler;
                     break;
                 case
                     ETickByTickDataType.Last:
                     this.TwsCallbackHandler_.TickByTickLastEvent -= tickByTickLastEventHandler;
+                    this.TwsCallbackHandler_.HistoricalTicksLastEvent -= historicalTicksLastEventHandler;
                     break;
                 case
                     ETickByTickDataType.AllLast:
                     this.TwsCallbackHandler_.TickByTickAllLastEvent -= tickByTickAllLastEventHandler;
+                    this.TwsCallbackHandler_.HistoricalTicksLastEvent -= historicalTicksLastEventHandler;
                     break;
                 case
                     ETickByTickDataType.BidAsk:
                     this.TwsCallbackHandler_.TickByTickBidAskEvent -= tickByTickBidAskEventHandler;
+                    this.TwsCallbackHandler_.HistoricalTicksBidAskEvent -= historicalTicksBidAskEventHandler;
                     break;
             }
 
@@ -914,6 +932,23 @@ public class IbClient : ObservableObject, IIbClient
             if (args.RequestId == requestId) { sucess(ETickByTickDataType.BidAsk); }
         };
 
+        historicalTicksEventHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId) { sucess(ETickByTickDataType.MidPoint); }
+        };
+
+        historicalTicksBidAskEventHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId) { sucess(ETickByTickDataType.BidAsk); }
+        };
+
+        historicalTicksLastEventHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId) { sucess(tickType); }
+        };
+
+
+
         errorEventHandler = (sender, args) =>
         {
             if (args.Id == requestId)
@@ -931,23 +966,29 @@ public class IbClient : ObservableObject, IIbClient
         {
             case ETickByTickDataType.MidPoint:
                 this.TwsCallbackHandler_.TickByTickMidPointEvent += tickByTickMidPointEventHandler;
+                this.TwsCallbackHandler_.HistoricalTicksEvent += historicalTicksEventHandler;
                 break;
-            case ETickByTickDataType.Last:
+            case
+                ETickByTickDataType.Last:
                 this.TwsCallbackHandler_.TickByTickLastEvent += tickByTickLastEventHandler;
+                this.TwsCallbackHandler_.HistoricalTicksLastEvent += historicalTicksLastEventHandler;
                 break;
-            case ETickByTickDataType.AllLast:
+            case
+                ETickByTickDataType.AllLast:
                 this.TwsCallbackHandler_.TickByTickAllLastEvent += tickByTickAllLastEventHandler;
+                this.TwsCallbackHandler_.HistoricalTicksLastEvent += historicalTicksLastEventHandler;
                 break;
-            case ETickByTickDataType.BidAsk:
+            case
+                ETickByTickDataType.BidAsk:
                 this.TwsCallbackHandler_.TickByTickBidAskEvent += tickByTickBidAskEventHandler;
+                this.TwsCallbackHandler_.HistoricalTicksBidAskEvent += historicalTicksBidAskEventHandler;
                 break;
         }
-
         this.TwsCallbackHandler_.ErrorEvent += errorEventHandler;
 
 
-        // Set the operation to cancel after 1 minute
-        CancellationTokenSource tokenSource = new CancellationTokenSource(60 * 1000);
+        // Set the operation to cancel after 20 s
+        CancellationTokenSource tokenSource = new CancellationTokenSource(20 * 1000);
         tokenSource.Token.Register(() =>
         {
             //todo:warn
@@ -958,14 +999,28 @@ public class IbClient : ObservableObject, IIbClient
             taskSource.TrySetCanceled();
         });
 
-        this.ClientSocket_.reqTickByTickData(requestId, contract, tickType.ToString(), 0, false);
+        // https://interactivebrokers.github.io/tws-api/tick_data.html
+        /*
+         The tick type field is case sensitive - it must be BidAsk, Last, AllLast, MidPoint. AllLast has additional trade types such as combos, derivatives, and average price trades which are not included in Last.
+        Tick-by-tick data for options is currently only available historically and not in real time.
+        Tick-by-tick data for indices is only provided for indices which are on CME.
+        Tick-by-tick data is not available for combos.
+        No more than 1 tick-by-tick request can be made for the same instrument within 15 seconds.
+        */
+        // 注意： * @param numberOfTicks - number of ticks.\n
+        // 这个接口，当请求的tickbytick数据有的时候，会发送实时数据，如果不处于交易时段，则没有任何数据
+        // 为了区分订阅数据是否成功，必须将@param numberOfTicks设为非0，如此,就算不处于交易时段，没有实时数据，也会发送一个历史数据过来
+        //this.ClientSocket_.reqTickByTickData(requestId, contract, tickType.ToString(), 0, false);  // 这种方式，如果非交易时段，不会发送实时数据，无法区分是否成功
+        // 另外： UnsubTickByTickData并不能保证取消订阅成功，因为ib的接口设计，无法知道是否取消成功，所以，同时要处理实时数据的影响
+        this.ClientSocket_.reqTickByTickData(requestId, contract, tickType.ToString(), 1, false);
 
         return taskSource.Task;
     }
 
     public void UnsubTickByTickData(Contract contract, ETickByTickDataType tickType)
     {
-        var sub = TickByTickSubscriptions.FirstOrDefault(p => p.Item1 == contract && p.Item2 == tickType);
+        // contract必须一致，否则会出错
+        var sub = TickByTickSubscriptions.FirstOrDefault(p => p.Item1.EqualSimple(contract) && p.Item2 == tickType);
         if (sub == null)
             return;
 

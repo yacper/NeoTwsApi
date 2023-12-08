@@ -137,6 +137,7 @@ namespace IBApi
          */
         public DeltaNeutralContract DeltaNeutralContract { get; set; }
 
-        public override string ToString() => $"{SecType} {Symbol} {Currency} {Exchange}";
+        //public override string ToString() => $"{SecType} {Symbol} {Currency} {Exchange}";
+        public override string ToString() => $"{SecType} {Symbol} {LocalSymbol} {Currency} {Exchange}";  // mod: for debug purpose only
     }
 }
