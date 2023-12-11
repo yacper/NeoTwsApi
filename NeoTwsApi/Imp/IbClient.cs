@@ -1125,7 +1125,7 @@ public class IbClient : ObservableObject, IIbClient
 
     public void UnsubRealtimeBars(Contract contract)
     {
-        var sub = RealtimeBarsSubscriptions.FirstOrDefault(p => p == contract);
+        var sub = RealtimeBarsSubscriptions.FirstOrDefault(p => p.EqualSimple(contract));
         if (sub == null)
             return;
 

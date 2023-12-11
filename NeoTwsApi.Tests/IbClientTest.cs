@@ -85,7 +85,8 @@ public partial class Tests
     public async Task GetContractAsync_Test()
     {
         //Contract contract = QQQContract_ETF;
-        Contract contract = TmfContract;
+        //Contract contract = TmfContract;
+        Contract contract = XauusdContract_CMDTY;
 
 
         var ret = await client.ReqContractAsync(contract);
@@ -338,10 +339,11 @@ public partial class Tests
     {
         //Contract            contract     = EurContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
         //Contract            contract     = AaplContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
-        Contract            contract     = TmfContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
+        //Contract            contract     = TmfContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
+        Contract            contract     = XauusdContract_CMDTY;  // xau不支持tickbytick
         //Contract            contract     = BacContract;  // 默认只有eur支持tickbytickdata， 并且只有midpoint和bidask
         //ETickByTickDataType tickDataType = ETickByTickDataType.BidAsk;
-        ETickByTickDataType tickDataType = ETickByTickDataType.AllLast;
+        ETickByTickDataType tickDataType = ETickByTickDataType.Last;
 
         var      historicalTickBidAsks = new List<HistoricalTickBidAsk>();
         client.TickByTickBidAskEvent += (s, e) =>

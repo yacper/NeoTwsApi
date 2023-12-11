@@ -139,6 +139,11 @@ public interface IIbClient : INotifyPropertyChanged
             Tick-by-tick data for indices is only provided for indices which are on CME.
             Tick-by-tick data is not available for combos.
             No more than 1 tick-by-tick request can be made for the same instrument within 15 seconds.
+
+            xauusd不支持，也许commodity都不支持
+            Failed to request tick-by-tick data:BidAsk tick-by-tick requests are not supported for XAUUSD
+
+            https://interactivebrokers.github.io/tws-api/market_data.html
           */
     Task SubTickByTickDataAsync(Contract contract, ETickByTickDataType tickType);
 
