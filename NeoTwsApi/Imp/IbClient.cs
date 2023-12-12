@@ -207,7 +207,11 @@ public class IbClient : ObservableObject, IIbClient
                                                 while (ThreadRunning_)
                                                 {
                                                     this.Signal_.waitForSignal();
-                                                    reader.processMsgs();
+                                                    lock (ReaderLock_)
+                                                    {
+                                                        if(ThreadRunning_)
+                                                            reader.processMsgs();
+                                                    }
                                                 }
                                             })
                 { IsBackground = true };
@@ -295,7 +299,12 @@ public class IbClient : ObservableObject, IIbClient
         // 意外中断事件删除
         this.TwsCallbackHandler_.ConnectionClosedEvent -= TwsCallbackHandler_OnConnectionClosedEvent;
 
-        this.ClientSocket_.eDisconnect();
+        ThreadRunning_ = false;
+        lock (ReaderLock_)
+        {
+            this.ClientSocket_.eDisconnect();
+            this.ClientSocket_ = null;
+        }
 
         return taskSource.Task;
     }
@@ -1224,6 +1233,7 @@ public class IbClient : ObservableObject, IIbClient
 #region Fields
 
     private bool ThreadRunning_ = false;
+    private object ReaderLock_  = new object();
 
 //    private   bool            _Connected;
     protected EConnectionState ConnectionState_;
@@ -1234,6 +1244,7 @@ public class IbClient : ObservableObject, IIbClient
     private EClientSocket ClientSocket_ = null;
 
     private EReaderSignal Signal_;
+
 
     private TwsRequestIdGenerator TwsRequestIdGenerator_ = null;
 
