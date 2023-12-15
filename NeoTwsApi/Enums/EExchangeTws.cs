@@ -15,6 +15,7 @@ public enum EExchangeTws
     IEX,
     CBOE,
     NYSE,
+    ARCA,
     NASDAQ,
     IDEALPRO
 }
