@@ -68,6 +68,7 @@ public partial class Tests
     public Contract XauusdContract_CMDTY = new Contract()
     {
         Symbol   = "XAUUSD",
+        LocalSymbol   = "XAUUSD",
         SecType  = ESecTypeTws.CMDTY.ToString(),
         Exchange = EExchangeTws.SMART.ToString(),
         Currency = ECurrencyTws.USD.ToString()

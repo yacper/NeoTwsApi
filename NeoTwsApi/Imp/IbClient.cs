@@ -518,11 +518,10 @@ public class IbClient : ObservableObject, IIbClient
     //    throw new NotImplementedException();
     //}
 
-    public Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
+    public Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true, int formatDate=1, bool keepUpToDate=false, List<TagValue> chartOptions=null)
     {
         int requestId = this.TwsRequestIdGenerator_.GetNextRequestId();
         ReqContracts[requestId] = new(contract, null);
-        List<TagValue> chartOptions = null;
 
         var taskSource = new TaskCompletionSource<List<Bar>>();
 
@@ -590,8 +589,8 @@ public class IbClient : ObservableObject, IIbClient
                                              tf.ToTwsString(),
                                              dataType.ToString(),
                                              useRth ? 1 : 0,
-                                             1,     // default format date
-                                             false, // not keep update
+                                             formatDate,     // default format date
+                                             keepUpToDate, // not keep update
                                              chartOptions);
 
         return taskSource.Task;
@@ -600,11 +599,35 @@ public class IbClient : ObservableObject, IIbClient
 
     public async Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime start, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
     {
-        var ret = await ReqHistoricalDataAsync(contract, end, DurationTwsEx.ToDurationTws(start, end, tf), tf, dataType, useRth);
-        // 如果有多余，截掉多余
-        int index = ret.FindIndex(p => p.Time() >= start);
-        ret.RemoveRange(0, index);
-        return ret;
+        if (contract == null)
+            throw new ArgumentNullException(nameof(contract));
+
+        if (start > end)
+            throw new ArgumentException("start > end");
+
+        //获取XAUUSD历史数据失败:Error validating request:-'bX' : cause - Historical data requests for durations longer than 365 days must be made in years.
+        // 如果时间跨度超过365天，需要分段请求
+        // 1. 先请求最后365天的数据
+        // 2. 然后再请求剩余的数据
+        // 3. 合并数据
+        // 4. 返回
+        // 5. 如果有多余，截掉多余
+        if (tf == ETimeFrameTws.D1 && end - start > TimeSpan.FromDays(365))
+        {
+            var ret = await ReqHistoricalDataAsync(contract, end - TimeSpan.FromDays(365), end, tf, dataType, useRth);
+            var ret2 = await ReqHistoricalDataAsync(contract, start, end - TimeSpan.FromDays(365), tf, dataType, useRth);
+            ret2.AddRange(ret);
+            return ret2;
+        }
+        else
+        {
+            var ret = await ReqHistoricalDataAsync(contract, end, DurationTwsEx.ToDurationTws(start, end, tf), tf, dataType, useRth);
+            // 如果有多余，截掉多余
+            int index = ret.FindIndex(p => p.Time() >= start);
+            if(index != -1)
+                ret.RemoveRange(0, index);
+            return ret;
+        }
     }
 
 #endregion

@@ -109,15 +109,49 @@ public interface IIbClient : INotifyPropertyChanged
 
 
 #region HistoricalData
-    /// <summary>
-    /// Request historical data from TWS
-    /// </summary>
-    /// <param name="contract">The contract</param>
-    /// <param name="end">The end time</param>
-    /// <param name="duration">The duration string</param>
-    /// <param name="dataType">The things to show (?)</param>
-    /// <param name="useRth">Whether to use regular trading hours</param>
-    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true);
+    /*
+     * @brief Requests contracts' historical data.
+     * When requesting historical data, a finishing time and date is required along with a duration string. For example, having:
+     *      - endDateTime: 20130701 23:59:59 GMT
+     *      - durationStr: 3 D
+     * will return three days of data counting backwards from July 1st 2013 at 23:59:59 GMT resulting in all the available bars of the last three days until the date and time specified. It is possible to specify a timezone optionally. The resulting bars will be returned in EWrapper::historicalData
+     * @param contract the contract for which we want to retrieve the data.
+     * @param endDateTime request's ending time with format yyyyMMdd HH:mm:ss {TMZ} 默认会先把时间转为gmt时间 
+     * @param durationStr the amount of time for which the data needs to be retrieved:
+     *      - " S (seconds)
+     *      - " D (days)
+     *      - " W (weeks)
+     *      - " M (months)
+     *      - " Y (years)
+     * @param barSizeSetting the size of the bar:
+     *      - 1 sec
+     *      - 5 secs
+     *      - 15 secs
+     *      - 30 secs
+     *      - 1 min
+     *      - 2 mins
+     *      - 3 mins
+     *      - 5 mins
+     *      - 15 mins
+     *      - 30 mins
+     *      - 1 hour
+     *      - 1 day
+     * @param whatToShow the kind of information being retrieved:
+     *      - TRADES
+     *      - MIDPOINT
+     *      - BID
+     *      - ASK
+     *      - BID_ASK
+     *      - HISTORICAL_VOLATILITY
+     *      - OPTION_IMPLIED_VOLATILITY
+     *      - FEE_RATE
+     *      - SCHEDULE
+     * @param useRTH set to 0 to obtain the data which was also generated outside of the Regular Trading Hours, set to 1 to obtain only the RTH data
+     * @param formatDate set to 1 to obtain the bars' time as yyyyMMdd HH:mm:ss, set to 2 to obtain it like system time format in seconds
+     * @param keepUpToDate set to True to received continuous updates on most recent bar data. If True, and endDateTime cannot be specified.
+     * @sa EWrapper::historicalData
+     */
+    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true, int formatDate=1, bool keepUpToDate=false, List<TagValue> chartOptions=null);
 
     // 模拟而得
     Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime start, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true);
