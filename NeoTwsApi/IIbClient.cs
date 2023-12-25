@@ -236,6 +236,8 @@ public interface IIbClient : INotifyPropertyChanged
 
     /// <summary>
     /// Cancels an order
+    /// IBOrder, 如果是本连接创建的，能返回正确的orderId，如果是其他client或者tws创建的，orderID统一为0
+    /// 这种设计方式，导致只能取消自己创建的订单，无法取消其他client或tws创建的订单
     /// </summary>
     /// <param name="orderId">The order ID</param>
     /// <returns>True if it was successfully cancelled</returns>

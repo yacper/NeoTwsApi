@@ -579,7 +579,8 @@ SuggestedSizeIncrement: 0.01
         var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
         successfullyPlaced.Should().NotBeNull();
 
-        var ret = await client.CancelOrderAsync(successfullyPlaced.OrderId);
+        //var ret = await client.CancelOrderAsync(successfullyPlaced.OrderId);
+        var ret = await client.CancelOrderAsync(successfullyPlaced.Order.PermId);
         ret.Should().BeTrue();
 
 
