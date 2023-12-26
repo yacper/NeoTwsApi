@@ -556,6 +556,100 @@ SuggestedSizeIncrement: 0.01
     }
 
     [Test]
+    public async Task PlaceBracketOrderAsync_Test()
+    {
+            {
+                // 单独市场单
+                var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Market, 200);
+                ret.Count.Should().Be(1);
+            }
+
+            {
+                // 市场单, + stop
+                var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Market, 200, null, ETifTws.GTC, null, 1);
+                ret.Count.Should().Be(2);
+
+                //// cancel stoploss
+                var cancelRet = await client.CancelOrderAsync(ret[1].OrderId);
+                cancelRet.Should().BeTrue();
+            }
+
+            {
+            // 市场单, + limit
+            var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Market, 200, null, ETifTws.GTC, 1.3);
+            ret.Count.Should().Be(2);
+
+            //// cancel limit
+            var cancelRet = await client.CancelOrderAsync(ret[1].OrderId);
+            cancelRet.Should().BeTrue();
+        }
+
+
+
+        {
+            //单独limit单
+            var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Limit, 200, 1);
+            ret.Count.Should().Be(1);
+
+            //// cancel stoploss
+            var cancelRet = await client.CancelOrderAsync(ret[0].OrderId);
+            cancelRet.Should().BeTrue();
+        }
+
+
+
+        {
+            //只有stoploss单子
+            var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Market, 200);
+            ret.Count.Should().Be(2);
+
+            //// cancel stoploss
+            var cancelRet = await client.CancelOrderAsync(ret[1].OrderId);
+            cancelRet.Should().BeTrue();
+        }
+
+        {
+            //只有takeprofit单子
+            var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Limit,  200, 1.1, ETifTws.GTC, 1.3);
+            ret.Count.Should().Be(2);
+
+            //// cancel takeprofit，
+            var cancelRet = await client.CancelOrderAsync(ret[1].OrderId);
+            cancelRet.Should().BeTrue();
+        }
+       
+
+        {
+            var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Limit, 200, 1.1, ETifTws.GTC,  1.3, 1);
+            ret.Count.Should().Be(3);
+
+            //// cancel takeprofit，2个子单会同时被取消
+            var cancelRet = await client.CancelOrderAsync(ret[1].OrderId);
+            cancelRet.Should().BeTrue();
+        }
+
+        {
+            var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Limit, 200, 1.1, ETifTws.GTC, 1.3, 1);
+            ret.Count.Should().Be(3);
+
+            //// cancel stoploss单子，2个子单会同时被取消
+            var cancelRet = await client.CancelOrderAsync(ret[2].OrderId);
+            cancelRet.Should().BeTrue();
+        }
+
+        {
+            var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Market, 200, null,  ETifTws.GTC,1.3, 1);
+            ret.Count.Should().Be(3);
+
+            //// cancel 主order，所有3个单子同时取消
+            var cancelRet = await client.CancelOrderAsync(ret.FirstOrDefault().OrderId);
+            cancelRet.Should().BeTrue();
+        }
+
+    }
+
+
+    [Test]
     public async Task CancelOrderAsync_Test()
     {
         //await Setup();

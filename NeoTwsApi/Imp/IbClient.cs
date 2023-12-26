@@ -647,7 +647,8 @@ public class IbClient : ObservableObject, IIbClient
     {
         var taskSource = new TaskCompletionSource<OpenOrderEventArgs>();
 
-        var orderId = GetNextValidOrderId();
+        if(order.OrderId ==0)
+            order.OrderId = GetNextValidOrderId();
 
         EventHandler<OpenOrderEventArgs> openOrderEventCallback  = null;
         EventHandler<ErrorEventArgs>     orderErrorEventCallback = null;
@@ -660,7 +661,7 @@ public class IbClient : ObservableObject, IIbClient
 
         openOrderEventCallback = (sender, eventArgs) =>
         {
-            if (eventArgs.OrderId == orderId)
+            if (eventArgs.OrderId == order.OrderId)
             {
                 if (eventArgs.OrderState.Status == TwsOrderStatus.Submitted ||
                     eventArgs.OrderState.Status == TwsOrderStatus.Presubmitted)
@@ -674,7 +675,7 @@ public class IbClient : ObservableObject, IIbClient
 
         orderErrorEventCallback = (sender, eventArgs) =>
         {
-            if (orderId == eventArgs.Id)
+            if (order.OrderId == eventArgs.Id)
             {   
                 // ib的错误和正常的状态混在一起，这里只处理明确的错误，实际很多应该作为wanrning处理，现在这样，导致不能处理所以情况
                 // TwsErrorCodes.OrderMessageError // 如果 lot被修改，也会发送这个错误，但其实订单时正确完成了，这个时候不能作为error处理
@@ -706,9 +707,155 @@ public class IbClient : ObservableObject, IIbClient
             taskSource.TrySetCanceled();
         });
 
-        this.ClientSocket_.placeOrder(orderId, contract, order);
+        this.ClientSocket_.placeOrder(order.OrderId, contract, order);
         return taskSource.Task;
     }
+
+    // https://interactivebrokers.github.io/tws-api/bracket_order.html
+    public Task<List<OpenOrderEventArgs>> PlaceBracketOrderAsync(Contract contract, EOrderActions action, EOrderTypeTws orderType, double quantity, double? limitPrice=null,  ETifTws tif = ETifTws.GTC, double? takeProfitPrice = null, double? stopLossPrice = null,
+        ETifTws? takeProfitTif = null, ETifTws? stopLossTif = null)
+    {
+        var parentOrderId = GetNextValidOrderId();
+
+        List<Order> lo = new();
+        //This will be our main or "parent" order
+        Order parent = new Order();
+        parent.OrderId       = parentOrderId;
+        parent.Action        = action.ToString();
+        parent.OrderType     = orderType.GetDescription();
+        //parent.OrderType     = "LMT";
+        parent.TotalQuantity = Convert.ToDecimal(quantity);
+        if(limitPrice != null)
+            parent.LmtPrice      = limitPrice.Value;
+        parent.Tif           = tif.ToString();
+        //The parent and children orders will need this attribute set to false to prevent accidental executions.
+        //The LAST CHILD will have it set to true, 
+        parent.Transmit = takeProfitPrice == null && stopLossPrice == null ? true : false;
+        lo.Add(parent);
+
+        if (takeProfitPrice != null)
+        {
+            Order takeProfit = new Order();
+            takeProfit.OrderId       = GetNextValidOrderId();
+            //takeProfit.Action        = action.Equals("BUY") ? "SELL" : "BUY";
+            takeProfit.Action        = action.Reverse().ToString();
+            takeProfit.OrderType     = "LMT";
+            takeProfit.TotalQuantity = Convert.ToDecimal(quantity);
+            takeProfit.LmtPrice      = takeProfitPrice.Value;
+            takeProfit.ParentId      = parentOrderId;
+            takeProfit.Tif = takeProfitTif?.ToString() ?? tif.ToString();
+            takeProfit.Transmit      = stopLossPrice == null ? true : false;
+            lo.Add(takeProfit);
+        }
+
+        if (stopLossPrice != null)
+        {
+            Order stopLoss = new Order();
+            stopLoss.OrderId   = GetNextValidOrderId();
+            //stopLoss.Action    = action.Equals("BUY") ? "SELL" : "BUY";
+            stopLoss.Action    = action.Reverse().ToString();
+            stopLoss.OrderType = "STP";
+            //Stop trigger price
+            stopLoss.AuxPrice      = stopLossPrice.Value;
+            stopLoss.TotalQuantity = Convert.ToDecimal(quantity);
+            stopLoss.ParentId      = parentOrderId;
+            //In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true 
+            //to activate all its predecessors
+            stopLoss.Transmit = true;
+            stopLoss.Tif = stopLossTif?.ToString() ?? tif.ToString();
+            lo.Add(stopLoss);
+        }
+
+        var                      taskSource = new TaskCompletionSource<List<OpenOrderEventArgs>>();
+        //List<OpenOrderEventArgs> ret        = new();
+
+        Dictionary<int, OpenOrderEventArgs> ret        = new();
+
+        EventHandler<OpenOrderEventArgs> openOrderEventCallback  = null;
+        EventHandler<ErrorEventArgs>     orderErrorEventCallback = null;
+
+        void clearHandler()
+        {
+            this.TwsCallbackHandler_.OpenOrderEvent -= openOrderEventCallback;
+            this.TwsCallbackHandler_.ErrorEvent     -= orderErrorEventCallback;
+        }
+
+        openOrderEventCallback = (sender, eventArgs) =>
+        {
+            // 开3个单子，会获得6次回调
+            /*
+                orderStatus: orderId:313 status:PreSubmitted filled:0 remainning200
+                Error: [id]:314 [errorCode]:399 [errorMsg]:Order Message: 买 200 EUR.USD Forex Warning: Your order size is below the EUR 20000 IdealPro minimum and will be routed as an odd lot order. [advancedOrderRejectJson]:
+                orderStatus: orderId:314 status:PreSubmitted filled:0 remainning200
+                orderStatus: orderId:314 status:PreSubmitted filled:0 remainning200
+                Error: [id]:315 [errorCode]:399 [errorMsg]:Order Message: 买 200 EUR.USD Forex Warning: Your order size is below the EUR 20000 IdealPro minimum and will be routed as an odd lot order. [advancedOrderRejectJson]:
+                orderStatus: orderId:315 status:PreSubmitted filled:0 remainning200
+                orderStatus: orderId:315 status:PreSubmitted filled:0 remainning200
+                orderStatus: orderId:313 status:Submitted filled:0 remainning200
+
+                // 每个单子有2个冗余，删掉一个
+            */
+            if (lo.Any(p=>p.OrderId == eventArgs.OrderId))
+            {
+                if (eventArgs.OrderState.Status == TwsOrderStatus.Submitted ||
+                    eventArgs.OrderState.Status == TwsOrderStatus.Presubmitted ||
+                    eventArgs.OrderState.Status == TwsOrderStatus.Filled)
+                {
+
+                    // 后面的覆盖前面的
+                    ret[eventArgs.OrderId] = eventArgs;
+                    // 完成的时候，必然parentId submitted
+                    if (eventArgs.OrderId == parentOrderId && (eventArgs.OrderState.Status == TwsOrderStatus.Submitted || eventArgs.OrderState.Status == TwsOrderStatus.Filled))
+                    {
+                        //Unregister the callbacks
+                        clearHandler();
+                        taskSource.TrySetResult(ret.Values.OrderBy(p=>p.OrderId).ToList());
+                    }
+                }
+            }
+        };
+
+        orderErrorEventCallback = (sender, eventArgs) =>
+        {
+            if (lo.Any(p=>p.OrderId == eventArgs.Id))
+            {   
+                // ib的错误和正常的状态混在一起，这里只处理明确的错误，实际很多应该作为wanrning处理，现在这样，导致不能处理所以情况
+                // TwsErrorCodes.OrderMessageError // 如果 lot被修改，也会发送这个错误，但其实订单时正确完成了，这个时候不能作为error处理
+                //if (// 以下是明确错误的情况
+                //    eventArgs.ErrorCode == TwsErrorCodes.InvalidOrderType ||
+                //    eventArgs.ErrorCode == TwsErrorCodes.AmbiguousContract ||
+                //    eventArgs.ErrorCode == TwsErrorCodes.OrderRejected
+                //    || eventArgs.ErrorCode ==TwsErrorCodes.InvalidEndTime //[errorMsg]:End Time: The date, time, or time-zone entered is invalid. The correct format is yyyymmdd hh:mm:ss xx/xxxx where yyyymmdd and xx/xxxx are optional
+                //    || eventArgs.ErrorCode == TwsErrorCodes.OrderNotSupportFractionalQuantity 
+                //    )
+                if (eventArgs.ErrorCode != TwsErrorCodes.OrderMessageError)
+                {
+                    // Unregister the callbacks
+                    clearHandler();
+                    taskSource.TrySetException(new TwsException(eventArgs));
+                }
+                //Logger?.Error($"Ib PlaceOrderAsync error:{eventArgs.ErrorCode} {eventArgs.ErrorMessage}");
+            }
+        };
+
+        this.TwsCallbackHandler_.ErrorEvent     += orderErrorEventCallback;
+        this.TwsCallbackHandler_.OpenOrderEvent += openOrderEventCallback;
+
+        //CancellationTokenSource cancellationToken = new CancellationTokenSource(TimeoutMilliseconds);
+        CancellationTokenSource cancellationToken = new CancellationTokenSource(50000);
+        cancellationToken.Token.Register(() =>
+        {
+            clearHandler();
+            taskSource.TrySetCanceled();
+        });
+
+        // 同时发送几个，直到最后一个order，Transmit设为true后，才会有回调
+        foreach (var o in lo)
+            this.ClientSocket_.placeOrder(o.OrderId, contract, o);
+
+        return taskSource.Task;
+    }
+
 
     public event EventHandler<OrderStatusEventArgs> OrderStatusEvent; // 订单状态变化时间
     public event EventHandler<OpenOrderEventArgs>   OpenOrderEvent;   // 新订单事件

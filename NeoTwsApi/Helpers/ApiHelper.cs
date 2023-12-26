@@ -6,6 +6,7 @@
 // modifiers:
 
 using IBApi;
+using NeoTwsApi.Enums;
 
 namespace NeoTwsApi.Helpers;
 
@@ -27,6 +28,16 @@ public static class ApiHelper
                left.SecType == right.SecType &&
                left.Exchange == right.Exchange &&
                left.Currency == right.Currency;
+    }
+
+    public static EOrderActions Reverse(this EOrderActions action)
+    {
+        if (action == EOrderActions.BUY)
+            return EOrderActions.SELL;
+        else if (action == EOrderActions.SELL)
+            return EOrderActions.BUY;
+
+        throw new ArgumentException($"{action}");
     }
 
     

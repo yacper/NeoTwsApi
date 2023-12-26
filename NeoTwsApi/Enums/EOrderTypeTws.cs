@@ -13,8 +13,9 @@ namespace NeoTwsApi.Enums;
 
 public enum EOrderTypeTws
 {
+    //Limit Order 
     [Description("LMT")]
-    Limit, //Limit Order 
+    Limit, 
 
     /// Peg to market order (Used to be PEG MKT but seems to have been changed, docs don't reflect it).
     [Description("REL")]

@@ -219,6 +219,19 @@ public interface IIbClient : INotifyPropertyChanged
     /// <returns>True if acknowledged</returns>
     Task<OpenOrderEventArgs> PlaceOrderAsync(Contract contract, Order order);
 
+    /// <summary>
+    /// bracket括号单
+    /// </summary>
+    /// <param name="contract"></param>
+    /// <param name="action"></param>
+    /// <param name="price"></param>
+    /// <param name="quantity"></param>
+    /// <param name="takeProfit"></param>
+    /// <param name="stopLoss"></param>
+    /// <returns></returns>
+    Task<List<OpenOrderEventArgs>> PlaceBracketOrderAsync(Contract contract, EOrderActions action, EOrderTypeTws orderType, double quantity, double? limitPrice=null,  ETifTws tif = ETifTws.GTC, double? takeProfitPrice = null, double? stopLossPrice = null,
+        ETifTws? takeProfitTif = null, ETifTws? stopLossTif = null);
+
     event EventHandler<OrderStatusEventArgs> OrderStatusEvent;  // 订单状态变化时间
     event EventHandler<OpenOrderEventArgs> OpenOrderEvent;  // 新订单事件 当订单状态发生变化时，也会调用该事件（该事件在新开订单时，可能会被调用6,7次）
     /// 订单成交后，将触发ExecutionDetailsEvent&CommissionReportEvent 这2个事件

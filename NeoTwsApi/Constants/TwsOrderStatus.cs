@@ -16,5 +16,10 @@ public class TwsOrderStatus
     /// Presubmitted order status
     /// </summary>
     public const string Presubmitted = "PreSubmitted";
+
+    /// <summary>
+    /// Filled order status
+    /// </summary>
+    public const string Filled = "Filled";
 }
 }
