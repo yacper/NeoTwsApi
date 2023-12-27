@@ -664,7 +664,8 @@ public class IbClient : ObservableObject, IIbClient
             if (eventArgs.OrderId == order.OrderId)
             {
                 if (eventArgs.OrderState.Status == TwsOrderStatus.Submitted ||
-                    eventArgs.OrderState.Status == TwsOrderStatus.Presubmitted)
+                    eventArgs.OrderState.Status == TwsOrderStatus.Presubmitted ||
+                    eventArgs.OrderState.Status == TwsOrderStatus.Filled)
                 {
                     // Unregister the callbacks
                     clearHandler();
