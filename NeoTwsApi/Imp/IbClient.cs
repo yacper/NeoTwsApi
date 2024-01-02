@@ -62,7 +62,7 @@ public class IbClient : ObservableObject, IIbClient
 
     public event EventHandler<NeoTwsApi.EventArgs.ErrorEventArgs> ErrorEvent;
 
-    public ReadOnlyObservableCollection<string> Accounts { get => new(Accounts_); }
+    public ReadOnlyObservableCollection<string> Accounts { get; set; }
 
     public event EventHandler<UpdateAccountValueEventArgs> UpdateAccountValueEvent;
 
@@ -73,6 +73,8 @@ public class IbClient : ObservableObject, IIbClient
         Port     = port;
         ClientId = clientId;
         Logger   = logger;
+
+        Accounts = new(Accounts_);
 
         TwsCallbackHandler_ = new TwsCallbackHandler(this);
 
@@ -336,7 +338,7 @@ public class IbClient : ObservableObject, IIbClient
         OnDisconnected();
     }
 
-    public void OnAccountsReccieved(string accountsList) // 当连接建立后，tws后会主动发送managedAccounts
+    public void OnAccountsReceived(string accountsList) // 当连接建立后，tws后会主动发送managedAccounts
     {
         Accounts_.Clear();
         MoreEnumerable.ForEach(accountsList.Split(','), p => Accounts_.Add(p));

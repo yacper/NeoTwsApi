@@ -489,7 +489,7 @@ public class TwsCallbackHandler : EWrapper
     // 登录的时候会被自动调用，列出连接所有的Account
     public void managedAccounts(string accountsList)
     {
-        IbClient_.OnAccountsReccieved(accountsList);
+        IbClient_.OnAccountsReceived(accountsList);
     }
 
     /// <inheritdoc/>
