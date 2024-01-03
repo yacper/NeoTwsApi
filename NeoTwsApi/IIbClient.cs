@@ -117,6 +117,9 @@ public interface IIbClient : INotifyPropertyChanged
      * will return three days of data counting backwards from July 1st 2013 at 23:59:59 GMT resulting in all the available bars of the last three days until the date and time specified. It is possible to specify a timezone optionally. The resulting bars will be returned in EWrapper::historicalData
      * @param contract the contract for which we want to retrieve the data.
      * @param endDateTime request's ending time with format yyyyMMdd HH:mm:ss {TMZ} 默认会先把时间转为gmt时间 
+        更直观的方式是直接使用gmt时间，这样在内部转换的时候，就完全是一致的
+        DateTime end = new DateTime(2022, 9, 13, 0, 0, 0, DateTimeKind.Utc);
+
      * @param durationStr the amount of time for which the data needs to be retrieved:
      *      - " S (seconds)
      *      - " D (days)
@@ -150,6 +153,8 @@ public interface IIbClient : INotifyPropertyChanged
      * @param formatDate set to 1 to obtain the bars' time as yyyyMMdd HH:mm:ss, set to 2 to obtain it like system time format in seconds
      * @param keepUpToDate set to True to received continuous updates on most recent bar data. If True, and endDateTime cannot be specified.
      * @sa EWrapper::historicalData
+     * 注意：如果是day以上的间隔，tws返回的的时间戳不保留时区信息。
+     *
      */
     Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true, int formatDate=1, bool keepUpToDate=false, List<TagValue> chartOptions=null);
 

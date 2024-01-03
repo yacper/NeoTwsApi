@@ -246,6 +246,328 @@ SuggestedSizeIncrement: 0.01
 #region HistoricalData
 
     [Test]
+    public async Task ReqHistoricalDataAsync_TimeZone()
+    {
+        Contract    contract = MsftContract;
+        DurationTws duration = new DurationTws(2, EDurationStep.D);
+        // 默认会先把时间转为gmt时间，所以直接使用gmt时间
+        DateTime end = new DateTime(2022, 9, 13, 0, 0, 0, DateTimeKind.Utc);
+        {
+            // 按Day的情况下，tws返回的时间戳，不保留时区信息
+            /* 使用操作者时区
+            {Bar}
+              Time: "20220909"
+              Open: 260.27
+              High: 265.18
+              Low: 260.27
+              Close: 264.44
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912"
+              Open: 265.8
+              High: 267.44
+              Low: 265.15
+              Close: 266.67
+              Volume: -1
+              WAP: -1
+              Count: -1
+          */
+            /* 使用产品时区
+            {Bar}
+              Time: "20220909"
+              Open: 260.27
+              High: 265.18
+              Low: 260.27
+              Close: 264.44
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912"
+              Open: 265.8
+              High: 267.44
+              Low: 265.15
+              Close: 266.67
+              Volume: -1
+              WAP: -1
+              Count: -1
+                        */
+            var ret = await client.ReqHistoricalDataAsync(contract, end, duration,
+                                                          ETimeFrameTws.D1, EDataType.MIDPOINT);
+            ret.Should().NotBeEmpty();
+
+            Debug.WriteLine(ret.Dump());
+        }
+
+            {// 按小时
+            /* 按产品时区，返回原产品的时间戳
+            {Bar}
+              Time: "20220909 09:30:00 US/Eastern"
+              Open: 260.27
+              High: 262.96
+              Low: 260.27
+              Close: 262.42
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220909 10:00:00 US/Eastern"
+              Open: 262.42
+              High: 265.18
+              Low: 262.23
+              Close: 264.82
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220909 11:00:00 US/Eastern"
+              Open: 264.82
+              High: 265.06
+              Low: 263.27
+              Close: 263.81
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220909 12:00:00 US/Eastern"
+              Open: 263.81
+              High: 264.04
+              Low: 262.72
+              Close: 263.98
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220909 13:00:00 US/Eastern"
+              Open: 263.98
+              High: 264.47
+              Low: 263.53
+              Close: 264.26
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220909 14:00:00 US/Eastern"
+              Open: 264.26
+              High: 264.6
+              Low: 264
+              Close: 264.4
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220909 15:00:00 US/Eastern"
+              Open: 264.4
+              High: 265.18
+              Low: 264.1
+              Close: 264.44
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912 09:30:00 US/Eastern"
+              Open: 265.8
+              High: 267.37
+              Low: 265.15
+              Close: 266.94
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912 10:00:00 US/Eastern"
+              Open: 266.94
+              High: 267.44
+              Low: 266.32
+              Close: 266.79
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912 11:00:00 US/Eastern"
+              Open: 266.79
+              High: 267.27
+              Low: 265.35
+              Close: 265.64
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912 12:00:00 US/Eastern"
+              Open: 265.64
+              High: 266.42
+              Low: 265.18
+              Close: 266.18
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912 13:00:00 US/Eastern"
+              Open: 266.18
+              High: 267.02
+              Low: 265.64
+              Close: 266.88
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912 14:00:00 US/Eastern"
+              Open: 266.88
+              High: 266.93
+              Low: 265.83
+              Close: 266.48
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912 15:00:00 US/Eastern"
+              Open: 266.48
+              High: 266.79
+              Low: 265.84
+              Close: 266.67
+              Volume: -1
+              WAP: -1
+              Count: -1           */
+            /*
+             * 按操作者时区，返回+8时区
+            {Bar}
+              Time: "20220909 21:30:00 Asia/Shanghai"
+              Open: 260.27
+              High: 262.96
+              Low: 260.27
+              Close: 262.42
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220909 22:00:00 Asia/Shanghai"
+              Open: 262.42
+              High: 265.18
+              Low: 262.23
+              Close: 264.82
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220909 23:00:00 Asia/Shanghai"
+              Open: 264.82
+              High: 265.06
+              Low: 263.27
+              Close: 263.81
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220910 00:00:00 Asia/Shanghai"
+              Open: 263.81
+              High: 264.04
+              Low: 262.72
+              Close: 263.98
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220910 01:00:00 Asia/Shanghai"
+              Open: 263.98
+              High: 264.47
+              Low: 263.53
+              Close: 264.26
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220910 02:00:00 Asia/Shanghai"
+              Open: 264.26
+              High: 264.6
+              Low: 264
+              Close: 264.4
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220910 03:00:00 Asia/Shanghai"
+              Open: 264.4
+              High: 265.18
+              Low: 264.1
+              Close: 264.44
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912 21:30:00 Asia/Shanghai"
+              Open: 265.8
+              High: 267.37
+              Low: 265.15
+              Close: 266.94
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912 22:00:00 Asia/Shanghai"
+              Open: 266.94
+              High: 267.44
+              Low: 266.32
+              Close: 266.79
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220912 23:00:00 Asia/Shanghai"
+              Open: 266.79
+              High: 267.27
+              Low: 265.35
+              Close: 265.64
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220913 00:00:00 Asia/Shanghai"
+              Open: 265.64
+              High: 266.42
+              Low: 265.18
+              Close: 266.18
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220913 01:00:00 Asia/Shanghai"
+              Open: 266.18
+              High: 267.02
+              Low: 265.64
+              Close: 266.88
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220913 02:00:00 Asia/Shanghai"
+              Open: 266.88
+              High: 266.93
+              Low: 265.83
+              Close: 266.48
+              Volume: -1
+              WAP: -1
+              Count: -1
+            {Bar}
+              Time: "20220913 03:00:00 Asia/Shanghai"
+              Open: 266.48
+              High: 266.79
+              Low: 265.84
+              Close: 266.67
+              Volume: -1
+              WAP: -1
+              Count: -1
+             */
+            var ret = await client.ReqHistoricalDataAsync(contract, end, duration,
+                                                          ETimeFrameTws.H1, EDataType.MIDPOINT);
+            ret.Should().NotBeEmpty();
+
+            Debug.WriteLine(ret.Dump());
+        }
+    }
+
+
+    [Test]
     public async Task ReqHistoricalDataAsync_Test()
     {
         //Contract    contract = XauusdContract_CMDTY;

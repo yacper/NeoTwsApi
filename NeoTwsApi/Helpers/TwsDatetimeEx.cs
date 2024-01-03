@@ -47,12 +47,11 @@ public static class TwsDatetimeEx
 
     public static DateTime ToTwsDateTime(this string dt)
     {
-        //  yyyyMMdd HH:mm:ss {TMZ}  20220317 00:00:00 Asia/Shanghai
+        //  yyyyMMdd HH:mm:ss {TMZ}  20220317 00:00:00 Asia/Shanghai | 20220909 09:30:00 US/Eastern
         // 目前发现这两种
         // 20220317  00:00:00
         // 20220317  
-        // 20220815-10:21:34 China Standard Time
-        if (dt.Length == 8)
+        if (dt.Length == 8)     // 代表天的情况，此时，不包含时区信息
         {
             DateTime ret = DateTime.ParseExact(dt, "yyyyMMdd", CultureInfo.InvariantCulture);
             return ret;
