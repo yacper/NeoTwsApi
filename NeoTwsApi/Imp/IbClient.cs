@@ -38,7 +38,7 @@ public class IbClient : ObservableObject, IIbClient
 
     public override string ToString() => $"IbClient[{Host}:{Port}-{ClientId}]";
 
-    public int TimeoutMilliseconds { get; set; } = 5000;
+    public int TimeoutMilliseconds { get; set; } = 10000;
 
     public ILogger? Logger { get; protected set; }
 
@@ -673,6 +673,8 @@ public class IbClient : ObservableObject, IIbClient
                     clearHandler();
                     taskSource.TrySetResult(eventArgs);
                 }
+                else
+                    Logger?.Warn($"Abnormal PlaceOrderAsync({eventArgs}):{eventArgs.OrderState}");
             }
         };
 
