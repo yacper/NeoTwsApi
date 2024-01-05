@@ -669,6 +669,9 @@ public class IbClient : ObservableObject, IIbClient
                     eventArgs.OrderState.Status == TwsOrderStatus.Presubmitted ||
                     eventArgs.OrderState.Status == TwsOrderStatus.Filled)
                 {
+
+                    Logger?.Info($"IbClient PlaceOrderAsync({order.OrderId}, {contract}, {order}) Finished:{eventArgs}");
+
                     // Unregister the callbacks
                     clearHandler();
                     taskSource.TrySetResult(eventArgs);
@@ -698,6 +701,8 @@ public class IbClient : ObservableObject, IIbClient
                     taskSource.TrySetException(new TwsException(eventArgs));
                 }
                 //Logger?.Error($"Ib PlaceOrderAsync error:{eventArgs.ErrorCode} {eventArgs.ErrorMessage}");
+
+                Logger?.Info($"IbClient PlaceOrderAsync({order.OrderId}, {contract}, {order}) Error:[{eventArgs.ErrorCode}]{eventArgs.ErrorMessage}");
             }
         };
 
@@ -708,11 +713,17 @@ public class IbClient : ObservableObject, IIbClient
         CancellationTokenSource cancellationToken = new CancellationTokenSource(TimeoutMilliseconds);
         cancellationToken.Token.Register(() =>
         {
-            clearHandler();
-            taskSource.TrySetCanceled();
+            if (!taskSource.Task.IsCompleted)
+            {
+                Logger?.Info($"IbClient PlaceOrderAsync({order.OrderId}, {contract}, {order}) Timedout.");
+                clearHandler();
+                taskSource.TrySetCanceled();
+            }
         });
 
         this.ClientSocket_.placeOrder(order.OrderId, contract, order);
+        Logger?.Info($"IbClient PlaceOrderAsync({order.OrderId}, {contract}, {order})...");
+
         return taskSource.Task;
     }
 
