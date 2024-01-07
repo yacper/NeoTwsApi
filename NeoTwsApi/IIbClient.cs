@@ -216,6 +216,8 @@ public interface IIbClient : INotifyPropertyChanged
 
 #region Orders
 
+    int GetNextValidOrderId();
+
     /// <summary>
     /// Send an order to TWS
     /// </summary>
@@ -234,8 +236,16 @@ public interface IIbClient : INotifyPropertyChanged
     /// <param name="takeProfit"></param>
     /// <param name="stopLoss"></param>
     /// <returns></returns>
-    Task<List<OpenOrderEventArgs>> PlaceBracketOrderAsync(Contract contract, EOrderActions action, EOrderTypeTws orderType, double quantity, double? limitPrice=null,  ETifTws tif = ETifTws.GTC, double? takeProfitPrice = null, double? stopLossPrice = null,
+    Task<List<OpenOrderEventArgs>> PlaceBracketOrderAsync(Contract contract, EOrderActions action, EOrderTypeTws orderType, double quantity, 
+        double? limitPrice=null,  ETifTws tif = ETifTws.GTC, double? takeProfitPrice = null, double? stopLossPrice = null,
         ETifTws? takeProfitTif = null, ETifTws? stopLossTif = null);
+
+    List<Order> MakeBracketOrders(Contract contract,             EOrderActions action,                    EOrderTypeTws orderType,              double  quantity,
+        double?                            limitPrice    = null, ETifTws       tif         = ETifTws.GTC, double?       takeProfitPrice = null, double? stopLossPrice = null,
+        ETifTws?                           takeProfitTif = null, ETifTws?      stopLossTif = null);
+
+    Task<List<OpenOrderEventArgs>> PlaceBracketOrderAsync(Contract contract, List<Order> orders);
+
 
     event EventHandler<OrderStatusEventArgs> OrderStatusEvent;  // 订单状态变化时间
     event EventHandler<OpenOrderEventArgs> OpenOrderEvent;  // 新订单事件 当订单状态发生变化时，也会调用该事件（该事件在新开订单时，可能会被调用6,7次）

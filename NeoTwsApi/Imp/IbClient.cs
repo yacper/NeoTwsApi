@@ -727,23 +727,23 @@ public class IbClient : ObservableObject, IIbClient
         return taskSource.Task;
     }
 
-    // https://interactivebrokers.github.io/tws-api/bracket_order.html
-    public Task<List<OpenOrderEventArgs>> PlaceBracketOrderAsync(Contract contract, EOrderActions action, EOrderTypeTws orderType, double quantity, double? limitPrice=null,  ETifTws tif = ETifTws.GTC, double? takeProfitPrice = null, double? stopLossPrice = null,
-        ETifTws? takeProfitTif = null, ETifTws? stopLossTif = null)
+    public List<Order> MakeBracketOrders(Contract contract,             EOrderActions action,                    EOrderTypeTws orderType,              double  quantity,
+        double?                                   limitPrice    = null, ETifTws       tif         = ETifTws.GTC, double?       takeProfitPrice = null, double? stopLossPrice = null,
+        ETifTws?                                  takeProfitTif = null, ETifTws?      stopLossTif = null)
     {
         var parentOrderId = GetNextValidOrderId();
 
         List<Order> lo = new();
         //This will be our main or "parent" order
         Order parent = new Order();
-        parent.OrderId       = parentOrderId;
-        parent.Action        = action.ToString();
-        parent.OrderType     = orderType.GetDescription();
+        parent.OrderId   = parentOrderId;
+        parent.Action    = action.ToString();
+        parent.OrderType = orderType.GetDescription();
         //parent.OrderType     = "LMT";
         parent.TotalQuantity = Convert.ToDecimal(quantity);
-        if(limitPrice != null)
-            parent.LmtPrice      = limitPrice.Value;
-        parent.Tif           = tif.ToString();
+        if (limitPrice != null)
+            parent.LmtPrice = limitPrice.Value;
+        parent.Tif = tif.ToString();
         //The parent and children orders will need this attribute set to false to prevent accidental executions.
         //The LAST CHILD will have it set to true, 
         parent.Transmit = takeProfitPrice == null && stopLossPrice == null ? true : false;
@@ -752,14 +752,14 @@ public class IbClient : ObservableObject, IIbClient
         if (takeProfitPrice != null)
         {
             Order takeProfit = new Order();
-            takeProfit.OrderId       = GetNextValidOrderId();
+            takeProfit.OrderId = GetNextValidOrderId();
             //takeProfit.Action        = action.Equals("BUY") ? "SELL" : "BUY";
             takeProfit.Action        = action.Reverse().ToString();
             takeProfit.OrderType     = "LMT";
             takeProfit.TotalQuantity = Convert.ToDecimal(quantity);
             takeProfit.LmtPrice      = takeProfitPrice.Value;
             takeProfit.ParentId      = parentOrderId;
-            takeProfit.Tif = takeProfitTif?.ToString() ?? tif.ToString();
+            takeProfit.Tif           = takeProfitTif?.ToString() ?? tif.ToString();
             takeProfit.Transmit      = stopLossPrice == null ? true : false;
             lo.Add(takeProfit);
         }
@@ -767,7 +767,7 @@ public class IbClient : ObservableObject, IIbClient
         if (stopLossPrice != null)
         {
             Order stopLoss = new Order();
-            stopLoss.OrderId   = GetNextValidOrderId();
+            stopLoss.OrderId = GetNextValidOrderId();
             //stopLoss.Action    = action.Equals("BUY") ? "SELL" : "BUY";
             stopLoss.Action    = action.Reverse().ToString();
             stopLoss.OrderType = "STP";
@@ -778,10 +778,27 @@ public class IbClient : ObservableObject, IIbClient
             //In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true 
             //to activate all its predecessors
             stopLoss.Transmit = true;
-            stopLoss.Tif = stopLossTif?.ToString() ?? tif.ToString();
+            stopLoss.Tif      = stopLossTif?.ToString() ?? tif.ToString();
             lo.Add(stopLoss);
         }
 
+        return lo;
+    }
+
+
+
+    // https://interactivebrokers.github.io/tws-api/bracket_order.html
+    public Task<List<OpenOrderEventArgs>> PlaceBracketOrderAsync(Contract contract, EOrderActions action, EOrderTypeTws orderType, double quantity, double? limitPrice=null,  ETifTws tif = ETifTws.GTC, double? takeProfitPrice = null, double? stopLossPrice = null,
+        ETifTws? takeProfitTif = null, ETifTws? stopLossTif = null)
+    {
+        var lo = MakeBracketOrders(contract, action, orderType, quantity, limitPrice, tif, takeProfitPrice, stopLossPrice, takeProfitTif, stopLossTif);
+        return PlaceBracketOrderAsync(contract, lo);
+    }
+
+    public Task<List<OpenOrderEventArgs>> PlaceBracketOrderAsync(Contract contract, List<Order> lo)
+    {
+        int parentOrderId = lo[0].OrderId;
+      
         var                      taskSource = new TaskCompletionSource<List<OpenOrderEventArgs>>();
         //List<OpenOrderEventArgs> ret        = new();
 
@@ -870,8 +887,8 @@ public class IbClient : ObservableObject, IIbClient
             this.ClientSocket_.placeOrder(o.OrderId, contract, o);
 
         return taskSource.Task;
-    }
 
+    }
 
     public event EventHandler<OrderStatusEventArgs> OrderStatusEvent; // 订单状态变化时间
     public event EventHandler<OpenOrderEventArgs>   OpenOrderEvent;   // 新订单事件
@@ -1408,6 +1425,9 @@ public class IbClient : ObservableObject, IIbClient
 
     public int GetNextValidOrderId()
     {
+        if (ConnectionState_ != EConnectionState.Connected)
+            throw new InvalidOperationException("Not connected");
+
         var nextId = Interlocked.Read(ref NextValidOrderId_);
         var r      = Interlocked.Increment(ref NextValidOrderId_);
         return (int)nextId;
