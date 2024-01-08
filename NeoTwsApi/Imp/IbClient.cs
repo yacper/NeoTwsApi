@@ -702,7 +702,7 @@ public class IbClient : ObservableObject, IIbClient
                 }
                 //Logger?.Error($"Ib PlaceOrderAsync error:{eventArgs.ErrorCode} {eventArgs.ErrorMessage}");
 
-                Logger?.Info($"IbClient PlaceOrderAsync({order.OrderId}, {contract}, {order}) Error:[{eventArgs.ErrorCode}]{eventArgs.ErrorMessage}");
+                Logger?.Error($"IbClient PlaceOrderAsync({order.OrderId}, {contract}, {order}) Error:[{eventArgs.ErrorCode}]{eventArgs.ErrorMessage}");
             }
         };
 
@@ -715,7 +715,7 @@ public class IbClient : ObservableObject, IIbClient
         {
             if (!taskSource.Task.IsCompleted)
             {
-                Logger?.Info($"IbClient PlaceOrderAsync({order.OrderId}, {contract}, {order}) Timedout.");
+                Logger?.Error($"IbClient PlaceOrderAsync({order.OrderId}, {contract}, {order}) Timedout.");
                 clearHandler();
                 taskSource.TrySetCanceled();
             }
