@@ -710,7 +710,8 @@ public class IbClient : ObservableObject, IIbClient
         this.TwsCallbackHandler_.OpenOrderEvent += openOrderEventCallback;
 
 
-        CancellationTokenSource cancellationToken = new CancellationTokenSource(TimeoutMilliseconds);
+        //CancellationTokenSource cancellationToken = new CancellationTokenSource(TimeoutMilliseconds);
+        CancellationTokenSource cancellationToken = new CancellationTokenSource(15000);  // 大部分情况下，15s能得到return
         cancellationToken.Token.Register(() =>
         {
             if (!taskSource.Task.IsCompleted)
