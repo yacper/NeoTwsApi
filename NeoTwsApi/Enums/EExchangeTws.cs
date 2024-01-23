@@ -17,5 +17,6 @@ public enum EExchangeTws
     NYSE,
     ARCA,
     NASDAQ,
-    IDEALPRO
+    IDEALPRO,
+    PAXOS,      // Paxos Crypto Exchange
 }

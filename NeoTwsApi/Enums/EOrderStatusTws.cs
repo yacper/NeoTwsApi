@@ -14,5 +14,6 @@ public enum EOrderStatusTws
     Filled,
     Cancelled,      // 已取消
     Inactive,      // 
+    PendingCancel
 
 }

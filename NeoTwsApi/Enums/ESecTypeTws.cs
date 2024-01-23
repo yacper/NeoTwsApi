@@ -22,4 +22,5 @@ public enum ESecTypeTws
     FUND,  // A mutual fund contract
     NEWS,  // A news contract
     CFD,    // 
+    CRYPTO, //
 }

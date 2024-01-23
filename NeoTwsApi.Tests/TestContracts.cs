@@ -74,6 +74,16 @@ public partial class Tests
         Currency = ECurrencyTws.USD.ToString()
     };
 
+    public Contract BtcContract = new Contract()
+    {
+        //Symbol   = "BTC.USD",
+        LocalSymbol   = "BTC.USD",
+        SecType  = ESecTypeTws.CRYPTO.ToString(),
+        Exchange = EExchangeTws.PAXOS.ToString(),
+        Currency = ECurrencyTws.USD.ToString()
+    };
+
+
     public Contract QQQContract_ETF = new Contract()
     {
         Symbol   = "QQQ",

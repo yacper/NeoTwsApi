@@ -86,7 +86,9 @@ public partial class Tests
     {
         //Contract contract = QQQContract_ETF;
         //Contract contract = TmfContract;
-        Contract contract = XauusdContract_CMDTY;
+        //Contract contract = XauusdContract_CMDTY;
+        Contract contract = BtcContract;
+
 
 
         var ret = await client.ReqContractAsync(contract);
@@ -788,7 +790,8 @@ SuggestedSizeIncrement: 0.01
     public async Task PlaceOrderAsync_Test()
     {
         // Initialize the contract
-        Contract contract = EurContract;
+        //Contract contract = EurContract;
+        Contract contract = BtcContract;
 
 
         // Initialize the order
@@ -796,7 +799,8 @@ SuggestedSizeIncrement: 0.01
         {
             Action        = "BUY",
             OrderType     = "MKT",
-            TotalQuantity = 2000,
+            //TotalQuantity = 1,
+            CashQty = 38930,
             //TotalQuantity = 2000.01m,   在tws客户端上，eur最小支持0.01单子，也可以被执行，但是通过api无法执行，返回TwsErrorCodes.OrderNotSupportFractionalQuantity
             Tif = ETifTws.GTC.ToString()
         };
