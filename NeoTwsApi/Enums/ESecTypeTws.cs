@@ -9,6 +9,7 @@ namespace NeoTwsApi.Enums;
 
 public enum ESecTypeTws
 {
+    Unknown,
     STK,   // A stock contract
     OPT,   // An option contract
     FUT,   // A future contract
