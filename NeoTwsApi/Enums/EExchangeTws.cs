@@ -9,6 +9,7 @@ namespace NeoTwsApi.Enums;
 
 public enum EExchangeTws
 {
+    Unknown,
     DTB,    // The DTB exchange in Germany
     SMART,  // Smart routing by IB
     ISLAND, // The Island Exchange
