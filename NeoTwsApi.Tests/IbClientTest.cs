@@ -790,9 +790,7 @@ SuggestedSizeIncrement: 0.01
     public async Task PlaceOrderAsync_Test()
     {
         // Initialize the contract
-        //Contract contract = EurContract;
-        Contract contract = BtcContract;
-
+        Contract contract = EurContract;
 
         // Initialize the order
         Order order = new Order
@@ -803,6 +801,75 @@ SuggestedSizeIncrement: 0.01
             CashQty = 38930,
             //TotalQuantity = 2000.01m,   在tws客户端上，eur最小支持0.01单子，也可以被执行，但是通过api无法执行，返回TwsErrorCodes.OrderNotSupportFractionalQuantity
             Tif = ETifTws.GTC.ToString()
+        };
+
+
+        // Initialize the order
+        Order closeOrder = new Order
+        {
+            Action        = "SELL",
+            OrderType     = "MKT",
+            TotalQuantity = 12000M,
+            Tif           = ETifTws.GTC.ToString()
+        };
+
+        ExecutionDetailsEventArgs details = null;
+        CommissionReport          cr      = null;
+
+        EventHandler<ExecutionDetailsEventArgs> executionDetailsEventHandler = (s, e) => { details = e; };
+        EventHandler<CommissionReport>          commissionReportHandler      = (s, e) => { cr      = e; };
+
+
+        client.ExecutionDetailsEvent += executionDetailsEventHandler;
+        client.CommissionReportEvent += commissionReportHandler;
+
+
+        // Call the API
+        var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
+        //var successfullyPlaced = await client.PlaceOrderAsync(contract, closeOrder);
+
+        // Assert
+        successfullyPlaced.Should().NotBeNull();
+        Debug.WriteLine(successfullyPlaced.Dump());
+
+        await Task.Delay(3000);
+
+        details.Should().NotBeNull();
+        Debug.WriteLine(details.Dump());
+
+        cr.Should().NotBeNull();
+        Debug.WriteLine(cr.Dump());
+
+        client.ExecutionDetailsEvent -= executionDetailsEventHandler;
+        client.CommissionReportEvent -= commissionReportHandler;
+    }
+
+
+    [Test]
+    public async Task PlaceOrderAsync_Crypto_Test()
+    {
+        // Initialize the contract
+        Contract contract = BtcContract;
+
+
+        // 涉及到加密货币，有很多特殊处理
+        // https://interactivebrokers.github.io/tws-api/cryptocurrency.html
+        // https://blog.stockviva.com/ib%E6%95%99%E5%AD%B8/ib%E8%B2%B7bitcoin-%E5%8A%A0%E5%AF%86%E8%B2%A8%E5%B9%A3-%E6%AF%94%E7%89%B9%E5%B9%A3
+        /*
+            Cryptocurrency supports only Market and Limit Order order types.
+            TimeInForce (Tif) for Market (MKT) order is only valid value for Cryptocurrency is IOC (Immediate or Cancel).
+            When placing a BUY MKT order cashQty must be specified.
+            Limit (LMT) Order supports IOC (Immediate or Cancel) and Minutes Tif. Minutes: Order are canceled if not filled in 5 minutes.
+         */
+
+        // Initialize the order
+        Order order = new Order
+        {
+            Action    = "BUY",
+            OrderType = "MKT",
+            CashQty = 40125,
+            //TotalQuantity = 2000.01m,   在tws客户端上，eur最小支持0.01单子，也可以被执行，但是通过api无法执行，返回TwsErrorCodes.OrderNotSupportFractionalQuantity
+            Tif = ETifTws.IOC.ToString()
         };
 
 

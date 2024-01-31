@@ -12,9 +12,10 @@ namespace NeoTwsApi.Models;
 
 public class AccountDetails : ConcurrentDictionary<string, string>
 {
-    public string       AccountCode => this[nameof(AccountCode)];
-    public string       AccountType => this[nameof(AccountType)];
-    public ECurrencyTws Currency    => Enum.Parse<ECurrencyTws>(this[nameof(Currency)]);
+    public string AccountCode => this[nameof(AccountCode)];
+    public string AccountType => this[nameof(AccountType)];
+    //public ECurrencyTws Currency    => Enum.Parse<ECurrencyTws>(this[nameof(Currency)]);
+    public string Currency => this[nameof(Currency)];
 
 #region 余额
 
