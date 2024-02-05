@@ -374,7 +374,10 @@ public class TwsCallbackHandler : EWrapper
     public void error(Exception e)
     {
         Debug.WriteLine($"Tws Exception:{e}");
-        throw e;
+        //throw e;
+
+        var eventArgs = new ErrorEventArgs(-1, -1, e.Message);
+        this.ErrorEvent?.Invoke(this, eventArgs);
     }
 
     /// <inheritdoc/>

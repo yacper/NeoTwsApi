@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using IBApi;
+using NeoTwsApi.Constants;
 using NeoTwsApi.Enums;
 using NeoTwsApi.EventArgs;
 using NeoTwsApi.Exceptions;
@@ -844,6 +845,120 @@ SuggestedSizeIncrement: 0.01
         client.CommissionReportEvent -= commissionReportHandler;
     }
 
+
+ [Test]
+ // https://interactivebrokers.github.io/tws-api/basic_orders.html#stop
+ public async Task PlaceStopOrderAsync_Test()
+ {
+     // Initialize the contract
+     Contract contract = XauusdContract_CMDTY;
+
+     // Initialize the order
+     Order order = new Order
+     {
+         Action    = "BUY",
+         AuxPrice = 2030,    // stop
+         OrderType = TwsOrderType.Stop,
+         TotalQuantity = 1,
+         //TotalQuantity = 2000.01m,   在tws客户端上，eur最小支持0.01单子，也可以被执行，但是通过api无法执行，返回TwsErrorCodes.OrderNotSupportFractionalQuantity
+         Tif = ETifTws.DAY.ToString()
+     };
+
+     // Initialize the order
+     Order closeOrder = new Order
+     {
+         Action        = "SELL",
+         OrderType     = "MKT",
+         TotalQuantity = 12000M,
+         Tif           = ETifTws.GTC.ToString()
+     };
+
+     ExecutionDetailsEventArgs details = null;
+     CommissionReport          cr      = null;
+
+     EventHandler<ExecutionDetailsEventArgs> executionDetailsEventHandler = (s, e) => { details = e; };
+     EventHandler<CommissionReport>          commissionReportHandler      = (s, e) => { cr      = e; };
+
+
+     client.ExecutionDetailsEvent += executionDetailsEventHandler;
+     client.CommissionReportEvent += commissionReportHandler;
+
+
+     // Call the API
+     var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
+
+     // Assert
+     successfullyPlaced.Should().NotBeNull();
+     Debug.WriteLine(successfullyPlaced.Dump());
+
+     await Task.Delay(3000);
+
+     details.Should().NotBeNull();
+     Debug.WriteLine(details.Dump());
+
+     cr.Should().NotBeNull();
+     Debug.WriteLine(cr.Dump());
+
+     client.ExecutionDetailsEvent -= executionDetailsEventHandler;
+     client.CommissionReportEvent -= commissionReportHandler;
+ }
+
+    [Test]
+    public async Task PlaceStoplimitOrderAsync_Test()
+    {
+        // Initialize the contract
+        Contract contract = XauusdContract_CMDTY;
+
+        // Initialize the order
+        Order order = new Order
+        {
+            Action    = "BUY",
+            LmtPrice = 2030,    // limit
+            AuxPrice = 2030,    // stop
+            OrderType = TwsOrderType.StopLimit,
+            TotalQuantity = 1,
+            //TotalQuantity = 2000.01m,   在tws客户端上，eur最小支持0.01单子，也可以被执行，但是通过api无法执行，返回TwsErrorCodes.OrderNotSupportFractionalQuantity
+            Tif = ETifTws.DAY.ToString()
+        };
+
+        // Initialize the order
+        Order closeOrder = new Order
+        {
+            Action        = "SELL",
+            OrderType     = "MKT",
+            TotalQuantity = 12000M,
+            Tif           = ETifTws.GTC.ToString()
+        };
+
+        ExecutionDetailsEventArgs details = null;
+        CommissionReport          cr      = null;
+
+        EventHandler<ExecutionDetailsEventArgs> executionDetailsEventHandler = (s, e) => { details = e; };
+        EventHandler<CommissionReport>          commissionReportHandler      = (s, e) => { cr      = e; };
+
+
+        client.ExecutionDetailsEvent += executionDetailsEventHandler;
+        client.CommissionReportEvent += commissionReportHandler;
+
+
+        // Call the API
+        var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
+
+        // Assert
+        successfullyPlaced.Should().NotBeNull();
+        Debug.WriteLine(successfullyPlaced.Dump());
+
+        await Task.Delay(3000);
+
+        details.Should().NotBeNull();
+        Debug.WriteLine(details.Dump());
+
+        cr.Should().NotBeNull();
+        Debug.WriteLine(cr.Dump());
+
+        client.ExecutionDetailsEvent -= executionDetailsEventHandler;
+        client.CommissionReportEvent -= commissionReportHandler;
+    }
 
     [Test]
     public async Task PlaceOrderAsync_Crypto_Test()

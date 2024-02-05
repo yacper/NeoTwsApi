@@ -25,7 +25,7 @@ public class TwsOrderType
     /// <summary>
     /// Stop loss
     /// </summary>
-    public const string StopLoss = "STP";
+    public const string Stop = "STP";
 
     /// <summary>
     /// Stop limit

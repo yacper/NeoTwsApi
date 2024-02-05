@@ -31,7 +31,7 @@ public enum EOrderTypeTws
     /// Stop loss 止损市价单
     /// </summary>
     [Description("STP")]
-    StopLoss,
+    Stop,
 
     /// <summary>
     /// Stop limit 止损限价单
