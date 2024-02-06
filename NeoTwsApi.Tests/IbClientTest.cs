@@ -663,6 +663,69 @@ SuggestedSizeIncrement: 0.01
         //Debug.WriteLine(ret.Dump());
     }
 
+    [Test]
+    public async Task ReqHistoricalDataAsync_W1()
+    {
+        Contract contract = EurContract;
+        DateTime start    = DateTime.Parse("2023/12/11"); // 周一
+        DateTime end      = DateTime.Parse("2023/12/12");
+        DateTime end2     = DateTime.Parse("2023/12/12 22:00:00");
+        DateTime end3     = DateTime.Parse("2023/12/13");
+        {
+            var ret2 = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2022/6/11"), DateTime.Parse("2023/12/12"),
+                                                           ETimeFrameTws.D1, EDataType.MIDPOINT);
+            ret2.Count.Should().Be(377);
+        }
+
+        {
+            DurationTws d400_duration = new DurationTws(400, EDurationStep.D);
+
+            // 周一，0点，返回上周五的k线
+            var ret = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2023/12/11 gmt"), d400_duration, ETimeFrameTws.D1, EDataType.MIDPOINT);
+            ret.Count.Should().Be(1);
+        }
+
+
+        {
+            DurationTws d1_duration = new DurationTws(1, EDurationStep.D);
+
+            {
+                // 周一，0点，返回上周五的k线
+                var ret = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2023/12/11 gmt"), d1_duration, ETimeFrameTws.D1, EDataType.MIDPOINT);
+            }
+            {
+                // 周一
+                var ret = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2023/12/11 23:50:00"), d1_duration,
+                                                              ETimeFrameTws.D1, EDataType.MIDPOINT);
+            }
+
+
+            var ret2 = await client.ReqHistoricalDataAsync(contract, start, end,
+                                                           ETimeFrameTws.D1, EDataType.MIDPOINT);
+            ret2.Count.Should().Be(1);
+        }
+        //{
+        //    var ret = await client.ReqHistoricalDataAsync(contract, start, end,
+        //                                                  ETimeFrameTws.M5, EDataType.MIDPOINT);
+        //        // 周一从早上6:00开始的k线
+        //    ret.Count.Should().Be(216);
+        //    ret.FirstOrDefault().Time().Should().Be(DateTime.Parse("2022/7/4 06:00:00"));
+        //    ret.LastOrDefault().Time().Should().Be(DateTime.Parse("2022/7/4 23:55:00"));
+        //}
+        {
+            var ret = await client.ReqHistoricalDataAsync(contract, end, end2,
+                                                          ETimeFrameTws.M5, EDataType.MIDPOINT);
+            // 周二从早上00:00开始的k线
+            // 2:10闭盘，6:00重新开盘
+            ret.Count.Should().Be(243);
+            ret.FirstOrDefault().Time().Should().Be(DateTime.Parse("2022/7/5 00:00:00"));
+            ret.LastOrDefault().Time().Should().Be(DateTime.Parse("2022/7/5 23:55:00"));
+        }
+
+
+        //Debug.WriteLine(ret.Dump());
+    }
+
 #endregion
 
 

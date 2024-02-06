@@ -83,8 +83,12 @@ public static class DurationTwsEx
                 return new DurationTws((int)Math.Ceiling(ts.TotalDays+1), EDurationStep.D);
             case <= ETimeFrameTws.D1 and >=ETimeFrameTws.H1:
                 return new DurationTws((int)Math.Ceiling(ts.TotalDays), EDurationStep.D);
-             case <= ETimeFrameTws.MN1 and >=ETimeFrameTws.W1:
-                return new DurationTws((int)Math.Ceiling(ts.TotalDays), EDurationStep.D);
+             case ETimeFrameTws.W1:
+                return new DurationTws((int)(Math.Ceiling(ts.TotalDays)/7), EDurationStep.W);
+             case ETimeFrameTws.MN1:
+                return new DurationTws((int)(Math.Ceiling(ts.TotalDays)/30), EDurationStep.M);
+             case ETimeFrameTws.Y1:
+                return new DurationTws((int)(Math.Ceiling(ts.TotalDays)/360), EDurationStep.Y);
         }
 
         throw new NotImplementedException();

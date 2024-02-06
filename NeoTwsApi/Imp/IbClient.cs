@@ -614,7 +614,8 @@ public class IbClient : ObservableObject, IIbClient
         // 3. 合并数据
         // 4. 返回
         // 5. 如果有多余，截掉多余
-        if (tf == ETimeFrameTws.D1 && end - start > TimeSpan.FromDays(365))
+        //if (tf == ETimeFrameTws.D1 && end - start > TimeSpan.FromDays(365))
+        if (end - start > TimeSpan.FromDays(365))
         {
             var ret = await ReqHistoricalDataAsync(contract, end - TimeSpan.FromDays(365), end, tf, dataType, useRth);
             var ret2 = await ReqHistoricalDataAsync(contract, start, end - TimeSpan.FromDays(365), tf, dataType, useRth);

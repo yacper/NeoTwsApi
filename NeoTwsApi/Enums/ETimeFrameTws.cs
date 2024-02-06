@@ -37,6 +37,7 @@ public enum ETimeFrameTws
     D1,
     W1,
     MN1,
+    Y1,
 }
 
 public static class ETimeFrameTwsEx
