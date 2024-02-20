@@ -74,21 +74,25 @@ public static class DurationTwsEx
         // todo:
         // tws在分钟级别的时候，如果设置duration 1天，获得的数据很可能是少于一天的，
         // 这个跟时区有关,虽然设置了duration为1天，但是时区不同，造成获取的数据可能会少，这里简单处理下+1天
+
+
+        // 注意：如果超过52周，必须用year， Error validating request:-'bX' : cause - Historical data request for durations longer than 52 weeks must be made in years.”
         TimeSpan ts = end - start;
+        if(ts.TotalDays >= 360)
+            return new DurationTws((int)(Math.Ceiling(ts.TotalDays / 360)), EDurationStep.Y);
+
         switch (tf)
         {
-            case < ETimeFrameTws.M1 and >=ETimeFrameTws.S1:
+            case < ETimeFrameTws.M1 and >= ETimeFrameTws.S1:
                 return new DurationTws((int)Math.Ceiling(ts.TotalSeconds), EDurationStep.S);
-            case < ETimeFrameTws.H1 and >=ETimeFrameTws.M1:
-                return new DurationTws((int)Math.Ceiling(ts.TotalDays+1), EDurationStep.D);
-            case <= ETimeFrameTws.D1 and >=ETimeFrameTws.H1:
+            case < ETimeFrameTws.H1 and >= ETimeFrameTws.M1:
+                return new DurationTws((int)Math.Ceiling(ts.TotalDays + 1), EDurationStep.D);
+            case <= ETimeFrameTws.D1 and >= ETimeFrameTws.H1:
                 return new DurationTws((int)Math.Ceiling(ts.TotalDays), EDurationStep.D);
-             case ETimeFrameTws.W1:
-                return new DurationTws((int)(Math.Ceiling(ts.TotalDays)/7), EDurationStep.W);
-             case ETimeFrameTws.MN1:
-                return new DurationTws((int)(Math.Ceiling(ts.TotalDays)/30), EDurationStep.M);
-             case ETimeFrameTws.Y1:
-                return new DurationTws((int)(Math.Ceiling(ts.TotalDays)/360), EDurationStep.Y);
+            case ETimeFrameTws.W1:
+                return new DurationTws((int)(Math.Ceiling(ts.TotalDays / 7)), EDurationStep.W);
+            case ETimeFrameTws.MN1:
+                return new DurationTws((int)(Math.Ceiling(ts.TotalDays / 30)), EDurationStep.M);
         }
 
         throw new NotImplementedException();

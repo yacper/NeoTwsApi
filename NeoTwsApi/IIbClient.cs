@@ -158,8 +158,9 @@ public interface IIbClient : INotifyPropertyChanged
      */
     Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime end, DurationTws duration, ETimeFrameTws tf, EDataType dataType, bool useRth = true, int formatDate=1, bool keepUpToDate=false, List<TagValue> chartOptions=null);
 
-    // 模拟而得
-    Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime start, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true);
+    // 模拟而得， 返回的数据，做过优化处理，比如周线，都是按每周周一来呈现的
+    // 由于tws默认提供的接口，比较反直觉，所以这里提供了一个更直观的接口，但底层，还是调用了ReqHistoricalDataAsync
+    Task<List<Bar>> ReqHistoricalDataAsync2(Contract contract, DateTime start, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true);
 #endregion
 
 

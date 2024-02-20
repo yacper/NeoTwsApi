@@ -10,6 +10,15 @@
 
 namespace NeoTwsApi.Enums;
 
+//Valid Bar Sizes
+//Size
+//1 secs	5 secs	10 secs	15 secs	30 secs
+//1 min	2 mins	3 mins	5 mins	10 mins	15 mins	20 mins	30 mins
+//1 hour	2 hours	3 hours	4 hours	8 hours
+//1 day
+//1 week
+//1 month
+// https://interactivebrokers.github.io/tws-api/historical_bars.html
 public enum ETimeFrameTws
 {
     Unknown = 0,
@@ -37,7 +46,7 @@ public enum ETimeFrameTws
     D1,
     W1,
     MN1,
-    Y1,
+    //Y1,   //不支持年线
 }
 
 public static class ETimeFrameTwsEx
@@ -69,6 +78,11 @@ public static class ETimeFrameTwsEx
 
             case ETimeFrameTws.MN1:
                 return $"1 month";
+
+                // 不支持年线
+            //case ETimeFrameTws.Y1:
+            //    return $"1 year";
+
         }
 
         throw new ArgumentException();

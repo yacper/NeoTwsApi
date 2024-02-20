@@ -10,6 +10,12 @@ namespace IBApi
      */
     public class Bar
     {
+        // mod by rush: 方便调试
+        public override string ToString()
+        {
+            return $"{Time,-15} O:{Open,-12} H:{High,-12} L:{Low,-12} C:{Close,-12} V:{Volume,-12}";
+        }
+
         public Bar(string time, double open, double high, double low, double close, decimal volume, int count, decimal wap)
         {
             Time = time;

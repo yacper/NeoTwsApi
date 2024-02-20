@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -609,7 +610,7 @@ SuggestedSizeIncrement: 0.01
         DateTime end2      = DateTime.Parse("2023/12/12 22:00:00");
         DateTime end3     = DateTime.Parse("2023/12/13");
         {
-            var ret2 = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2022/6/11"), DateTime.Parse("2023/12/12"),
+            var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("2022/6/11"), DateTime.Parse("2023/12/12"),
                                                            ETimeFrameTws.D1, EDataType.MIDPOINT);
             ret2.Count.Should().Be(377);
         }
@@ -637,7 +638,7 @@ SuggestedSizeIncrement: 0.01
             }
 
 
-            var ret2 = await client.ReqHistoricalDataAsync(contract, start, end,
+            var ret2 = await client.ReqHistoricalDataAsync2(contract, start, end,
                                                           ETimeFrameTws.D1, EDataType.MIDPOINT);
             ret2.Count.Should().Be(1);
         }
@@ -650,7 +651,7 @@ SuggestedSizeIncrement: 0.01
         //    ret.LastOrDefault().Time().Should().Be(DateTime.Parse("2022/7/4 23:55:00"));
         //}
         {
-            var ret = await client.ReqHistoricalDataAsync(contract, end, end2,
+            var ret = await client.ReqHistoricalDataAsync2(contract, end, end2,
                                                           ETimeFrameTws.M5, EDataType.MIDPOINT);
             // 周二从早上00:00开始的k线
             // 2:10闭盘，6:00重新开盘
@@ -667,64 +668,108 @@ SuggestedSizeIncrement: 0.01
     public async Task ReqHistoricalDataAsync_W1()
     {
         Contract contract = EurContract;
-        DateTime start    = DateTime.Parse("2023/12/11"); // 周一
-        DateTime end      = DateTime.Parse("2023/12/12");
-        DateTime end2     = DateTime.Parse("2023/12/12 22:00:00");
-        DateTime end3     = DateTime.Parse("2023/12/13");
-        {
-            var ret2 = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2022/6/11"), DateTime.Parse("2023/12/12"),
-                                                           ETimeFrameTws.D1, EDataType.MIDPOINT);
-            ret2.Count.Should().Be(377);
-        }
 
-        {
-            DurationTws d400_duration = new DurationTws(400, EDurationStep.D);
-
-            // 周一，0点，返回上周五的k线
-            var ret = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2023/12/11 gmt"), d400_duration, ETimeFrameTws.D1, EDataType.MIDPOINT);
-            ret.Count.Should().Be(1);
-        }
-
-
-        {
-            DurationTws d1_duration = new DurationTws(1, EDurationStep.D);
-
-            {
-                // 周一，0点，返回上周五的k线
-                var ret = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2023/12/11 gmt"), d1_duration, ETimeFrameTws.D1, EDataType.MIDPOINT);
-            }
-            {
-                // 周一
-                var ret = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2023/12/11 23:50:00"), d1_duration,
-                                                              ETimeFrameTws.D1, EDataType.MIDPOINT);
+            {// 一年
+                var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("2023/02/25", null, DateTimeStyles.AssumeUniversal), DateTime.Parse("2024/02/25", null, DateTimeStyles.AssumeUniversal),
+                                                               ETimeFrameTws.W1, EDataType.MIDPOINT);
+                ret2.FirstOrDefault().Time.Should().Be("20230220");
+                ret2.LastOrDefault().Time.Should().Be("20240219");
+                ret2.Count.Should().Be(53);
             }
 
+            {// 10年
+                var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("2014/02/25", null, DateTimeStyles.AssumeUniversal), DateTime.Parse("2024/02/25", null, DateTimeStyles.AssumeUniversal),
+                                                               ETimeFrameTws.W1, EDataType.MIDPOINT);
+                ret2.FirstOrDefault().Time.Should().Be("20140224");
+                ret2.LastOrDefault().Time.Should().Be("20240219");
+                ret2.Count.Should().Be(522);
+            }
 
-            var ret2 = await client.ReqHistoricalDataAsync(contract, start, end,
-                                                           ETimeFrameTws.D1, EDataType.MIDPOINT);
-            ret2.Count.Should().Be(1);
-        }
-        //{
-        //    var ret = await client.ReqHistoricalDataAsync(contract, start, end,
-        //                                                  ETimeFrameTws.M5, EDataType.MIDPOINT);
-        //        // 周一从早上6:00开始的k线
-        //    ret.Count.Should().Be(216);
-        //    ret.FirstOrDefault().Time().Should().Be(DateTime.Parse("2022/7/4 06:00:00"));
-        //    ret.LastOrDefault().Time().Should().Be(DateTime.Parse("2022/7/4 23:55:00"));
-        //}
-        {
-            var ret = await client.ReqHistoricalDataAsync(contract, end, end2,
-                                                          ETimeFrameTws.M5, EDataType.MIDPOINT);
-            // 周二从早上00:00开始的k线
-            // 2:10闭盘，6:00重新开盘
-            ret.Count.Should().Be(243);
-            ret.FirstOrDefault().Time().Should().Be(DateTime.Parse("2022/7/5 00:00:00"));
-            ret.LastOrDefault().Time().Should().Be(DateTime.Parse("2022/7/5 23:55:00"));
+            {// 20年
+                var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("2004/02/25", null, DateTimeStyles.AssumeUniversal), DateTime.Parse("2024/02/25", null, DateTimeStyles.AssumeUniversal),
+                                                               ETimeFrameTws.W1, EDataType.MIDPOINT);
+                ret2.FirstOrDefault().Time.Should().Be("20050307");       // eurusd 最多20050307
+                ret2.LastOrDefault().Time.Should().Be("20240219");
+                ret2.Count.Should().Be(990);
+            }
+
+            {// 20年
+                var ret2 = await client.ReqHistoricalDataAsync2(AaplContract, DateTime.Parse("2004/02/25", null, DateTimeStyles.AssumeUniversal), DateTime.Parse("2024/02/25", null, DateTimeStyles.AssumeUniversal),
+                                                               ETimeFrameTws.W1, EDataType.MIDPOINT);
+                ret2.FirstOrDefault().Time.Should().Be("20040223");
+                ret2.LastOrDefault().Time.Should().Be("20240212");
+                ret2.Count.Should().Be(1043);
+            }
+
+            {// 请求30年， 实际最多返回20年数据
+            var ret2 = await client.ReqHistoricalDataAsync2(AaplContract, DateTime.Parse("1994/02/25", null, DateTimeStyles.AssumeUniversal), DateTime.Parse("2024/02/25", null, DateTimeStyles.AssumeUniversal),
+                                                           ETimeFrameTws.W1, EDataType.MIDPOINT);
+            ret2.FirstOrDefault().Time.Should().Be("20040119");
+            ret2.LastOrDefault().Time.Should().Be("20240212");
+            ret2.Count.Should().Be(1048);
         }
 
+
+
+        {// 原始信息，不处理
+            var ret2 = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2024/02/22").ToUniversalTime(), new DurationTws(1, EDurationStep.Y),
+                                                           ETimeFrameTws.W1, EDataType.MIDPOINT);
+            //ret2.Count.Should().Be(377);
+        }
 
         //Debug.WriteLine(ret.Dump());
     }
+
+
+
+    [Test]
+    public async Task ReqHistoricalDataAsync_MN1()
+    {
+        Contract contract = EurContract;
+
+        {
+            // 一年
+            var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("2023/02/25"),
+                                                            DateTime.Parse("2024/02/25"),
+                                                            ETimeFrameTws.MN1, EDataType.MIDPOINT);
+            ret2.FirstOrDefault().Time.Should().Be("20230201");
+            ret2.LastOrDefault().Time.Should().Be("20240201");
+            ret2.Count.Should().Be(13);
+        }
+
+        {
+            // 10年
+            var ret2 = await client.ReqHistoricalDataAsync2(AaplContract, DateTime.Parse("2014/02/25"),
+                                                            DateTime.Parse("2024/02/25"),
+                                                            ETimeFrameTws.MN1, EDataType.MIDPOINT);
+            ret2.FirstOrDefault().Time.Should().Be("20140201");
+            ret2.LastOrDefault().Time.Should().Be("20240201");
+            ret2.Count.Should().Be(121);
+        }
+
+
+        {
+            // 20年
+            var ret2 = await client.ReqHistoricalDataAsync2(AaplContract, DateTime.Parse("2004/02/25"),
+                                                            DateTime.Parse("2024/02/25"),
+                                                            ETimeFrameTws.MN1, EDataType.MIDPOINT);
+            ret2.FirstOrDefault().Time.Should().Be("20040201");
+            ret2.LastOrDefault().Time.Should().Be("20240201");
+            ret2.Count.Should().Be(241);
+        }
+
+        {
+            // 30年 实际只能返回20年
+            var ret2 = await client.ReqHistoricalDataAsync2(AaplContract, DateTime.Parse("1994/02/25"),
+                                                            DateTime.Parse("2024/02/25"),
+                                                            ETimeFrameTws.MN1, EDataType.MIDPOINT);
+            ret2.FirstOrDefault().Time.Should().Be("20040101");
+            ret2.LastOrDefault().Time.Should().Be("20240201");
+            ret2.Count.Should().Be(242);
+        }
+ 
+    }
+
 
 #endregion
 

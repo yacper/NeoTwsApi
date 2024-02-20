@@ -22,6 +22,7 @@ using NeoTwsApi.Helpers;
 using NeoTwsApi.Imp;
 using ErrorEventArgs = NeoTwsApi.EventArgs.ErrorEventArgs;
 using System.Globalization;
+using FluentDateTime;
 using MoreLinq.Extensions;
 using NeoTwsApi.Constants;
 using NeoTwsApi.Models;
@@ -599,13 +600,13 @@ public class IbClient : ObservableObject, IIbClient
     }
 
 
-    public async Task<List<Bar>> ReqHistoricalDataAsync(Contract contract, DateTime start, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
+    public async Task<List<Bar>> ReqHistoricalDataAsync2(Contract contract, DateTime start, DateTime end, ETimeFrameTws tf, EDataType dataType, bool useRth = true)
     {
         if (contract == null)
             throw new ArgumentNullException(nameof(contract));
 
         if (start > end)
-            throw new ArgumentException("start > end");
+            throw new ArgumentException($"start({start}) > end({end})");
 
         //获取XAUUSD历史数据失败:Error validating request:-'bX' : cause - Historical data requests for durations longer than 365 days must be made in years.
         // 如果时间跨度超过365天，需要分段请求
@@ -614,19 +615,35 @@ public class IbClient : ObservableObject, IIbClient
         // 3. 合并数据
         // 4. 返回
         // 5. 如果有多余，截掉多余
-        //if (tf == ETimeFrameTws.D1 && end - start > TimeSpan.FromDays(365))
-        if (end - start > TimeSpan.FromDays(365))
+        if (tf <= ETimeFrameTws.D1 && end - start > TimeSpan.FromDays(365))
         {
-            var ret = await ReqHistoricalDataAsync(contract, end - TimeSpan.FromDays(365), end, tf, dataType, useRth);
-            var ret2 = await ReqHistoricalDataAsync(contract, start, end - TimeSpan.FromDays(365), tf, dataType, useRth);
+            var ret = await ReqHistoricalDataAsync2(contract, end - TimeSpan.FromDays(365), end, tf, dataType, useRth);
+            var ret2 = await ReqHistoricalDataAsync2(contract, start, end - TimeSpan.FromDays(365), tf, dataType, useRth);
             ret2.AddRange(ret);
             return ret2;
         }
+
+        // 如果超过52周，必须用year， Error validating request:-'bX' : cause - Historical data request for durations longer than 52 weeks must be made in years.”
         else
         {
             var ret = await ReqHistoricalDataAsync(contract, end, DurationTwsEx.ToDurationTws(start, end, tf), tf, dataType, useRth);
+
+            // 如果需要mod日期信息
+            ret = ret.ModBars(tf);
+
             // 如果有多余，截掉多余
-            int index = ret.FindIndex(p => p.Time() >= start);
+            var clampStart = start;
+            switch (tf)
+            {
+                case ETimeFrameTws.W1:
+                    clampStart = start.FirstDayOfWeek().Date;
+                    break;
+                case ETimeFrameTws.MN1:
+                    clampStart = start.FirstDayOfMonth().Date;
+                    break;
+            }
+
+            int index = ret.FindIndex(p => p.Time() >= clampStart);
             if(index != -1)
                 ret.RemoveRange(0, index);
             return ret;
