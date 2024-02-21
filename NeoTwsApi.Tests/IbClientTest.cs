@@ -768,6 +768,28 @@ SuggestedSizeIncrement: 0.01
             ret2.Count.Should().Be(242);
         }
  
+        {
+            // xauusd 开始得90年以后，不然无法获得数据
+            var ret2 = await client.ReqHistoricalDataAsync2(XauusdContract_CMDTY, DateTime.Parse("1990/01/01"),
+                                                            DateTime.Parse("2024/02/25"),
+                                                            ETimeFrameTws.MN1, EDataType.MIDPOINT);
+            ret2.FirstOrDefault().Time.Should().Be("20250301");
+            ret2.LastOrDefault().Time.Should().Be("20240201");
+            ret2.Count.Should().Be(228);
+        }
+
+
+        {
+            // 最长年
+            var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("1970/01/01"),
+                                                            DateTime.Parse("2024/02/25"),
+                                                            ETimeFrameTws.MN1, EDataType.MIDPOINT);
+            ret2.FirstOrDefault().Time.Should().Be("20250301");
+            ret2.LastOrDefault().Time.Should().Be("20240201");
+            ret2.Count.Should().Be(228);
+        }
+
+
     }
 
 
