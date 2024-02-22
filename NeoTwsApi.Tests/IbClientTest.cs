@@ -601,6 +601,21 @@ SuggestedSizeIncrement: 0.01
         Debug.WriteLine(ret.Dump());
     }
 
+
+    [Test]
+    public async Task ReqHistoricalDataAsync_M5()
+    {
+        Contract contract = MsftContract;
+        {
+            var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("2024/02/19"), DateTime.Parse("2024/02/22"),
+                                                            ETimeFrameTws.M5, EDataType.MIDPOINT);
+            //ret2.Count.Should().Be(377);
+        }
+
+                //Debug.WriteLine(ret.Dump());
+    }
+
+
     [Test]
     public async Task ReqHistoricalDataAsync_D1()
     {

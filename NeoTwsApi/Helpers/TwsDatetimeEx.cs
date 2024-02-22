@@ -74,7 +74,7 @@ public static class TwsDatetimeEx
             {
                 var ret = DateTime.ParseExact($"{ss[0]} {ss[1]}", "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
                 var tz  = TimeZoneInfo.FindSystemTimeZoneById(ss[2]);
-                return TimeZoneInfo.ConvertTime(ret, tz);
+                return TimeZoneInfo.ConvertTime(ret, tz, TimeZoneInfo.Local);       // 统一转为local
             }
 
             throw new ArgumentException();

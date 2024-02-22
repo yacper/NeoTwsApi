@@ -15,7 +15,8 @@ public static class BarEx
 {
     public static DateTime Time(this Bar b)
     {
-        return b.Time.ToTwsDateTime();
+        var t= b.Time.ToTwsDateTime();
+        return t;
     }
 
     // 正规化bars
