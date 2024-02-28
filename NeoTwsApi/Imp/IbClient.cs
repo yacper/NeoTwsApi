@@ -569,7 +569,7 @@ public class IbClient : ObservableObject, IIbClient
         };
 
         // Set the operation to cancel after 2 minute
-        CancellationTokenSource tokenSource = new CancellationTokenSource(60 * 1000);
+        CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
         tokenSource.Token.Register(() =>
         {
             //todo:warn
