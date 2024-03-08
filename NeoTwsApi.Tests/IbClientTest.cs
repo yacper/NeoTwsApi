@@ -1334,6 +1334,52 @@ SuggestedSizeIncrement: 0.01
         //await TearDown();
     }
 
+    [Test]// https://interactivebrokers.github.io/tws-api/modifying_orders.html
+    public async Task ModifyOrderAsync_Test()
+    {
+        //await Setup();
+
+        // Initialize the contract
+        Contract contract = new Contract();
+        contract.Symbol   = "EUR";
+        contract.SecType  = "CASH";
+        contract.Currency = "USD";
+        contract.Exchange = "IDEALPRO";
+
+        // Initialize the order
+        Order order = new Order
+        {
+            Action        = "BUY",
+            OrderType     = "LMT",
+            TotalQuantity = 20000,
+            LmtPrice      = 1
+        };
+
+        // modifyOrder
+        Order modifyOrder = new Order
+        {
+            Action        = "BUY",
+            OrderType     = "LMT",
+            TotalQuantity = 40000,
+            LmtPrice      = 1
+        };
+
+
+        var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
+        successfullyPlaced.Should().NotBeNull();
+
+        // 必须设置order
+        modifyOrder.OrderId = successfullyPlaced.OrderId;
+
+        var r = await client.PlaceOrderAsync(contract, modifyOrder);
+        r.Should().NotBeNull();
+        r.Order.TotalQuantity.Should().Be(40000);       // 修改成40000
+
+        //await TearDown();
+    }
+
+
+
 #endregion
 
 #region Positions
