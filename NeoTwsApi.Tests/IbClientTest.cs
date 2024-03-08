@@ -1379,6 +1379,68 @@ SuggestedSizeIncrement: 0.01
     }
 
 
+ [Test]// https://interactivebrokers.github.io/tws-api/modifying_orders.html
+ public async Task ModifyBracketOrderAsync_Test()
+ {// 修改括号单，需要同时修改主单和子单
+     Order modifyLotsOrder = new Order
+     {
+         Action        = "BUY",
+         OrderType     = "LMT",
+         TotalQuantity = 40000,
+         LmtPrice      = 1.05
+     };
+
+     var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Limit, 20000, 1.05, ETifTws.GTC, 1.3, 1);
+     ret.Count.Should().Be(3);
+
+     // 必须设置order
+     modifyLotsOrder.OrderId = ret[0].OrderId;
+
+     // 修改主order 数量，会同时修改2个子单数量
+     {
+         var r = await client.PlaceOrderAsync(EurContract, modifyLotsOrder);
+
+         r.Should().NotBeNull();
+        r.Order.TotalQuantity.Should().Be(40000);       // 修改成40000
+     }
+      //修改takeprofit，只能修改子单的takeprofit
+      {
+          Order modifyTakeprofitOrder = new Order
+          {
+              Action        = "SELL",
+              OrderType     = "LMT",
+              TotalQuantity = 40000,
+              LmtPrice      = 1.35
+          };
+          modifyTakeprofitOrder.OrderId = ret[1].OrderId; // 对应takeprofit订单
+
+          var r2 = await client.PlaceOrderAsync(EurContract, modifyTakeprofitOrder);
+
+          r2.Should().NotBeNull();
+          r2.Order.LmtPrice.Should().Be(1.35); // 修改成1.35
+      }
+      // 修改stoploss，只能修改子单的stoploss
+      {
+          Order modifyStoplossOrder = new Order
+          {
+              Action        = "SELL",
+              OrderType     = "STP",
+              TotalQuantity = 40000,
+              AuxPrice      = 0.95
+          };
+          modifyStoplossOrder.OrderId = ret[2].OrderId; // 对应stoploss订单
+
+          var r3 = await client.PlaceOrderAsync(EurContract, modifyStoplossOrder);
+
+          r3.Should().NotBeNull();
+          r3.Order.AuxPrice.Should().Be(0.95); // 修改成0.95
+      }
+       
+
+     //await TearDown();
+ }
+
+
 
 #endregion
 
