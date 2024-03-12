@@ -272,6 +272,15 @@ public interface IIbClient : INotifyPropertyChanged
     /// <returns>True if it was successfully cancelled</returns>
     Task<bool> CancelOrderAsync(int orderId);
 
+
+    /// <summary>
+    /// 请求订单的执行情况, 只能获得当天的
+    /// </summary>
+    /// <param name="filter"></param>
+    /// <returns></returns>
+    Task<List<ExecutionDetailsEventArgs>> ReqExecutionsAsync(ExecutionFilter filter);
+
+
 #endregion
 
 #region Positions

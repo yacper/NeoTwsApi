@@ -1001,6 +1001,55 @@ public class IbClient : ObservableObject, IIbClient
     }
 
 
+    public Task<List<ExecutionDetailsEventArgs>> ReqExecutionsAsync(ExecutionFilter filter)
+    {
+        int requestId = this.TwsRequestIdGenerator_.GetNextRequestId();
+        ReqContracts[requestId] = new(null, null);
+
+
+        List<ExecutionDetailsEventArgs>         executions                = new List<ExecutionDetailsEventArgs>();
+        var                                   taskSource                     = new TaskCompletionSource<List<ExecutionDetailsEventArgs>>();
+        EventHandler<ExecutionDetailsEventArgs> executionDetailsEventHandler     = null;
+        EventHandler<ExecutionDetailsEndEventArgs> executionDetailsEndEventHandler = null;
+
+        executionDetailsEventHandler = (sender, args) =>
+        {
+            if(args.RequestId == requestId)
+                executions.Add(args);
+        };
+
+        executionDetailsEndEventHandler = (sender, args) =>
+        {
+            if (args.RequestId == requestId)
+            {
+                // Cleanup the event handlers when the positions end event is called.
+                clearHandler();
+                taskSource.TrySetResult(executions);
+            }
+        };
+
+        void clearHandler()
+        {
+            this.TwsCallbackHandler_.ExecutionDetailsEvent     -= executionDetailsEventHandler;
+            this.TwsCallbackHandler_.ExecutionDetailsEndEvent -= executionDetailsEndEventHandler;
+        }
+
+        this.TwsCallbackHandler_.ExecutionDetailsEvent     += executionDetailsEventHandler;
+        this.TwsCallbackHandler_.ExecutionDetailsEndEvent += executionDetailsEndEventHandler;
+
+        // Set the operation to cancel after 5 seconds
+        CancellationTokenSource tokenSource = new CancellationTokenSource(TimeoutMilliseconds);
+        tokenSource.Token.Register(() =>
+        {
+            clearHandler();
+            taskSource.TrySetCanceled();
+        });
+
+        this.ClientSocket_.reqExecutions(requestId, filter);
+
+        return taskSource.Task;
+    }
+
     /// <summary>
     /// Cancels an order in TWS.
     /// </summary>
