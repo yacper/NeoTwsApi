@@ -747,8 +747,8 @@ public class IbClient : ObservableObject, IIbClient
     }
 
     public List<Order> MakeBracketOrders(Contract contract,             EOrderActions action,                    EOrderTypeTws orderType,              double  quantity,
-        double?                                   limitPrice    = null, ETifTws       tif         = ETifTws.GTC, double?       takeProfitPrice = null, double? stopLossPrice = null,
-        ETifTws?                                  takeProfitTif = null, ETifTws?      stopLossTif = null)
+                                         double?  price         = null, ETifTws       tif         = ETifTws.GTC, double?       takeProfitPrice = null, double? stopLossPrice = null,
+                                         ETifTws? takeProfitTif = null, ETifTws?      stopLossTif = null)
     {
         var parentOrderId = GetNextValidOrderId();
 
@@ -760,8 +760,10 @@ public class IbClient : ObservableObject, IIbClient
         parent.OrderType = orderType.GetDescription();
         //parent.OrderType     = "LMT";
         parent.TotalQuantity = Convert.ToDecimal(quantity);
-        if (limitPrice != null)
-            parent.LmtPrice = limitPrice.Value;
+        if (orderType == EOrderTypeTws.Stop)
+            parent.AuxPrice = price.Value;
+        else if (price != null)
+            parent.LmtPrice = price.Value;
         parent.Tif = tif.ToString();
         //The parent and children orders will need this attribute set to false to prevent accidental executions.
         //The LAST CHILD will have it set to true, 
@@ -857,7 +859,8 @@ public class IbClient : ObservableObject, IIbClient
                     // 后面的覆盖前面的
                     ret[eventArgs.OrderId] = eventArgs;
                     // 完成的时候，必然parentId submitted
-                    if (eventArgs.OrderId == parentOrderId && (eventArgs.OrderState.Status == TwsOrderStatus.Submitted || eventArgs.OrderState.Status == TwsOrderStatus.Filled))
+                    if (ret.Count==3 )
+                    //&& eventArgs.OrderId == parentOrderId && (eventArgs.OrderState.Status == TwsOrderStatus.Presubmitted ||eventArgs.OrderState.Status == TwsOrderStatus.Submitted || eventArgs.OrderState.Status == TwsOrderStatus.Filled))
                     {
                         //Unregister the callbacks
                         clearHandler();

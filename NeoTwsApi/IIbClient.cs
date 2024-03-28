@@ -242,7 +242,7 @@ public interface IIbClient : INotifyPropertyChanged
         ETifTws? takeProfitTif = null, ETifTws? stopLossTif = null);
 
     List<Order> MakeBracketOrders(Contract contract,             EOrderActions action,                    EOrderTypeTws orderType,              double  quantity,
-        double?                            limitPrice    = null, ETifTws       tif         = ETifTws.GTC, double?       takeProfitPrice = null, double? stopLossPrice = null,
+        double?                            price    = null, ETifTws       tif         = ETifTws.GTC, double?       takeProfitPrice = null, double? stopLossPrice = null,
         ETifTws?                           takeProfitTif = null, ETifTws?      stopLossTif = null);
 
     Task<List<OpenOrderEventArgs>> PlaceBracketOrderAsync(Contract contract, List<Order> orders);
