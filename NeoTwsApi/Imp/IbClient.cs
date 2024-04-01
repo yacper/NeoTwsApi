@@ -858,8 +858,7 @@ public class IbClient : ObservableObject, IIbClient
 
                     // 后面的覆盖前面的
                     ret[eventArgs.OrderId] = eventArgs;
-                    // 完成的时候，必然parentId submitted
-                    if (ret.Count==3 )
+                    if (ret.Count==lo.Count )
                     //&& eventArgs.OrderId == parentOrderId && (eventArgs.OrderState.Status == TwsOrderStatus.Presubmitted ||eventArgs.OrderState.Status == TwsOrderStatus.Submitted || eventArgs.OrderState.Status == TwsOrderStatus.Filled))
                     {
                         //Unregister the callbacks
