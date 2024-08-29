@@ -11,7 +11,6 @@ using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using IBApi;
-using Microsoft.Toolkit.Mvvm.ComponentModel;
 using NeoTwsApi.Enums;
 using NeoTwsApi.EventArgs;
 using NeoTwsApi.Helpers;
