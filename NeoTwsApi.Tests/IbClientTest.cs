@@ -254,11 +254,11 @@ SuggestedSizeIncrement: 0.01
     {
         Contract    contract = MsftContract;
         DurationTws duration = new DurationTws(2, EDurationStep.D);
-        // Ä¬ÈÏ»áÏÈ°ÑÊ±¼ä×ªÎªgmtÊ±¼ä£¬ËùÒÔÖ±½ÓÊ¹ÓÃgmtÊ±¼ä
+        // Ä¬ï¿½Ï»ï¿½ï¿½È°ï¿½Ê±ï¿½ï¿½×ªÎªgmtÊ±ï¿½ä£¬ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½Ê¹ï¿½ï¿½gmtÊ±ï¿½ï¿½
         DateTime end = new DateTime(2022, 9, 13, 0, 0, 0, DateTimeKind.Utc);
         {
-            // °´DayµÄÇé¿öÏÂ£¬tws·µ»ØµÄÊ±¼ä´Á£¬²»±£ÁôÊ±ÇøÐÅÏ¢
-            /* Ê¹ÓÃ²Ù×÷ÕßÊ±Çø
+            // ï¿½ï¿½Dayï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½twsï¿½ï¿½ï¿½Øµï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ï¢
+            /* Ê¹ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
             {Bar}
               Time: "20220909"
               Open: 260.27
@@ -278,7 +278,7 @@ SuggestedSizeIncrement: 0.01
               WAP: -1
               Count: -1
           */
-            /* Ê¹ÓÃ²úÆ·Ê±Çø
+            /* Ê¹ï¿½Ã²ï¿½Æ·Ê±ï¿½ï¿½
             {Bar}
               Time: "20220909"
               Open: 260.27
@@ -305,8 +305,8 @@ SuggestedSizeIncrement: 0.01
             Debug.WriteLine(ret.Dump());
         }
 
-            {// °´Ð¡Ê±
-            /* °´²úÆ·Ê±Çø£¬·µ»ØÔ­²úÆ·µÄÊ±¼ä´Á
+            {// ï¿½ï¿½Ð¡Ê±
+            /* ï¿½ï¿½ï¿½ï¿½Æ·Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½Æ·ï¿½ï¿½Ê±ï¿½ï¿½ï¿½
             {Bar}
               Time: "20220909 09:30:00 US/Eastern"
               Open: 260.27
@@ -434,7 +434,7 @@ SuggestedSizeIncrement: 0.01
               WAP: -1
               Count: -1           */
             /*
-             * °´²Ù×÷ÕßÊ±Çø£¬·µ»Ø+8Ê±Çø
+             * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½+8Ê±ï¿½ï¿½
             {Bar}
               Time: "20220909 21:30:00 Asia/Shanghai"
               Open: 260.27
@@ -620,7 +620,7 @@ SuggestedSizeIncrement: 0.01
     public async Task ReqHistoricalDataAsync_D1()
     {
         Contract contract = MsftContract;
-        DateTime start    = DateTime.Parse("2023/12/11");       // ÖÜÒ»
+        DateTime start    = DateTime.Parse("2023/12/11");       // ï¿½ï¿½Ò»
         DateTime end      = DateTime.Parse("2023/12/12");
         DateTime end2      = DateTime.Parse("2023/12/12 22:00:00");
         DateTime end3     = DateTime.Parse("2023/12/13");
@@ -633,7 +633,7 @@ SuggestedSizeIncrement: 0.01
         {
             DurationTws d400_duration = new DurationTws(400, EDurationStep.D);
 
-            // ÖÜÒ»£¬0µã£¬·µ»ØÉÏÖÜÎåµÄkÏß
+            // ï¿½ï¿½Ò»ï¿½ï¿½0ï¿½ã£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½kï¿½ï¿½
             var ret = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2023/12/11 gmt"), d400_duration, ETimeFrameTws.D1, EDataType.MIDPOINT);
             ret.Count.Should().Be(1);
         }
@@ -643,11 +643,11 @@ SuggestedSizeIncrement: 0.01
             DurationTws d1_duration = new DurationTws(1, EDurationStep.D);
 
             {
-                // ÖÜÒ»£¬0µã£¬·µ»ØÉÏÖÜÎåµÄkÏß
+                // ï¿½ï¿½Ò»ï¿½ï¿½0ï¿½ã£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½kï¿½ï¿½
                 var ret = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2023/12/11 gmt"), d1_duration, ETimeFrameTws.D1, EDataType.MIDPOINT);
             }
             {
-                // ÖÜÒ»
+                // ï¿½ï¿½Ò»
                 var ret = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2023/12/11 23:50:00"), d1_duration,
                                                               ETimeFrameTws.D1, EDataType.MIDPOINT);
             }
@@ -660,7 +660,7 @@ SuggestedSizeIncrement: 0.01
         //{
         //    var ret = await client.ReqHistoricalDataAsync(contract, start, end,
         //                                                  ETimeFrameTws.M5, EDataType.MIDPOINT);
-        //        // ÖÜÒ»´ÓÔçÉÏ6:00¿ªÊ¼µÄkÏß
+        //        // ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½6:00ï¿½ï¿½Ê¼ï¿½ï¿½kï¿½ï¿½
         //    ret.Count.Should().Be(216);
         //    ret.FirstOrDefault().Time().Should().Be(DateTime.Parse("2022/7/4 06:00:00"));
         //    ret.LastOrDefault().Time().Should().Be(DateTime.Parse("2022/7/4 23:55:00"));
@@ -668,8 +668,8 @@ SuggestedSizeIncrement: 0.01
         {
             var ret = await client.ReqHistoricalDataAsync2(contract, end, end2,
                                                           ETimeFrameTws.M5, EDataType.MIDPOINT);
-            // ÖÜ¶þ´ÓÔçÉÏ00:00¿ªÊ¼µÄkÏß
-            // 2:10±ÕÅÌ£¬6:00ÖØÐÂ¿ªÅÌ
+            // ï¿½Ü¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½00:00ï¿½ï¿½Ê¼ï¿½ï¿½kï¿½ï¿½
+            // 2:10ï¿½ï¿½ï¿½Ì£ï¿½6:00ï¿½ï¿½ï¿½Â¿ï¿½ï¿½ï¿½
             ret.Count.Should().Be(243);
             ret.FirstOrDefault().Time().Should().Be(DateTime.Parse("2022/7/5 00:00:00"));
             ret.LastOrDefault().Time().Should().Be(DateTime.Parse("2022/7/5 23:55:00"));
@@ -684,7 +684,7 @@ SuggestedSizeIncrement: 0.01
     {
         Contract contract = EurContract;
 
-            {// Ò»Äê
+            {// Ò»ï¿½ï¿½
                 var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("2023/02/25", null, DateTimeStyles.AssumeUniversal), DateTime.Parse("2024/02/25", null, DateTimeStyles.AssumeUniversal),
                                                                ETimeFrameTws.W1, EDataType.MIDPOINT);
                 ret2.FirstOrDefault().Time.Should().Be("20230220");
@@ -692,7 +692,7 @@ SuggestedSizeIncrement: 0.01
                 ret2.Count.Should().Be(53);
             }
 
-            {// 10Äê
+            {// 10ï¿½ï¿½
                 var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("2014/02/25", null, DateTimeStyles.AssumeUniversal), DateTime.Parse("2024/02/25", null, DateTimeStyles.AssumeUniversal),
                                                                ETimeFrameTws.W1, EDataType.MIDPOINT);
                 ret2.FirstOrDefault().Time.Should().Be("20140224");
@@ -700,15 +700,15 @@ SuggestedSizeIncrement: 0.01
                 ret2.Count.Should().Be(522);
             }
 
-            {// 20Äê
+            {// 20ï¿½ï¿½
                 var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("2004/02/25", null, DateTimeStyles.AssumeUniversal), DateTime.Parse("2024/02/25", null, DateTimeStyles.AssumeUniversal),
                                                                ETimeFrameTws.W1, EDataType.MIDPOINT);
-                ret2.FirstOrDefault().Time.Should().Be("20050307");       // eurusd ×î¶à20050307
+                ret2.FirstOrDefault().Time.Should().Be("20050307");       // eurusd ï¿½ï¿½ï¿½20050307
                 ret2.LastOrDefault().Time.Should().Be("20240219");
                 ret2.Count.Should().Be(990);
             }
 
-            {// 20Äê
+            {// 20ï¿½ï¿½
                 var ret2 = await client.ReqHistoricalDataAsync2(AaplContract, DateTime.Parse("2004/02/25", null, DateTimeStyles.AssumeUniversal), DateTime.Parse("2024/02/25", null, DateTimeStyles.AssumeUniversal),
                                                                ETimeFrameTws.W1, EDataType.MIDPOINT);
                 ret2.FirstOrDefault().Time.Should().Be("20040223");
@@ -716,7 +716,7 @@ SuggestedSizeIncrement: 0.01
                 ret2.Count.Should().Be(1043);
             }
 
-            {// ÇëÇó30Äê£¬ Êµ¼Ê×î¶à·µ»Ø20ÄêÊý¾Ý
+            {// ï¿½ï¿½ï¿½ï¿½30ï¿½ê£¬ Êµï¿½ï¿½ï¿½ï¿½à·µï¿½ï¿½20ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             var ret2 = await client.ReqHistoricalDataAsync2(AaplContract, DateTime.Parse("1994/02/25", null, DateTimeStyles.AssumeUniversal), DateTime.Parse("2024/02/25", null, DateTimeStyles.AssumeUniversal),
                                                            ETimeFrameTws.W1, EDataType.MIDPOINT);
             ret2.FirstOrDefault().Time.Should().Be("20040119");
@@ -726,7 +726,7 @@ SuggestedSizeIncrement: 0.01
 
 
 
-        {// Ô­Ê¼ÐÅÏ¢£¬²»´¦Àí
+        {// Ô­Ê¼ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             var ret2 = await client.ReqHistoricalDataAsync(contract, DateTime.Parse("2024/02/22").ToUniversalTime(), new DurationTws(1, EDurationStep.Y),
                                                            ETimeFrameTws.W1, EDataType.MIDPOINT);
             //ret2.Count.Should().Be(377);
@@ -743,7 +743,7 @@ SuggestedSizeIncrement: 0.01
         Contract contract = EurContract;
 
         {
-            // Ò»Äê
+            // Ò»ï¿½ï¿½
             var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("2023/02/25"),
                                                             DateTime.Parse("2024/02/25"),
                                                             ETimeFrameTws.MN1, EDataType.MIDPOINT);
@@ -753,7 +753,7 @@ SuggestedSizeIncrement: 0.01
         }
 
         {
-            // 10Äê
+            // 10ï¿½ï¿½
             var ret2 = await client.ReqHistoricalDataAsync2(AaplContract, DateTime.Parse("2014/02/25"),
                                                             DateTime.Parse("2024/02/25"),
                                                             ETimeFrameTws.MN1, EDataType.MIDPOINT);
@@ -764,7 +764,7 @@ SuggestedSizeIncrement: 0.01
 
 
         {
-            // 20Äê
+            // 20ï¿½ï¿½
             var ret2 = await client.ReqHistoricalDataAsync2(AaplContract, DateTime.Parse("2004/02/25"),
                                                             DateTime.Parse("2024/02/25"),
                                                             ETimeFrameTws.MN1, EDataType.MIDPOINT);
@@ -774,7 +774,7 @@ SuggestedSizeIncrement: 0.01
         }
 
         {
-            // 30Äê Êµ¼ÊÖ»ÄÜ·µ»Ø20Äê
+            // 30ï¿½ï¿½ Êµï¿½ï¿½Ö»ï¿½Ü·ï¿½ï¿½ï¿½20ï¿½ï¿½
             var ret2 = await client.ReqHistoricalDataAsync2(AaplContract, DateTime.Parse("1994/02/25"),
                                                             DateTime.Parse("2024/02/25"),
                                                             ETimeFrameTws.MN1, EDataType.MIDPOINT);
@@ -784,7 +784,7 @@ SuggestedSizeIncrement: 0.01
         }
  
         {
-            // xauusd ¿ªÊ¼µÃ90ÄêÒÔºó£¬²»È»ÎÞ·¨»ñµÃÊý¾Ý
+            // xauusd ï¿½ï¿½Ê¼ï¿½ï¿½90ï¿½ï¿½ï¿½Ôºó£¬²ï¿½È»ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             var ret2 = await client.ReqHistoricalDataAsync2(XauusdContract_CMDTY, DateTime.Parse("1990/01/01"),
                                                             DateTime.Parse("2024/02/25"),
                                                             ETimeFrameTws.MN1, EDataType.MIDPOINT);
@@ -795,7 +795,7 @@ SuggestedSizeIncrement: 0.01
 
 
         {
-            // ×î³¤Äê
+            // ï¿½î³¤ï¿½ï¿½
             var ret2 = await client.ReqHistoricalDataAsync2(contract, DateTime.Parse("1970/01/01"),
                                                             DateTime.Parse("2024/02/25"),
                                                             ETimeFrameTws.MN1, EDataType.MIDPOINT);
@@ -832,11 +832,11 @@ SuggestedSizeIncrement: 0.01
     [Test]
     public async Task SubTickByTickData_BidAsk()
     {
-        //Contract            contract     = EurContract;  // Ä¬ÈÏÖ»ÓÐeurÖ§³Ötickbytickdata£¬ ²¢ÇÒÖ»ÓÐmidpointºÍbidask
-        //Contract            contract     = AaplContract;  // Ä¬ÈÏÖ»ÓÐeurÖ§³Ötickbytickdata£¬ ²¢ÇÒÖ»ÓÐmidpointºÍbidask
-        //Contract            contract     = TmfContract;  // Ä¬ÈÏÖ»ÓÐeurÖ§³Ötickbytickdata£¬ ²¢ÇÒÖ»ÓÐmidpointºÍbidask
-        Contract contract = XauusdContract_CMDTY; // xau²»Ö§³Ötickbytick
-        //Contract            contract     = BacContract;  // Ä¬ÈÏÖ»ÓÐeurÖ§³Ötickbytickdata£¬ ²¢ÇÒÖ»ÓÐmidpointºÍbidask
+        //Contract            contract     = EurContract;  // Ä¬ï¿½ï¿½Ö»ï¿½ï¿½eurÖ§ï¿½ï¿½tickbytickdataï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½midpointï¿½ï¿½bidask
+        //Contract            contract     = AaplContract;  // Ä¬ï¿½ï¿½Ö»ï¿½ï¿½eurÖ§ï¿½ï¿½tickbytickdataï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½midpointï¿½ï¿½bidask
+        //Contract            contract     = TmfContract;  // Ä¬ï¿½ï¿½Ö»ï¿½ï¿½eurÖ§ï¿½ï¿½tickbytickdataï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½midpointï¿½ï¿½bidask
+        Contract contract = XauusdContract_CMDTY; // xauï¿½ï¿½Ö§ï¿½ï¿½tickbytick
+        //Contract            contract     = BacContract;  // Ä¬ï¿½ï¿½Ö»ï¿½ï¿½eurÖ§ï¿½ï¿½tickbytickdataï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½midpointï¿½ï¿½bidask
         //ETickByTickDataType tickDataType = ETickByTickDataType.BidAsk;
         ETickByTickDataType tickDataType = ETickByTickDataType.Last;
 
@@ -945,7 +945,7 @@ SuggestedSizeIncrement: 0.01
             OrderType     = "MKT",
             //TotalQuantity = 1,
             CashQty = 38930,
-            //TotalQuantity = 2000.01m,   ÔÚtws¿Í»§¶ËÉÏ£¬eur×îÐ¡Ö§³Ö0.01µ¥×Ó£¬Ò²¿ÉÒÔ±»Ö´ÐÐ£¬µ«ÊÇÍ¨¹ýapiÎÞ·¨Ö´ÐÐ£¬·µ»ØTwsErrorCodes.OrderNotSupportFractionalQuantity
+            //TotalQuantity = 2000.01m,   ï¿½ï¿½twsï¿½Í»ï¿½ï¿½ï¿½ï¿½Ï£ï¿½eurï¿½ï¿½Ð¡Ö§ï¿½ï¿½0.01ï¿½ï¿½ï¿½Ó£ï¿½Ò²ï¿½ï¿½ï¿½Ô±ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½apiï¿½Þ·ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½TwsErrorCodes.OrderNotSupportFractionalQuantity
             Tif = ETifTws.GTC.ToString()
         };
 
@@ -1005,7 +1005,7 @@ SuggestedSizeIncrement: 0.01
          AuxPrice = 2030,    // stop
          OrderType = TwsOrderType.Stop,
          TotalQuantity = 1,
-         //TotalQuantity = 2000.01m,   ÔÚtws¿Í»§¶ËÉÏ£¬eur×îÐ¡Ö§³Ö0.01µ¥×Ó£¬Ò²¿ÉÒÔ±»Ö´ÐÐ£¬µ«ÊÇÍ¨¹ýapiÎÞ·¨Ö´ÐÐ£¬·µ»ØTwsErrorCodes.OrderNotSupportFractionalQuantity
+         //TotalQuantity = 2000.01m,   ï¿½ï¿½twsï¿½Í»ï¿½ï¿½ï¿½ï¿½Ï£ï¿½eurï¿½ï¿½Ð¡Ö§ï¿½ï¿½0.01ï¿½ï¿½ï¿½Ó£ï¿½Ò²ï¿½ï¿½ï¿½Ô±ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½apiï¿½Þ·ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½TwsErrorCodes.OrderNotSupportFractionalQuantity
          Tif = ETifTws.DAY.ToString()
      };
 
@@ -1062,7 +1062,7 @@ SuggestedSizeIncrement: 0.01
             AuxPrice = 2030,    // stop
             OrderType = TwsOrderType.StopLimit,
             TotalQuantity = 1,
-            //TotalQuantity = 2000.01m,   ÔÚtws¿Í»§¶ËÉÏ£¬eur×îÐ¡Ö§³Ö0.01µ¥×Ó£¬Ò²¿ÉÒÔ±»Ö´ÐÐ£¬µ«ÊÇÍ¨¹ýapiÎÞ·¨Ö´ÐÐ£¬·µ»ØTwsErrorCodes.OrderNotSupportFractionalQuantity
+            //TotalQuantity = 2000.01m,   ï¿½ï¿½twsï¿½Í»ï¿½ï¿½ï¿½ï¿½Ï£ï¿½eurï¿½ï¿½Ð¡Ö§ï¿½ï¿½0.01ï¿½ï¿½ï¿½Ó£ï¿½Ò²ï¿½ï¿½ï¿½Ô±ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½apiï¿½Þ·ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½TwsErrorCodes.OrderNotSupportFractionalQuantity
             Tif = ETifTws.DAY.ToString()
         };
 
@@ -1112,7 +1112,7 @@ SuggestedSizeIncrement: 0.01
         Contract contract = BtcContract;
 
 
-        // Éæ¼°µ½¼ÓÃÜ»õ±Ò£¬ÓÐºÜ¶àÌØÊâ´¦Àí
+        // ï¿½æ¼°ï¿½ï¿½ï¿½ï¿½ï¿½Ü»ï¿½ï¿½Ò£ï¿½ï¿½ÐºÜ¶ï¿½ï¿½ï¿½ï¿½â´¦ï¿½ï¿½
         // https://interactivebrokers.github.io/tws-api/cryptocurrency.html
         // https://blog.stockviva.com/ib%E6%95%99%E5%AD%B8/ib%E8%B2%B7bitcoin-%E5%8A%A0%E5%AF%86%E8%B2%A8%E5%B9%A3-%E6%AF%94%E7%89%B9%E5%B9%A3
         /*
@@ -1128,7 +1128,7 @@ SuggestedSizeIncrement: 0.01
             Action    = "BUY",
             OrderType = "MKT",
             CashQty = 40125,
-            //TotalQuantity = 2000.01m,   ÔÚtws¿Í»§¶ËÉÏ£¬eur×îÐ¡Ö§³Ö0.01µ¥×Ó£¬Ò²¿ÉÒÔ±»Ö´ÐÐ£¬µ«ÊÇÍ¨¹ýapiÎÞ·¨Ö´ÐÐ£¬·µ»ØTwsErrorCodes.OrderNotSupportFractionalQuantity
+            //TotalQuantity = 2000.01m,   ï¿½ï¿½twsï¿½Í»ï¿½ï¿½ï¿½ï¿½Ï£ï¿½eurï¿½ï¿½Ð¡Ö§ï¿½ï¿½0.01ï¿½ï¿½ï¿½Ó£ï¿½Ò²ï¿½ï¿½ï¿½Ô±ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½apiï¿½Þ·ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½TwsErrorCodes.OrderNotSupportFractionalQuantity
             Tif = ETifTws.IOC.ToString()
         };
 
@@ -1212,13 +1212,13 @@ SuggestedSizeIncrement: 0.01
     public async Task PlaceBracketOrderAsync_Test()
     {
             {
-                // µ¥¶ÀÊÐ³¡µ¥
+                // ï¿½ï¿½ï¿½ï¿½ï¿½Ð³ï¿½ï¿½ï¿½
                 var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Market, 200);
                 ret.Count.Should().Be(1);
             }
 
             {
-                // ÊÐ³¡µ¥, + stop
+                // ï¿½Ð³ï¿½ï¿½ï¿½, + stop
                 var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Market, 200, null, ETifTws.GTC, null, 1);
                 ret.Count.Should().Be(2);
 
@@ -1228,7 +1228,7 @@ SuggestedSizeIncrement: 0.01
             }
 
             {
-            // ÊÐ³¡µ¥, + limit
+            // ï¿½Ð³ï¿½ï¿½ï¿½, + limit
             var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Market, 200, null, ETifTws.GTC, 1.3);
             ret.Count.Should().Be(2);
 
@@ -1240,7 +1240,7 @@ SuggestedSizeIncrement: 0.01
 
 
         {
-            //µ¥¶Àlimitµ¥
+            //ï¿½ï¿½ï¿½ï¿½limitï¿½ï¿½
             var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Limit, 200, 1);
             ret.Count.Should().Be(1);
 
@@ -1252,7 +1252,7 @@ SuggestedSizeIncrement: 0.01
 
 
         {
-            //Ö»ÓÐstoplossµ¥×Ó
+            //Ö»ï¿½ï¿½stoplossï¿½ï¿½ï¿½ï¿½
             var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Market, 200);
             ret.Count.Should().Be(2);
 
@@ -1262,11 +1262,11 @@ SuggestedSizeIncrement: 0.01
         }
 
         {
-            //Ö»ÓÐtakeprofitµ¥×Ó
+            //Ö»ï¿½ï¿½takeprofitï¿½ï¿½ï¿½ï¿½
             var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Limit,  200, 1.1, ETifTws.GTC, 1.3);
             ret.Count.Should().Be(2);
 
-            //// cancel takeprofit£¬
+            //// cancel takeprofitï¿½ï¿½
             var cancelRet = await client.CancelOrderAsync(ret[1].OrderId);
             cancelRet.Should().BeTrue();
         }
@@ -1276,7 +1276,7 @@ SuggestedSizeIncrement: 0.01
             var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Limit, 200, 1.1, ETifTws.GTC,  1.3, 1);
             ret.Count.Should().Be(3);
 
-            //// cancel takeprofit£¬2¸ö×Óµ¥»áÍ¬Ê±±»È¡Ïû
+            //// cancel takeprofitï¿½ï¿½2ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½È¡ï¿½ï¿½
             var cancelRet = await client.CancelOrderAsync(ret[1].OrderId);
             cancelRet.Should().BeTrue();
         }
@@ -1285,7 +1285,7 @@ SuggestedSizeIncrement: 0.01
             var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Limit, 200, 1.1, ETifTws.GTC, 1.3, 1);
             ret.Count.Should().Be(3);
 
-            //// cancel stoplossµ¥×Ó£¬2¸ö×Óµ¥»áÍ¬Ê±±»È¡Ïû
+            //// cancel stoplossï¿½ï¿½ï¿½Ó£ï¿½2ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½È¡ï¿½ï¿½
             var cancelRet = await client.CancelOrderAsync(ret[2].OrderId);
             cancelRet.Should().BeTrue();
         }
@@ -1294,7 +1294,7 @@ SuggestedSizeIncrement: 0.01
             var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Market, 200, null,  ETifTws.GTC,1.3, 1);
             ret.Count.Should().Be(3);
 
-            //// cancel Ö÷order£¬ËùÓÐ3¸öµ¥×ÓÍ¬Ê±È¡Ïû
+            //// cancel ï¿½ï¿½orderï¿½ï¿½ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ê±È¡ï¿½ï¿½
             var cancelRet = await client.CancelOrderAsync(ret.FirstOrDefault().OrderId);
             cancelRet.Should().BeTrue();
         }
@@ -1368,12 +1368,12 @@ SuggestedSizeIncrement: 0.01
         var successfullyPlaced = await client.PlaceOrderAsync(contract, order);
         successfullyPlaced.Should().NotBeNull();
 
-        // ±ØÐëÉèÖÃorder
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½order
         modifyOrder.OrderId = successfullyPlaced.OrderId;
 
         var r = await client.PlaceOrderAsync(contract, modifyOrder);
         r.Should().NotBeNull();
-        r.Order.TotalQuantity.Should().Be(40000);       // ÐÞ¸Ä³É40000
+        r.Order.TotalQuantity.Should().Be(40000);       // ï¿½Þ¸Ä³ï¿½40000
 
         //await TearDown();
     }
@@ -1381,7 +1381,7 @@ SuggestedSizeIncrement: 0.01
 
  [Test]// https://interactivebrokers.github.io/tws-api/modifying_orders.html
  public async Task ModifyBracketOrderAsync_Test()
- {// ÐÞ¸ÄÀ¨ºÅµ¥£¬ÐèÒªÍ¬Ê±ÐÞ¸ÄÖ÷µ¥ºÍ×Óµ¥
+ {// ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½Åµï¿½ï¿½ï¿½ï¿½ï¿½ÒªÍ¬Ê±ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½
      Order modifyLotsOrder = new Order
      {
          Action        = "BUY",
@@ -1393,17 +1393,17 @@ SuggestedSizeIncrement: 0.01
      var ret = await client.PlaceBracketOrderAsync(EurContract, EOrderActions.BUY, EOrderTypeTws.Limit, 20000, 1.05, ETifTws.GTC, 1.3, 1);
      ret.Count.Should().Be(3);
 
-     // ±ØÐëÉèÖÃorder
+     // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½order
      modifyLotsOrder.OrderId = ret[0].OrderId;
 
-     // ÐÞ¸ÄÖ÷order ÊýÁ¿£¬»áÍ¬Ê±ÐÞ¸Ä2¸ö×Óµ¥ÊýÁ¿
+     // ï¿½Þ¸ï¿½ï¿½ï¿½order ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ê±ï¿½Þ¸ï¿½2ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½
      {
          var r = await client.PlaceOrderAsync(EurContract, modifyLotsOrder);
 
          r.Should().NotBeNull();
-        r.Order.TotalQuantity.Should().Be(40000);       // ÐÞ¸Ä³É40000
+        r.Order.TotalQuantity.Should().Be(40000);       // ï¿½Þ¸Ä³ï¿½40000
      }
-      //ÐÞ¸Ätakeprofit£¬Ö»ÄÜÐÞ¸Ä×Óµ¥µÄtakeprofit
+      //ï¿½Þ¸ï¿½takeprofitï¿½ï¿½Ö»ï¿½ï¿½ï¿½Þ¸ï¿½ï¿½Óµï¿½ï¿½ï¿½takeprofit
       {
           Order modifyTakeprofitOrder = new Order
           {
@@ -1412,14 +1412,14 @@ SuggestedSizeIncrement: 0.01
               TotalQuantity = 40000,
               LmtPrice      = 1.35
           };
-          modifyTakeprofitOrder.OrderId = ret[1].OrderId; // ¶ÔÓ¦takeprofit¶©µ¥
+          modifyTakeprofitOrder.OrderId = ret[1].OrderId; // ï¿½ï¿½Ó¦takeprofitï¿½ï¿½ï¿½ï¿½
 
           var r2 = await client.PlaceOrderAsync(EurContract, modifyTakeprofitOrder);
 
           r2.Should().NotBeNull();
-          r2.Order.LmtPrice.Should().Be(1.35); // ÐÞ¸Ä³É1.35
+          r2.Order.LmtPrice.Should().Be(1.35); // ï¿½Þ¸Ä³ï¿½1.35
       }
-      // ÐÞ¸Ästoploss£¬Ö»ÄÜÐÞ¸Ä×Óµ¥µÄstoploss
+      // ï¿½Þ¸ï¿½stoplossï¿½ï¿½Ö»ï¿½ï¿½ï¿½Þ¸ï¿½ï¿½Óµï¿½ï¿½ï¿½stoploss
       {
           Order modifyStoplossOrder = new Order
           {
@@ -1428,12 +1428,12 @@ SuggestedSizeIncrement: 0.01
               TotalQuantity = 40000,
               AuxPrice      = 0.95
           };
-          modifyStoplossOrder.OrderId = ret[2].OrderId; // ¶ÔÓ¦stoploss¶©µ¥
+          modifyStoplossOrder.OrderId = ret[2].OrderId; // ï¿½ï¿½Ó¦stoplossï¿½ï¿½ï¿½ï¿½
 
           var r3 = await client.PlaceOrderAsync(EurContract, modifyStoplossOrder);
 
           r3.Should().NotBeNull();
-          r3.Order.AuxPrice.Should().Be(0.95); // ÐÞ¸Ä³É0.95
+          r3.Order.AuxPrice.Should().Be(0.95); // ï¿½Þ¸Ä³ï¿½0.95
       }
        
 

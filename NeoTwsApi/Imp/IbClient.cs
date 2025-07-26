@@ -210,7 +210,8 @@ public class IbClient : ObservableObject, IIbClient
                                                 while (ThreadRunning_)
                                                 {
                                                     this.Signal_.waitForSignal();
-                                                    lock (ReaderLock_)
+                                                    // todo: 还没有完全验证，暂时这样
+                                                    //lock (ReaderLock_)
                                                     {
                                                         if(ThreadRunning_)
                                                             reader.processMsgs();
@@ -303,7 +304,8 @@ public class IbClient : ObservableObject, IIbClient
         this.TwsCallbackHandler_.ConnectionClosedEvent -= TwsCallbackHandler_OnConnectionClosedEvent;
 
         ThreadRunning_ = false;
-        lock (ReaderLock_)
+        // todo: 这个lock可能会导致死锁，暂时先这样，还没有完全验证
+        //lock (ReaderLock_)
         {
             this.ClientSocket_.eDisconnect();
             this.ClientSocket_ = null;
